@@ -1,0 +1,180 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage{pdfpages}
+\usepackage{hyperref}
+\usepackage[title, titletoc, toc]{appendix}
+\usepackage{graphicx}
+\usepackage{xspace}
+
+\begin{document}
+
+% definitions here
+
+\title{Roadmap for DC2 Production}
+\author{ .. (add names/affiliations) ...$^1$, C.W.~Walter$^2$ \\
+{\small $^1$SLAC National Accelerator Laboratory, $^2$Duke University}}
+
+\date{\today}
+
+\maketitle
+
+\begin{abstract}
+  In this note we describe and document the configurations used for
+  the DESC D2 data challenge including the validation metrics for
+  certification of suitability for the science studies described in
+  the 2017 DESC Science Roadmap document~\cite{SRM:2015}.
+\end{abstract}
+
+\noindent
+\begin{center}
+  \fboxsep=5pt \fbox{\begin{minipage}{5.25in} \it This document is in
+      initial draft form.  Add your name and expand the text.
+    \end{minipage}} 
+  \end{center} 
+\vspace{0.1in}
+
+\section{Introduction}
+
+At the June 2017 Stony Brook collaboration meeting the SSim group
+surveyed and discussed with the analysis working groups (WG) their
+needs for DC2 production.  The WGs were presented with a baseline DC2
+configuration and then they presented their plans for DC2 analysis
+along with requests for additional features or configuration options
+which were currently not present.
+
+This document summarizes the consensus list of the needed parameters
+and configuration options and serves as a record of the options used
+in the production.  Additionally, in this document we specify the
+tests used to validate that an initial test sample of produced images
+are appropriate.
+
+The document also presents our production strategy of staging the DC2
+production along with which tools will be used for each part and a timeline.
+ 
+\section{Planned uses for the DC2 Simulation}
+
+A summary of typical planned analyses and usages by the various
+working groups.
+
+
+\section{DC2 Cosmological Simulation Configuration and Options}
+
+The DC2 cosmological simulations is the “Outer Rim” (4.225Gpc, $10^9$
+mass resolution)” simulation with lensing shear applied.  Parameters
+of the simulation are specified in Table~\ref{tab:csim-options} below.
+
+\begin{table}[!htb]
+  \centering
+  \begin{tabular}{| l| l| }
+    \hline 
+    Parameter                       & Value   \\
+    \hline
+    Catalog and Image area  & 300 sq deg \\
+     \hline
+  \end{tabular}
+  \caption{Cosmological Simulation Parameters}
+  \label{tab:csim-options}
+\end{table}
+
+
+\section{DC2 Catalog and Image Configuration Options}
+
+The options chosen for the DC2 production are for the most part a
+further specification or refinement on the specifications of the XXX
+table in SRM. 
+
+Table~\ref{tab:image-options} describes the choice of options for
+production as decided after consultation and discussion among the
+working groups and those coordination the DC2 production.
+
+\begin{table}[!htb]
+  \centering
+  \begin{tabular}{| l| l| }
+    \hline 
+    Parameter                       & Value   \\
+    \hline
+    Catalog and Image area  & 300 sq deg \\
+    Bands                             & ugrizy   \\
+    Number of Visits per band  &  (ugrizy) = (56, 80,184,184,160,160) \\
+    Cadence                         & OpSim WFD with embedded DDF and twinkles fields\\
+    Input                              & Outer rim catalog +MW stars model \\
+    Sky Model                      & Basic OpSim Model \\
+    Dithering                       & Random translational and rotational  \\
+    Sensor Effects                & Basic sensor effects (saturation, tree-rings, brighter-fatter) \\
+    Readout type                 & E-image and amplifier readout available \\
+    \hline
+  \end{tabular}
+  \caption{Catalog and image production options}
+  \label{tab:image-options}
+\end{table}
+
+The command files which implement this configuration can be found in
+Appendix~\ref{sec:command-file}.  The CatSim query commands can be
+found in~ ??? {\bf (Can we document this?)}.
+
+\section{Production Strategies and Timeline}
+
+This section should cover:
+
+\begin{itemize}
+\item Expected uses of PhoSim and imSim
+\item Planned staging strategy
+\item Anticipated timeline
+\end{itemize}
+
+[CWW: This document could also list features still needed to be implemented
+in imSim etc before production but I anticipate tracking that
+externally and using this document when that code is ready]
+
+\section{Features Implemented and the Current DM Feature Set}
+
+\section{Anticipated Needed Computer Resources}
+
+In the DC1 production approximately 20M cpu-hours were used for the
+production of the PhoSim image files, Three 75 TB datasets were
+finally produced after production.  With 6 bands and 7 times the area
+we anticipate a scaling of a factor of approximately 30 in the amount
+of data produced.
+
+\section{Output Format and Processing}
+
+A discussion of issues related to dataframes, Qserve etc.
+
+\section{Validation Samples and Tests}
+
+As part of the staging process we will want the analysis groups to run
+tests on the output.  We also would like the analysis groups to
+implement some tests now on the DC1 data sets.  Those tests can be
+discussed here.
+
+\noindent
+{\bf SPECIFY SAMPLES AND VALIDATION TESTS HERE}
+
+
+\section{Timeline}
+
+An expected timeline could go here instead.
+
+\begin{appendices}
+
+\section{Command Files}
+\label{sec:command-file}
+
+The basic command file used to run the production can be
+included here.
+
+\begin{verbatim}
+Lots O\' Commands
+\end{verbatim}
+
+\end{appendices}
+
+\begin{thebibliography}{100}
+
+\bibitem{SRM:2015} 
+DESC Science Roadmap,
+\url{http://lsst-desc.org/sites/default/files/DESC_SRM_V1.pdf}, 2015
+
+\end{thebibliography}
+
+\end{document}
