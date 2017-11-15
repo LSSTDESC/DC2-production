@@ -75,21 +75,14 @@ if __name__ == "__main__":
 
     obs_generator = ObservationMetaDataGenerator(database=opsimdb, driver='sqlite')
 
-    from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogSersic2D
     from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogZPoint
     from lsst.sims.catUtils.exampleCatalogDefinitions import DefaultPhoSimHeaderMap
     from lsst.sims.catUtils.baseCatalogModels import StarObj
-    from lsst.sims.catUtils.baseCatalogModels import GalaxyBulgeObj, GalaxyDiskObj
-    from lsst.sims.catUtils.baseCatalogModels import GalaxyAgnObj
     from lsst.sims.utils import _getRotSkyPos
     import copy
 
     star_db = StarObj(database='LSSTCATSIM', host='fatboy.phys.washington.edu',
                       port=1433, driver='mssql+pymssql')
-
-    bulge_db = GalaxyBulgeObj(connection=star_db.connection)
-    disk_db = GalaxyDiskObj(connection=star_db.connection)
-    agn_db = GalaxyAgnObj(connection=star_db.connection)
 
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -118,7 +111,7 @@ if __name__ == "__main__":
         cat_name = os.path.join(out_dir,'phosim_cat_%d.txt' % obshistid)
         star_name = 'star_cat_%d.txt' % obshistid
         gal_name = 'gal_cat_%d.txt' % obshistid
-        agn_name = 'agn_cat_%d.txt' % obshistid
+        #agn_name = 'agn_cat_%d.txt' % obshistid
 
         cat = PhoSimCatalogPoint(star_db, obs_metadata=obs)
         cat.phoSimHeaderMap = phosim_header_map
@@ -126,7 +119,7 @@ if __name__ == "__main__":
             cat.write_header(output)
             output.write('includeobj %s.gz\n' % star_name)
             output.write('includeobj %s.gz\n' % gal_name)
-            output.write('includeobj %s.gz\n' % agn_name)
+            #output.write('includeobj %s.gz\n' % agn_name)
 
         star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs)
         star_cat.phoSimHeaderMap = phosim_header_map
@@ -142,11 +135,10 @@ if __name__ == "__main__":
 
         db_bulge = bulgeDESCQAObject(args.descqa_cat_file)
         cat = PhoSimDESCQA(db_bulge, obs_metadata=obs, cannot_be_null=['hasBulge'])
-        cat.phoSimHeaderMap = DefaultPhoSimHeaderMap
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_header=False)
 
-        db_disk = diskDESCQAOject(args.descqa_cat_file)
+        db_disk = diskDESCQAObject(args.descqa_cat_file)
         cat = PhoSimDESCQA(db_disk, obs_metadata=obs, cannot_be_null=['hasDisk'])
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
