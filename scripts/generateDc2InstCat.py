@@ -1,8 +1,9 @@
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 import argparse
 import os
 import numpy as np
-import gzip
+import subprocess
+import h5py
 
 from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogPoint
 from lsst.sims.catalogs.definitions import InstanceCatalog
@@ -15,7 +16,7 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
     min_mag = None
 
     column_outputs = ['prefix', 'uniqueId', 'raPhoSim', 'decPhoSim', 'maskedMagNorm', 'sedFilepath',
-                      'redshift', 'gamma1', 'gamma2', 'kappa', 'raOffset', 'decOffset',
+                      'redshift', 'shear1', 'shear2', 'kappa', 'raOffset', 'decOffset',
                       'spatialmodel', 'internalExtinctionModel',
                       'galacticExtinctionModel', 'galacticAv', 'galacticRv']
 
@@ -99,7 +100,7 @@ if __name__ == "__main__":
 
         obs = obs_list[0]
         if dither_switch:
-            print 'dithering'
+            print('dithering')
             obs.pointingRA = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitRA'])
             obs.pointingDec = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitDec'])
             rotSky = _getRotSkyPos(obs._pointingRA, obs._pointingDec, obs,
@@ -143,9 +144,6 @@ if __name__ == "__main__":
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
 
-        for orig_name in (star_name, gal_name, agn_name):
+        for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
-            with open(full_name, 'r') as input_file:
-                with gzip.open(full_name+'.gz', 'w') as output_file:
-                    output_file.writelines(input_file)
-            os.unlink(full_name)
+            subprocess.check_call('gzip -f %s' % full_name, shell=True)
