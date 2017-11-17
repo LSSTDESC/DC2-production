@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import pandas as pd
 from lsst.sims.catUtils.utils import ObservationMetaDataGenerator
@@ -44,6 +45,6 @@ for obs in obs_list:
                        obs.summary['OpsimMetaData']['propID'],
                        obs.summary['OpsimMetaData']['expMJD'])
 
-df.to_pickle('protoDC2_visits_%i.pkl' % half_extent)
+pickle.dump(df, open('protoDC2_visits_%i.pkl' % half_extent, 'wb'), protocol=2)
 
 print(len(df))

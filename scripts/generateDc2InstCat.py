@@ -2,7 +2,7 @@ from __future__ import with_statement, print_function
 import argparse
 import os
 import numpy as np
-import subprocess
+import gzip
 import h5py
 
 from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogPoint
@@ -146,4 +146,7 @@ if __name__ == "__main__":
 
         for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
-            subprocess.check_call('gzip -f %s' % full_name, shell=True)
+            with open(full_name, 'r') as input_file:
+                with gzip.open(full_name+'.gz', 'wb') as output_file:
+                    output_file.writelines(input_file)
+            os.unlink(full_name)
