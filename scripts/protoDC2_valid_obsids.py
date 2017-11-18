@@ -19,15 +19,16 @@ obs_list.extend(obs_gen.getObservationMetaData(fieldRA=(360-half_extent, 360.),
                                                boundLength=radius))
 
 df = pd.DataFrame(columns=['obsHistID', 'fieldRA', 'fieldDec',
-                           'ditheredRA', 'ditheredDec',
+                           'randomDitherFieldPerVisitRA',
+                           'randomDitherFieldPerVisitDec',
                            'filter', 'fieldID', 'propID', 'expMJD'])
 
 outer_box_size = 2.5 + 1.77
 for obs in obs_list:
-    ditheredRA = obs.summary['OpsimMetaData']['ditheredRA']*180./np.pi
+    ditheredRA = obs.summary['OpsimMetaData']['randomDitherFieldPerVisitRA']*180./np.pi
     if ditheredRA > 180:
         ditheredRA -= 360.
-    ditheredDec = obs.summary['OpsimMetaData']['ditheredDec']*180./np.pi
+    ditheredDec = obs.summary['OpsimMetaData']['randomDitherFieldPerVisitDec']*180./np.pi
 
     if (-outer_box_size > ditheredRA or ditheredRA > outer_box_size or
         -outer_box_size > ditheredDec or ditheredDec > outer_box_size):

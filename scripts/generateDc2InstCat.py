@@ -7,11 +7,13 @@ import h5py
 
 from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogPoint
 from lsst.sims.catalogs.definitions import InstanceCatalog
-from lsst.sims.catalogs.decorators import cached
+from lsst.sims.catalogs.decorators import cached, compound
 
 from GCRCatSimInterface import PhoSimDESCQA, bulgeDESCQAObject, diskDESCQAObject
 
 class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
+
+    disable_proper_motion = False
 
     min_mag = None
 
@@ -26,6 +28,12 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
         if self.min_mag is None:
             return raw_norm
         return np.where(raw_norm<self.min_mag, self.min_mag, raw_norm)
+
+    def column_by_name(self, colname):
+        if (not colname.startswith('properMotion')
+            or not self.disable_proper_motion):
+            return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
+        return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
 
 
 class BrightStarCatalog(PhoSimCatalogPoint):
@@ -60,6 +68,9 @@ if __name__ == "__main__":
                         help='the minimum magintude for stars')
     parser.add_argument('--fov', type=float, default=2.0,
                         help='field of view radius in degrees')
+    parser.add_argument('--disable_proper_motion', default=False,
+                        action='store_true',
+                        help='flag to disable proper motion')
     args = parser.parse_args()
 
     obshistid_list = args.id
@@ -126,6 +137,7 @@ if __name__ == "__main__":
         star_cat.phoSimHeaderMap = phosim_header_map
         bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
+        star_cat.disable_proper_motion = args.disable_proper_motion
         bright_cat.min_mag = args.min_mag
 
         from lsst.sims.catalogs.definitions import parallelCatalogWriter
