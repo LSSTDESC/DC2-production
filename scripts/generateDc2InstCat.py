@@ -1,4 +1,4 @@
-from __future__ import with_statement, print_function
+from __future__ import with_statement
 import argparse
 import os
 import numpy as np
@@ -7,7 +7,7 @@ import h5py
 
 from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogPoint
 from lsst.sims.catalogs.definitions import InstanceCatalog
-from lsst.sims.catalogs.decorators import cached, compound
+from lsst.sims.catalogs.decorators import cached
 
 from GCRCatSimInterface import PhoSimDESCQA, bulgeDESCQAObject, diskDESCQAObject
 
@@ -111,7 +111,6 @@ if __name__ == "__main__":
 
         obs = obs_list[0]
         if dither_switch:
-            print('dithering')
             obs.pointingRA = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitRA'])
             obs.pointingDec = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitDec'])
             rotSky = _getRotSkyPos(obs._pointingRA, obs._pointingDec, obs,
