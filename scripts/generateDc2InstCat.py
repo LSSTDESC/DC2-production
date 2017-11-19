@@ -22,6 +22,8 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
                       'spatialmodel', 'internalExtinctionModel',
                       'galacticExtinctionModel', 'galacticAv', 'galacticRv']
 
+    protoDc2_half_size = 2.5*np.pi/180.
+
     @cached
     def get_maskedMagNorm(self):
         raw_norm = self.column_by_name('phoSimMagNorm')
@@ -29,8 +31,19 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
             return raw_norm
         return np.where(raw_norm<self.min_mag, self.min_mag, raw_norm)
 
+    @cached
+    def get_inProtoDc2(self):
+        ra_values = self.column_by_name('raPhoSim')
+        ra = np.where(ra_values < np.pi, ra_values, ra_values - 2.*np.pi)
+        dec = self.column_by_name('decPhoSim')
+        return np.where((ra > -self.protoDc2_half_size) &
+                        (ra < self.protoDc2_half_size) &
+                        (dec > -self.protoDc2_half_size) &
+                        (dec < self.protoDc2_half_size), 1, None)
+
     def column_by_name(self, colname):
         if (not colname.startswith('properMotion')
+            or colname == 'radialVelocity'
             or not self.disable_proper_motion):
             return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
         return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
@@ -132,7 +145,8 @@ if __name__ == "__main__":
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
 
-        star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs)
+        star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs,
+                                            cannot_be_null=['inProtoDc2'])
         star_cat.phoSimHeaderMap = phosim_header_map
         bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
