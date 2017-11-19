@@ -61,6 +61,6 @@ for obs in obs_list:
                        obs.summary['OpsimMetaData']['propID'],
                        obs.summary['OpsimMetaData']['expMJD'])
 
-pickle.dump(df, open('protoDC2_visits_%i.pkl' % dxy, 'wb'), protocol=2)
+pickle.dump(df, open('protoDC2_visits.pkl', 'wb'), protocol=2)
 
 print(len(df))
