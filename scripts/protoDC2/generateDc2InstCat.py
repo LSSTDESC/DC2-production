@@ -42,11 +42,11 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
                         (dec < self.protoDc2_half_size), 1, None)
 
     def column_by_name(self, colname):
-        if (not colname.startswith('properMotion')
-            or colname == 'radialVelocity'
-            or not self.disable_proper_motion):
-            return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
-        return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
+        if (self.disable_proper_motion and
+            (colname.startswith('properMotion')
+             or colname == 'radialVelocity')):
+            return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
+        return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
 
 
 class BrightStarCatalog(PhoSimCatalogPoint):
