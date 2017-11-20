@@ -74,9 +74,9 @@ if __name__ == "__main__":
     parser.add_argument('--id', type=int, nargs='+',
                         default=None,
                         help='obsHistID to generate InstanceCatalog for (a list)')
-    parser.add_argument('--dither', type=str,
-                        default='True',
-                        help='whether or not to apply dithering (true/false; default true)')
+    parser.add_argument('--disable_dithering', default=False,
+                        action='store_true',
+                        help='flag to disable dithering')
     parser.add_argument('--min_mag', type=float, default=10.0,
                         help='the minimum magintude for stars')
     parser.add_argument('--fov', type=float, default=2.0,
@@ -89,9 +89,6 @@ if __name__ == "__main__":
     obshistid_list = args.id
     opsimdb = args.db
     out_dir = args.out
-    dither_switch = True
-    if args.dither.lower()[0] == 'f':
-        dither_switch = False
 
     from lsst.sims.catUtils.utils import ObservationMetaDataGenerator
 
@@ -123,7 +120,7 @@ if __name__ == "__main__":
                                                         boundLength=args.fov)
 
         obs = obs_list[0]
-        if dither_switch:
+        if not args.disable_dithering:
             obs.pointingRA = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitRA'])
             obs.pointingDec = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitDec'])
             rotSky = _getRotSkyPos(obs._pointingRA, obs._pointingDec, obs,
