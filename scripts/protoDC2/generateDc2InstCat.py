@@ -3,6 +3,7 @@ import argparse
 import os
 import numpy as np
 import gzip
+import h5py
 
 from lsst.sims.catUtils.exampleCatalogDefinitions import PhoSimCatalogPoint
 from lsst.sims.catalogs.definitions import InstanceCatalog
@@ -12,12 +13,16 @@ from GCRCatSimInterface import PhoSimDESCQA, bulgeDESCQAObject, diskDESCQAObject
 
 class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
 
+    disable_proper_motion = False
+
     min_mag = None
 
     column_outputs = ['prefix', 'uniqueId', 'raPhoSim', 'decPhoSim', 'maskedMagNorm', 'sedFilepath',
-                      'redshift', 'gamma1', 'gamma2', 'kappa', 'raOffset', 'decOffset',
+                      'redshift', 'shear1', 'shear2', 'kappa', 'raOffset', 'decOffset',
                       'spatialmodel', 'internalExtinctionModel',
                       'galacticExtinctionModel', 'galacticAv', 'galacticRv']
+
+    protoDc2_half_size = 2.5*np.pi/180.
 
     @cached
     def get_maskedMagNorm(self):
@@ -25,6 +30,23 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
         if self.min_mag is None:
             return raw_norm
         return np.where(raw_norm<self.min_mag, self.min_mag, raw_norm)
+
+    @cached
+    def get_inProtoDc2(self):
+        ra_values = self.column_by_name('raPhoSim')
+        ra = np.where(ra_values < np.pi, ra_values, ra_values - 2.*np.pi)
+        dec = self.column_by_name('decPhoSim')
+        return np.where((ra > -self.protoDc2_half_size) &
+                        (ra < self.protoDc2_half_size) &
+                        (dec > -self.protoDc2_half_size) &
+                        (dec < self.protoDc2_half_size), 1, None)
+
+    def column_by_name(self, colname):
+        if (self.disable_proper_motion and
+            (colname.startswith('properMotion')
+             or colname == 'radialVelocity')):
+            return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
+        return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
 
 
 class BrightStarCatalog(PhoSimCatalogPoint):
@@ -52,21 +74,21 @@ if __name__ == "__main__":
     parser.add_argument('--id', type=int, nargs='+',
                         default=None,
                         help='obsHistID to generate InstanceCatalog for (a list)')
-    parser.add_argument('--dither', type=str,
-                        default='True',
-                        help='whether or not to apply dithering (true/false; default true)')
+    parser.add_argument('--disable_dithering', default=False,
+                        action='store_true',
+                        help='flag to disable dithering')
     parser.add_argument('--min_mag', type=float, default=10.0,
                         help='the minimum magintude for stars')
     parser.add_argument('--fov', type=float, default=2.0,
                         help='field of view radius in degrees')
+    parser.add_argument('--disable_proper_motion', default=False,
+                        action='store_true',
+                        help='flag to disable proper motion')
     args = parser.parse_args()
 
     obshistid_list = args.id
     opsimdb = args.db
     out_dir = args.out
-    dither_switch = True
-    if args.dither.lower()[0] == 'f':
-        dither_switch = False
 
     from lsst.sims.catUtils.utils import ObservationMetaDataGenerator
 
@@ -98,8 +120,7 @@ if __name__ == "__main__":
                                                         boundLength=args.fov)
 
         obs = obs_list[0]
-        if dither_switch:
-            print 'dithering'
+        if not args.disable_dithering:
             obs.pointingRA = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitRA'])
             obs.pointingDec = np.degrees(obs.OpsimMetaData['randomDitherFieldPerVisitDec'])
             rotSky = _getRotSkyPos(obs._pointingRA, obs._pointingDec, obs,
@@ -121,10 +142,12 @@ if __name__ == "__main__":
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
 
-        star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs)
+        star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs,
+                                            cannot_be_null=['inProtoDc2'])
         star_cat.phoSimHeaderMap = phosim_header_map
         bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
+        star_cat.disable_proper_motion = args.disable_proper_motion
         bright_cat.min_mag = args.min_mag
 
         from lsst.sims.catalogs.definitions import parallelCatalogWriter
@@ -143,9 +166,9 @@ if __name__ == "__main__":
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
 
-        for orig_name in (star_name, gal_name, agn_name):
+        for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
             with open(full_name, 'r') as input_file:
-                with gzip.open(full_name+'.gz', 'w') as output_file:
+                with gzip.open(full_name+'.gz', 'wb') as output_file:
                     output_file.writelines(input_file)
             os.unlink(full_name)
