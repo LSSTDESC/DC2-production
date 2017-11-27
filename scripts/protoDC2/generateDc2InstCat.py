@@ -18,7 +18,7 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
     min_mag = None
 
     column_outputs = ['prefix', 'uniqueId', 'raPhoSim', 'decPhoSim', 'maskedMagNorm', 'sedFilepath',
-                      'redshift', 'shear1', 'shear2', 'kappa', 'raOffset', 'decOffset',
+                      'redshift', 'gamma1', 'gamma2', 'kappa', 'raOffset', 'decOffset',
                       'spatialmodel', 'internalExtinctionModel',
                       'galacticExtinctionModel', 'galacticAv', 'galacticRv']
 
