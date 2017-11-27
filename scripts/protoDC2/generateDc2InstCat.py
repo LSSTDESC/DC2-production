@@ -81,9 +81,9 @@ if __name__ == "__main__":
                         help='the minimum magintude for stars')
     parser.add_argument('--fov', type=float, default=2.0,
                         help='field of view radius in degrees')
-    parser.add_argument('--disable_proper_motion', default=False,
+    parser.add_argument('--enable_proper_motion', default=False,
                         action='store_true',
-                        help='flag to disable proper motion')
+                        help='flag to enable proper motion')
     args = parser.parse_args()
 
     obshistid_list = args.id
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         star_cat.phoSimHeaderMap = phosim_header_map
         bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
-        star_cat.disable_proper_motion = args.disable_proper_motion
+        star_cat.disable_proper_motion = not args.enable_proper_motion
         bright_cat.min_mag = args.min_mag
 
         from lsst.sims.catalogs.definitions import parallelCatalogWriter
