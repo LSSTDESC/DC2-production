@@ -43,8 +43,8 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
 
     def column_by_name(self, colname):
         if (self.disable_proper_motion and
-            (colname.startswith('properMotion')
-             or colname == 'radialVelocity')):
+            colname in ('properMotionRa', 'properMotionDec',
+                        'radialVelocity', 'parallax')):
             return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
         return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
 
@@ -84,6 +84,8 @@ if __name__ == "__main__":
     parser.add_argument('--enable_proper_motion', default=False,
                         action='store_true',
                         help='flag to enable proper motion')
+    parser.add_argument('--minsource', type=int, default=100,
+                        help='mininum number of objects in a trimmed instance catalog')
     args = parser.parse_args()
 
     obshistid_list = args.id
@@ -138,6 +140,7 @@ if __name__ == "__main__":
         cat.phoSimHeaderMap = phosim_header_map
         with open(cat_name, 'w') as output:
             cat.write_header(output)
+            output.write('minsource %i\n' % args.min_source)
             output.write('includeobj %s.gz\n' % star_name)
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
