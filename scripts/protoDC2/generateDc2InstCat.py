@@ -140,7 +140,7 @@ if __name__ == "__main__":
         cat.phoSimHeaderMap = phosim_header_map
         with open(cat_name, 'w') as output:
             cat.write_header(output)
-            output.write('minsource %i\n' % args.min_source)
+            output.write('minsource %i\n' % args.minsource)
             output.write('includeobj %s.gz\n' % star_name)
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
         for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
-            with open(full_name, 'r') as input_file:
+            with open(full_name, 'rb') as input_file:
                 with gzip.open(full_name+'.gz', 'wb') as output_file:
                     output_file.writelines(input_file)
             os.unlink(full_name)
