@@ -2,16 +2,17 @@ import pickle
 import numpy as np
 import pandas as pd
 from lsst.sims.catUtils.utils import ObservationMetaDataGenerator
+from lsst.sims.utils import angularSeparation
 
 def fov_overlaps_protoDC2(x, y, half_size=2.5, radius=1.77):
     if x > half_size and y > half_size:
-        return (x - half_size)**2 + (y - half_size)**2 < radius**2
+        return angularSeparation(x, y, half_size, half_size) < radius
     elif x < -half_size and y > half_size:
-        return (x + half_size)**2 + (y - half_size)**2 < radius**2
+        return angularSeparation(x, y, -half_size, half_size) < radius
     elif x < -half_size and y < -half_size:
-        return (x + half_size)**2 + (y + half_size)**2 < radius**2
+        return angularSeparation(x, y, -half_size, -half_size) < radius
     elif x > half_size and y < -half_size:
-        return (x - half_size)**2 + (y + half_size)**2 < radius**2
+        return angularSeparation(x, y, half_size, -half_size) < radius
     outer_box_size = half_size + radius
     return (-outer_box_size < x and x < outer_box_size and
             -outer_box_size < y and y < outer_box_size)

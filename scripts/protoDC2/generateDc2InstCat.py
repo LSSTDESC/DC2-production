@@ -18,7 +18,7 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
     min_mag = None
 
     column_outputs = ['prefix', 'uniqueId', 'raPhoSim', 'decPhoSim', 'maskedMagNorm', 'sedFilepath',
-                      'redshift', 'shear1', 'shear2', 'kappa', 'raOffset', 'decOffset',
+                      'redshift', 'gamma1', 'gamma2', 'kappa', 'raOffset', 'decOffset',
                       'spatialmodel', 'internalExtinctionModel',
                       'galacticExtinctionModel', 'galacticAv', 'galacticRv']
 
@@ -43,8 +43,8 @@ class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
 
     def column_by_name(self, colname):
         if (self.disable_proper_motion and
-            (colname.startswith('properMotion')
-             or colname == 'radialVelocity')):
+            colname in ('properMotionRa', 'properMotionDec',
+                        'radialVelocity', 'parallax')):
             return np.zeros(len(self.column_by_name('raJ2000')), dtype=np.float)
         return super(MaskedPhoSimCatalogPoint, self).column_by_name(colname)
 
@@ -81,9 +81,11 @@ if __name__ == "__main__":
                         help='the minimum magintude for stars')
     parser.add_argument('--fov', type=float, default=2.0,
                         help='field of view radius in degrees')
-    parser.add_argument('--disable_proper_motion', default=False,
+    parser.add_argument('--enable_proper_motion', default=False,
                         action='store_true',
-                        help='flag to disable proper motion')
+                        help='flag to enable proper motion')
+    parser.add_argument('--minsource', type=int, default=100,
+                        help='mininum number of objects in a trimmed instance catalog')
     args = parser.parse_args()
 
     obshistid_list = args.id
@@ -138,6 +140,7 @@ if __name__ == "__main__":
         cat.phoSimHeaderMap = phosim_header_map
         with open(cat_name, 'w') as output:
             cat.write_header(output)
+            output.write('minsource %i\n' % args.minsource)
             output.write('includeobj %s.gz\n' % star_name)
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
@@ -147,7 +150,7 @@ if __name__ == "__main__":
         star_cat.phoSimHeaderMap = phosim_header_map
         bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
-        star_cat.disable_proper_motion = args.disable_proper_motion
+        star_cat.disable_proper_motion = not args.enable_proper_motion
         bright_cat.min_mag = args.min_mag
 
         from lsst.sims.catalogs.definitions import parallelCatalogWriter
@@ -168,7 +171,7 @@ if __name__ == "__main__":
 
         for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
-            with open(full_name, 'r') as input_file:
+            with open(full_name, 'rb') as input_file:
                 with gzip.open(full_name+'.gz', 'wb') as output_file:
                     output_file.writelines(input_file)
             os.unlink(full_name)
