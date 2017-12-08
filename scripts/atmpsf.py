@@ -145,6 +145,12 @@ if __name__ == '__main__':
 
     parser.add_argument("--nproc", type=int, default=1,
                         help="Number of subprocesses to launch to create PSFs")
+    parser.add_argument("-n", "--njobs", type=int, default=1,
+                        help="set the total number of jobs that this run is a part of. "
+                        "Used in conjunction with -j (--job)")
+    parser.add_argument("-j", "--job", type=int, default=0,
+                        help="set the job number for this particular run.  Must be in [0, njobs-1]."
+                             "  Used in conjunction with -n (--njobs)")
 
     parser.add_argument("--outprefix", type=str, default="output/",
                         help="Prefix to apply to output files.  Default: 'output/'")
@@ -157,13 +163,7 @@ if __name__ == '__main__':
     rng = galsim.BaseDeviate(args.seed+1)
     u = galsim.UniformDeviate(rng)
 
-    thetas = [
-        (i,
-         (u()*args.field_size, u()*args.field_size))
-        for i in range(args.npsf)
-    ]
-
-    metafilename = "{}meta.pkl".format(args.outprefix)
+    metafilename = "{}meta_{}_{}.pkl".format(args.outprefix, args.job, args.njobs)
     # Make sure out directory exists
     dirname = os.path.dirname(metafilename)
     if not os.path.exists(dirname):
@@ -173,6 +173,22 @@ if __name__ == '__main__':
 
     if os.path.exists(metafilename) and not args.clobber:
         raise RuntimeError("Meta file already exists")
+
+    # Generate thetas for all jobs, even though we'll only actually use 1/njobs of these.
+    # This is just an easy way to make sure the random numbers align between jobs.
+    thetas = [
+        (i,
+         (u()*args.field_size, u()*args.field_size))
+        for i in range(args.npsf)
+    ]
+
+    # Reduce thetas to the range actually appropriate for this job.
+    psfs_per_job = args.npsf / args.njobs
+    boundaries = [int(psfs_per_job*i) for i in range(args.njobs+1)]
+    start, end = int(psfs_per_job*args.job), int(psfs_per_job*(args.job+1))
+    # start is included, end is not.
+    thetas = thetas[start:end]
+
     pickle.dump({"args":args, "thetas":thetas}, open(metafilename, 'wb'))
 
     # Create a global read-only hopefully shared memory atmosphere.
