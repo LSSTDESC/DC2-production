@@ -77,10 +77,10 @@ def getPSFImage(theta):
 
 def makePSFImage(a):
     i, theta = a
+    filename = "{}{:06d}-psf.fits".format(args.outprefix, i)
+    if os.path.exists(filename) and not args.clobber:
+        return True
     try:
-        filename = "{}{:06d}-psf.fits".format(args.outprefix, i)
-        if os.path.exists(filename) and not args.clobber:
-            return False
         psf_image = getPSFImage(theta)
         galsim.fits.write(psf_image, filename)
     except:
@@ -171,9 +171,6 @@ if __name__ == '__main__':
     if not os.path.isdir(dirname):
         raise RuntimeError("Output directory is not a directory!")
 
-    if os.path.exists(metafilename) and not args.clobber:
-        raise RuntimeError("Meta file already exists")
-
     # Generate thetas for all jobs, even though we'll only actually use 1/njobs of these.
     # This is just an easy way to make sure the random numbers align between jobs.
     thetas = [
@@ -189,7 +186,22 @@ if __name__ == '__main__':
     # start is included, end is not.
     thetas = thetas[start:end]
 
-    pickle.dump({"args":args, "thetas":thetas}, open(metafilename, 'wb'))
+    if not os.path.exists(metafilename) or args.clobber:
+        pickle.dump({"args":args, "thetas":thetas}, open(metafilename, 'wb'))
+
+    # Check if all of the outfiles already exist and we're done
+    if not args.clobber:
+        done = True
+        for tup in thetas:
+            i, theta = tup
+            filename = "{}{:06}-psf.fits".format(args.outprefix, i)
+            if not os.path.exists(filename):
+                done = False
+                break
+        if done:
+            print("All output files present and not clobber, so done.")
+            import sys
+            sys.exit()
 
     # Create a global read-only hopefully shared memory atmosphere.
     t0 = time.time()
