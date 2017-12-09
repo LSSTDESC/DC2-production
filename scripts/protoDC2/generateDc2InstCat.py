@@ -11,6 +11,26 @@ from lsst.sims.catalogs.decorators import cached
 
 from GCRCatSimInterface import PhoSimDESCQA, bulgeDESCQAObject, diskDESCQAObject
 
+
+class PhoSimDESCQA_ICRS(PhoSimDESCQA):
+    catalog_type = 'phoSim_catalog_DESCQA_ICRS'
+
+    column_outputs = ['prefix', 'uniqueId', 'raJ2000', 'decJ2000',
+                      'phoSimMagNorm', 'sedFilepath',
+                      'redshift', 'gamma1', 'gamma2', 'kappa',
+                      'raOffset', 'decOffset',
+                      'spatialmodel', 'majorAxis', 'minorAxis',
+                      'positionAngle', 'sindex',
+                      'internalExtinctionModel', 'internalAv', 'internalRv',
+                      'galacticExtinctionModel', 'galacticAv', 'galacticRv',]
+
+    transformations = {'raJ2000': np.degrees,
+                       'decJ2000': np.degrees,
+                       'positionAngle': np.degrees,
+                       'majorAxis': arcsecFromRadians,
+                       'minorAxis': arcsecFromRadians}
+
+
 class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
 
     disable_proper_motion = False
@@ -86,6 +106,8 @@ if __name__ == "__main__":
                         help='flag to enable proper motion')
     parser.add_argument('--minsource', type=int, default=100,
                         help='mininum number of objects in a trimmed instance catalog')
+    parser.add_argument('--imsim_catalog', default=False, action='store_true',
+                        help='flag to produce object catalog for imSim')
     args = parser.parse_args()
 
     obshistid_list = args.id
@@ -159,13 +181,20 @@ if __name__ == "__main__":
         cat_dict[os.path.join(out_dir, 'bright_stars_%d.txt' % obshistid)] = bright_cat
         parallelCatalogWriter(cat_dict, chunk_size=100000, write_header=False)
 
+        if args.imsim_catalog:
+            InstanceCatalogClass = PhoSimDESCQA_ICRS
+        else:
+            InstanceCatalogClass = PhoSimDESCQA
+
         db_bulge = bulgeDESCQAObject(args.descqa_cat_file)
-        cat = PhoSimDESCQA(db_bulge, obs_metadata=obs, cannot_be_null=['hasBulge'])
+        cat = InstanceCatalogClass(db_bulge, obs_metadata=obs,
+                                   cannot_be_null=['hasBulge'])
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_header=False)
 
         db_disk = diskDESCQAObject(args.descqa_cat_file)
-        cat = PhoSimDESCQA(db_disk, obs_metadata=obs, cannot_be_null=['hasDisk'])
+        cat = InstanceCatalogClass(db_disk, obs_metadata=obs,
+                                   cannot_be_null=['hasDisk'])
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
 
