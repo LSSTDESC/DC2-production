@@ -13,25 +13,6 @@ from lsst.sims.utils import arcsecFromRadians
 from GCRCatSimInterface import PhoSimDESCQA, bulgeDESCQAObject, diskDESCQAObject
 
 
-class PhoSimDESCQA_ICRS(PhoSimDESCQA):
-    catalog_type = 'phoSim_catalog_DESCQA_ICRS'
-
-    column_outputs = ['prefix', 'uniqueId', 'raJ2000', 'decJ2000',
-                      'phoSimMagNorm', 'sedFilepath',
-                      'redshift', 'gamma1', 'gamma2', 'kappa',
-                      'raOffset', 'decOffset',
-                      'spatialmodel', 'majorAxis', 'minorAxis',
-                      'positionAngle', 'sindex',
-                      'internalExtinctionModel', 'internalAv', 'internalRv',
-                      'galacticExtinctionModel', 'galacticAv', 'galacticRv',]
-
-    transformations = {'raJ2000': np.degrees,
-                       'decJ2000': np.degrees,
-                       'positionAngle': np.degrees,
-                       'majorAxis': arcsecFromRadians,
-                       'minorAxis': arcsecFromRadians}
-
-
 class MaskedPhoSimCatalogPoint(PhoSimCatalogPoint):
 
     disable_proper_motion = False
@@ -78,6 +59,53 @@ class BrightStarCatalog(PhoSimCatalogPoint):
     def get_isBright(self):
         raw_norm = self.column_by_name('phoSimMagNorm')
         return np.where(raw_norm<self.min_mag, raw_norm, None)
+
+class PhoSimDESCQA_ICRS(PhoSimDESCQA):
+    catalog_type = 'phoSim_catalog_DESCQA_ICRS'
+
+    column_outputs = ['prefix', 'uniqueId', 'raJ2000', 'decJ2000',
+                      'phoSimMagNorm', 'sedFilepath',
+                      'redshift', 'gamma1', 'gamma2', 'kappa',
+                      'raOffset', 'decOffset',
+                      'spatialmodel', 'majorAxis', 'minorAxis',
+                      'positionAngle', 'sindex',
+                      'internalExtinctionModel', 'internalAv', 'internalRv',
+                      'galacticExtinctionModel', 'galacticAv', 'galacticRv',]
+
+    transformations = {'raJ2000': np.degrees,
+                       'decJ2000': np.degrees,
+                       'positionAngle': np.degrees,
+                       'majorAxis': arcsecFromRadians,
+                       'minorAxis': arcsecFromRadians}
+
+
+class MaskedPhoSimCatalogPoint_ICRS(MaskedPhoSimCatalogPoint):
+    catalog_type = 'masked_phoSim_catalog_point_ICRS'
+
+    column_outputs = ['prefix', 'uniqueId', 'raJ2000', 'decJ2000',
+                      'maskedMagNorm', 'sedFilepath',
+                      'redshift', 'gamma1', 'gamma2', 'kappa',
+                      'raOffset', 'decOffset',
+                      'spatialmodel',
+                      'internalExtinctionModel',
+                      'galacticExtinctionModel', 'galacticAv', 'galacticRv',]
+
+    transformations = {'raJ2000': np.degrees,
+                       'decJ2000': np.degrees}
+
+class BrightStarCatalog_ICRS(BrightStarCatalog):
+    catalog_type = 'bright_star_catalog_point_ICRS'
+
+    column_outputs = ['prefix', 'uniqueId', 'raJ2000', 'decJ2000',
+                      'phoSimMagNorm', 'sedFilepath',
+                      'redshift', 'gamma1', 'gamma2', 'kappa',
+                      'raOffset', 'decOffset',
+                      'spatialmodel',
+                      'internalExtinctionModel',
+                      'galacticExtinctionModel', 'galacticAv', 'galacticRv',]
+
+    transformations = {'raJ2000': np.degrees,
+                       'decJ2000': np.degrees}
 
 
 if __name__ == "__main__":
@@ -138,6 +166,16 @@ if __name__ == "__main__":
     phosim_header_map['nsnap'] = 1
     phosim_header_map['vistime'] = 30.0
     phosim_header_map['camconfig'] = 1
+
+    if args.imsim_catalog:
+        StarInstanceCatalogClass = MaskedPhoSimCatalogPoint_ICRS
+        BrightStarCatalogClass = BrightStarCatalog_ICRS
+        PhoSimDESCQAClass = PhoSimDESCQA_ICRS
+    else:
+        StarInstanceCatalogClass = MaskedPhoSimCatalogPoint
+        BrightStarCatalogClass = BrightStarCatalog
+        PhoSimDESCQAClass = PhoSimDESCQA
+
     for obshistid in obshistid_list:
 
         obs_list = obs_generator.getObservationMetaData(obsHistID=obshistid,
@@ -168,10 +206,10 @@ if __name__ == "__main__":
             output.write('includeobj %s.gz\n' % gal_name)
             #output.write('includeobj %s.gz\n' % agn_name)
 
-        star_cat = MaskedPhoSimCatalogPoint(star_db, obs_metadata=obs,
+        star_cat = StarInstanceCatalogClass(star_db, obs_metadata=obs,
                                             cannot_be_null=['inProtoDc2'])
         star_cat.phoSimHeaderMap = phosim_header_map
-        bright_cat = BrightStarCatalog(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
+        bright_cat = BrightStarCatalogClass(star_db, obs_metadata=obs, cannot_be_null=['isBright'])
         star_cat.min_mag = args.min_mag
         star_cat.disable_proper_motion = not args.enable_proper_motion
         bright_cat.min_mag = args.min_mag
@@ -182,20 +220,15 @@ if __name__ == "__main__":
         cat_dict[os.path.join(out_dir, 'bright_stars_%d.txt' % obshistid)] = bright_cat
         parallelCatalogWriter(cat_dict, chunk_size=100000, write_header=False)
 
-        if args.imsim_catalog:
-            InstanceCatalogClass = PhoSimDESCQA_ICRS
-        else:
-            InstanceCatalogClass = PhoSimDESCQA
-
         db_bulge = bulgeDESCQAObject(args.descqa_cat_file)
-        cat = InstanceCatalogClass(db_bulge, obs_metadata=obs,
-                                   cannot_be_null=['hasBulge'])
+        cat = PhoSimDESCQAClass(db_bulge, obs_metadata=obs,
+                                cannot_be_null=['hasBulge'])
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_header=False)
 
         db_disk = diskDESCQAObject(args.descqa_cat_file)
-        cat = InstanceCatalogClass(db_disk, obs_metadata=obs,
-                                   cannot_be_null=['hasDisk'])
+        cat = PhoSimDESCQAClass(db_disk, obs_metadata=obs,
+                                cannot_be_null=['hasDisk'])
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
 
