@@ -13,6 +13,9 @@ except ImportError:
 """Script for validating GalSim atmospheric PSF"""
 
 def get_atm(args):
+    """
+    Returns galsim.PhaesScreenList containing atmoshere.
+    """
     # Initiate some GalSim random number generators.
     rng = galsim.BaseDeviate(args.seed)
     u = galsim.UniformDeviate(rng)
@@ -68,14 +71,23 @@ def get_atm(args):
 
 
 def getPSFImage(theta):
+    """
+    Returns galsim.Image with image of PSF.
+    """
     # Use global atm, which should hopefully be in shared memory.
     theta = (theta[0]*galsim.arcmin, theta[1]*galsim.arcmin)
-    psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper, t0=0.0, exptime=args.exptime)
+    psf = atm.makePSF(
+        lam=args.lam, theta=theta, aper=aper,
+        t0=0.0, exptime=args.exptime, time_step=args.time_step
+    )
     psf_image = psf.drawImage(nx=args.nx, ny=args.nx, scale=args.scale)
     return(psf_image)
 
 
 def makePSFImage(a):
+    """
+    Returns True if output file exists/is-created.
+    """
     i, theta = a
     filename = "{}{:06d}-psf.fits".format(args.outprefix, i)
     if os.path.exists(filename) and not args.clobber:
@@ -130,9 +142,9 @@ if __name__ == '__main__':
     parser.add_argument("--strut_angle", type=float, default=0.0,
                         help="Starting angle of first strut in degrees.  Default: 0.0")
 
-    parser.add_argument("--time_step", type=float, default=0.03,
+    parser.add_argument("--time_step", type=float, default=0.025,
                         help="Incremental time step for advancing phase screens and accumulating "
-                             "instantaneous PSFs in seconds.  Default: 0.03")
+                             "instantaneous PSFs in seconds.  Default: 0.025")
     parser.add_argument("--exptime", type=float, default=30.0,
                         help="Total amount of time to integrate in seconds.  Default: 30.0")
 
@@ -181,7 +193,6 @@ if __name__ == '__main__':
 
     # Reduce thetas to the range actually appropriate for this job.
     psfs_per_job = args.npsf / args.njobs
-    boundaries = [int(psfs_per_job*i) for i in range(args.njobs+1)]
     start, end = int(psfs_per_job*args.job), int(psfs_per_job*(args.job+1))
     # start is included, end is not.
     thetas = thetas[start:end]
