@@ -4,12 +4,8 @@
 # Enable centroid file
 centroidfile 1
 
-# Disable sensor effects
-cleardefects
+# Disable fringing
 fringing 0
-
-# Enable brighter/fatter
-chargesharing 1
 
 # Disable dirt
 contaminationmode 0
