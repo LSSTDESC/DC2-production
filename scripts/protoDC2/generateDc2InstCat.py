@@ -171,6 +171,9 @@ if __name__ == "__main__":
         StarInstanceCatalogClass = MaskedPhoSimCatalogPoint_ICRS
         BrightStarCatalogClass = BrightStarCatalog_ICRS
         PhoSimDESCQAClass = PhoSimDESCQA_ICRS
+        phosim_header_map['rawSeeing'] = ('rawSeeing', None)
+        phosim_header_map['FWHMgeom'] = ('FWHMgeom', None)
+        phosim_header_map['FWHMeff'] = ('FWHMeff', None)
     else:
         StarInstanceCatalogClass = MaskedPhoSimCatalogPoint
         BrightStarCatalogClass = BrightStarCatalog
