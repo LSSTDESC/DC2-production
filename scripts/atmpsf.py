@@ -4,6 +4,7 @@ import multiprocessing
 import galsim
 import numpy as np
 import os
+import sys
 import time
 try:
     import cPickle as pickle
@@ -130,6 +131,12 @@ if __name__ == '__main__':
                         help="Resolution of atmospheric screen in meters.  Default: 0.1")
     parser.add_argument("--max_speed", type=float, default=20.0,
                         help="Maximum wind speed in m/s.  Default: 20.0")
+    parser.add_argument("--dump_atm", type=str, default=None,
+                        help="Make atmosphere, pickle it into provided filename, then quit.")
+    parser.add_argument("--load_atm", type=str, default=None,
+                        help="Load atmosphere from pickle; ignore all other atm kwargs.")
+    parser.add_argument("--dump_indiv_screens", action='store_true',
+                        help="Pickle indiv screens instead of entire atm.")
 
     parser.add_argument("--diam", type=float, default=8.36,
                         help="Size of circular telescope pupil in meters.  Default: 8.36")
@@ -175,14 +182,7 @@ if __name__ == '__main__':
     rng = galsim.BaseDeviate(args.seed+1)
     u = galsim.UniformDeviate(rng)
 
-    metafilename = "{}meta_{}_{}.pkl".format(args.outprefix, args.job, args.njobs)
-    # Make sure out directory exists
-    dirname = os.path.dirname(metafilename)
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
-    if not os.path.isdir(dirname):
-        raise RuntimeError("Output directory is not a directory!")
-
+    # Spend first set of random numbers generating thetas.
     # Generate thetas for all jobs, even though we'll only actually use 1/njobs of these.
     # This is just an easy way to make sure the random numbers align between jobs.
     thetas = [
@@ -190,6 +190,37 @@ if __name__ == '__main__':
          (u()*args.field_size, u()*args.field_size))
         for i in range(args.npsf)
     ]
+
+    # If we're just dumping an atm, then do that now, before checking on metafiles, etc...
+    if args.dump_atm is not None:
+        atmfile = "{}{}".format(args.outprefix, args.dump_atm)
+        print(atmfile)
+        atmdirname = os.path.dirname(atmfile)
+        if not os.path.exists(atmdirname):
+            os.mkdir(atmdirname)
+        if not os.path.isdir(atmdirname):
+            raise RuntimeError("Atm output directory is not a directory!")
+        t0 = time.time()
+        atm = get_atm(args)
+        t1 = time.time()
+        print("Took {:6.1f} seconds to inflate atmosphere".format(t1-t0))
+        if args.dump_indiv_screens:
+            for i, screen in enumerate(atm):
+                thisatmfile = atmfile.replace(".pkl", "_{}.pkl".format(i))
+                pickle.dump(screen, open(thisatmfile, 'wb'), protocol=4)
+                print("Dumped screen {} to : {}".format(i, thisatmfile))
+        else:
+            pickle.dump(atm, open(atmfile, 'wb'), protocol=4)
+            print("Dumped atmosphere to: {}".format(atmfile))
+        sys.exit()
+
+    metafilename = "{}meta_{}_{}.pkl".format(args.outprefix, args.job, args.njobs)
+    # Make sure out directory exists
+    dirname = os.path.dirname(metafilename)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    if not os.path.isdir(dirname):
+        raise RuntimeError("Output directory is not a directory!")
 
     # Reduce thetas to the range actually appropriate for this job.
     psfs_per_job = args.npsf / args.njobs
@@ -211,14 +242,33 @@ if __name__ == '__main__':
                 break
         if done:
             print("All output files present and not clobber, so done.")
-            import sys
             sys.exit()
 
     # Create a global read-only hopefully shared memory atmosphere.
-    t0 = time.time()
-    atm = get_atm(args)
-    t1 = time.time()
-    print("Took {:6.1f} seconds to inflate atmosphere".format(t1-t0))
+    if args.load_atm is not None:
+        atmfile = "{}{}".format(args.outprefix, args.load_atm)
+        if args.dump_indiv_screens:
+            screens = []
+            i = 0
+            thisatmfile = atmfile.replace(".pkl", "_{}.pkl".format(i))
+            while os.path.isfile(thisatmfile):
+                screens.append(pickle.load(open(thisatmfile, 'rb')))
+                print("Loaded atm file: {}".format(thisatmfile))
+                i += 1
+                thisatmfile = atmfile.replace(".pkl", "_{}.pkl".format(i))
+            atm = galsim.PhaseScreenList(screens)
+        else:
+            atm = pickle.load(open(atmfile, 'rb'))
+            print("Loaded atm file: {}".format(atmfile))
+    else:
+        # Note that this step spends random numbers, so we will need to resynchronize below 
+        # if at any point we add random number spending below (such as photon shooting).  If
+        # we don't resynchronize, then output may depend on whether the atm was generated
+        # on the fly or read from pickle.
+        t0 = time.time()
+        atm = get_atm(args)
+        t1 = time.time()
+        print("Took {:6.1f} seconds to inflate atmosphere".format(t1-t0))
 
     # Construct an Aperture object for computing the PSF.  The Aperture object describes the
     # illumination pattern of the telescope pupil, and chooses good sampling size and resolution
