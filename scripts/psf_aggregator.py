@@ -59,7 +59,10 @@ with ProgressBar(args.njobs) as bar:
             args.indir,
             "{}meta_{}_{}.pkl".format(args.inprefix, i, args.njobs)
         )
-        thetas.extend(pickle.load(open(filename, 'rb'))['thetas'])
+        try:
+            thetas.extend(pickle.load(open(filename, 'rb'))['thetas'])
+        except FileNotFoundError:
+            continue
         bar.update()
 print("Processing FITS files")
 
