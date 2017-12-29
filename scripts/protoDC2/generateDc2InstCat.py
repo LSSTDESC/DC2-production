@@ -1,6 +1,7 @@
 from __future__ import with_statement
 import argparse
 import os
+import subprocess
 import numpy as np
 import gzip
 import h5py
@@ -235,6 +236,12 @@ if __name__ == "__main__":
         cat.write_catalog(os.path.join(out_dir, gal_name), chunk_size=100000,
                           write_mode='a', write_header=False)
 
+        if args.imsim_catalog:
+            imsim_cat = 'imsim_cat_%i.txt' % obshistid
+            command = 'cat %(cat_name)s %(star_name)s %(gal_name)s | grep -v includeobj > %(imsim_cat)s' % locals()
+            subprocess.check_call(command, shell=True)
+
+        # gzip the object files.
         for orig_name in (star_name, gal_name):
             full_name = os.path.join(out_dir, orig_name)
             with open(full_name, 'rb') as input_file:
