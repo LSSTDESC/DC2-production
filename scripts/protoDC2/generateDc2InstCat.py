@@ -196,14 +196,14 @@ if __name__ == "__main__":
             obs.rotSkyPos = np.degrees(rotSky)
             obs.OpsimMetaData['rotTelPos'] = obs.OpsimMetaData['ditheredRotTelPos']
 
-        cat_name = os.path.join(out_dir,'phosim_cat_%d.txt' % obshistid)
+        cat_name = 'phosim_cat_%d.txt' % obshistid
         star_name = 'star_cat_%d.txt' % obshistid
         gal_name = 'gal_cat_%d.txt' % obshistid
         #agn_name = 'agn_cat_%d.txt' % obshistid
 
         cat = PhoSimCatalogPoint(star_db, obs_metadata=obs)
         cat.phoSimHeaderMap = phosim_header_map
-        with open(cat_name, 'w') as output:
+        with open(os.path.join(out_dir, cat_name), 'w') as output:
             cat.write_header(output)
             output.write('minsource %i\n' % args.minsource)
             output.write('includeobj %s.gz\n' % star_name)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
         if args.imsim_catalog:
             imsim_cat = 'imsim_cat_%i.txt' % obshistid
-            command = 'cat %(cat_name)s %(star_name)s %(gal_name)s | grep -v includeobj > %(imsim_cat)s' % locals()
+            command = 'cd %(out_dir)s; cat %(cat_name)s %(star_name)s %(gal_name)s | grep -v includeobj > %(imsim_cat)s' % locals()
             subprocess.check_call(command, shell=True)
 
         # gzip the object files.
