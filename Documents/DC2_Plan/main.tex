@@ -540,6 +540,7 @@ In the following, we provide very brief descriptions of the different stages and
     SSim Image Simulation Pipeline           & 01/12/2018 & Including algorithms, configurations. ``SSim Code Freeze,'' (no new ImSim or PhoSim features), start Run 1.1 image simulation. \\
     Run 1.1p/i (PhoSim \& ImSim) Images         & 01/19/2018 & 1 week to produce Run 1.1p and Run 1.1i images, from identical instance catalogs. \\
     CI DM DRP Pipeline                       & 01/19/2018 & Including algorithms, configurations. ``CI Code Freeze'' (no new DM features), start Run 1.1 DM processing. \\
+    Run 1.1p/i (PhoSim \& ImSim) Image Validation         & 01/22/2018 & Perform basic tests on Run 1.1p/i images as they are being produced. \\
     Run 1.1 Truth Tables                     & 01/26/2018 & In time to enable verification of Run 1.1 DM measurements. \\    
     Run 1.1p/i DM Catalogs                      & 01/26/2018 & 1 week to process the Run 1.1 images, to enable first validation test results (on DM catalogs) by the start of the winter collaboration meeting. \\ 
     DM Catalog Validation Test Suite         & 02/02/2018 & Developed against DC1 and Run 1.0 DM catalogs, and completed in time to be run on the Run 1.1 DM catalogs, starting at the SLAC meeting. \\ 
@@ -635,7 +636,7 @@ There are many other useful features of \textsc{GCRCatalogs}, to name a few: it 
 In addition, we developed the interface between \textsc{GCRCatalogs} and \textsc{CatSim} by wrapping \textsc{GCRCatalogs} to emulate a database that \textsc{CatSim} requires. 
 
 \subsection{Instance catalogs}
-
+The instance catalogs are generated using \textsc{CatSim} and observation metadata from \textsc{OpSim} (see Figure \ref{fig:workflow}). 
 \subsection{Image Files}
 
 \subsection{DM Catalogs}
@@ -704,17 +705,63 @@ The Working Groups need to determine the validation tests that are crucial for t
 
 In addition to specifying the required tests, it is also crucial for the Working Groups to define the criteria by which a catalog will pass or fail a given test. Such a specification should include a validation range over which the criteria will be applied, the definition of a metric to evaluate the criteria, and a numerical score that must be met in order to for a catalog to pass the test. Some examples of possible criteria are given in \cite{descqa}, but these were intended to illustrate the functionality of the framework. The Working Groups can design their own very specific criteria appropriate to the test they wish to make. DESCQA includes modules to compute various statistics and more can be added if need be.
 
+\subsection{Validation of Instance Catalogs}
+A suite of tests should be performed in the instance catalogs to make sure that the information from the extragalactic catalogs is properly propagated to the simulation tools. These tests can be integrated in DESCQA and are listed in Table \ref{tab:validation-tests-instance-catalog}.
 
+\begin{table}[!htb]
+  \centering
+  \caption{Validation tests for instance catalogs}
+  \label{tab:validation-tests-instance-catalog}
+  \begin{tabular}{|L{0.27\linewidth}|L{0.23\linewidth}|L{0.23\linewidth} |L{0.1\linewidth}|}
+  \hline 
+    Test (*\textit{required})         & Proposed test & Validation criteria & Progress \\
+    \hline\hline
+$N(z)$*    & Construct $N(z)$ and compute differences & Same as extragalactic catalog & \\
+$dN/d\mathrm{mag}$* & Construct $dN/d\mathrm{mag}$ and compute differences & Same as extragalactic catalog & \\
+Positions* & Compute difference distributions and whisker plots & Differences compatible with zero (or with proper motion if included) & \\
+ellipticity distributions* & Compute difference and analyze distributions and ellipticity correlations & Differences compatible with zero & \\
+\hline
+\end{tabular}    
+\end{table}
 \subsection{Validation of the Image Simulation Tools}
 \begin{itemize}
 \item atmospheric PSF
 \end{itemize}
-
+\subsection{Validation of PhoSim/ImSim images}
+Before feeding the images to the DM-stack basic tests should be performed. These tests can be found in Table \ref{fig:validation-images}. This can be done in an image subset.
+\begin{table}[!htb]
+  \centering
+  \caption{Validation tests for PhoSim/ImSim images}
+  \label{tab:validation-images}
+  \begin{tabular}{|L{0.27\linewidth}|L{0.23\linewidth}|L{0.23\linewidth} |L{0.1\linewidth}|}
+  \hline 
+    Test (*\textit{required})         & Proposed test & Validation criteria & Progress \\
+    \hline\hline
+    Background mean and noise* & Compare to \textsc{OpSim} & \\
+    Noise correlations* &  & \\
+    \hline
+\end{tabular}
+\end{table}
 \subsection{Validation of L1/L2 Image Processing Catalog Outputs}
+The validation of the L1/L2 outputs should be done in a two-layer approach, one layer where basic quality tests are performed with the DM-QA scripts, and a second layer where the SWGs add their own tests. The tests corresponding to the first layer are listed in \ref{tab:validation-l1l2}. The tests corresponding to the second layer are listed in Table \ref{tab:validation-tests}. 
 \begin{itemize}
 \item Execution of DM team QA scripts.
 \item Comparisons between information in the input truth tables with the L1/L2 catalog contents.
 \end{itemize}
+\begin{table}[!htb]
+  \centering
+  \caption{Validation tests for L1/L2 images and catalogs}
+  \label{tab:validation-l1l2}
+  \begin{tabular}{|L{0.27\linewidth}|L{0.1\linewidth}|L{0.23\linewidth} |L{0.2\linewidth}|L{0.1\linewidth}|}
+  \hline 
+    Test (*\textit{required})         & Proposed validation tests &  Validation criteria & Relevant WGs  & Progress \\
+    \hline\hline
+Background levels* & Compare with \textsc{OpSim} & Same order of magnitude & All & \\
+Astrometry and photometry* & Compare with inputs & Compatible within errors & All & DM-QA and validate\_drp \\
+Limiting magnitude & Compare with \textsc{OpSim} & Same order of magnitude & All & \\
+\hline
+\end{tabular}
+\end{table}
 
 
 %\section{Timeline}
