@@ -1,0 +1,21 @@
+# commands.txt - phoSim commands/physics-overrides
+# 12/14/2017 first guess for DC2
+
+# Enable centroid file
+centroidfile 1
+
+# Disable fringing
+fringing 0
+
+# Disable dirt
+contaminationmode 0
+
+# Quick background
+backalpha 0.1
+backbeta 4.0
+backgamma 1000.0
+backdelta 1.0
+activebuffer 600
+
+# Number of sources handled by a single thread
+sourceperthread 100
