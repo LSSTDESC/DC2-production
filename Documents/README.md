@@ -12,3 +12,5 @@ Technical details of the Run 1.1 test run. Cite as _"LSST DESC 2018b in preparat
 * **protoDC2: A Test Catalog for preparation of the Second DESC Data Challenge (Note: PDF on [DESC confluence](https://confluence.slac.stanford.edu/display/LSSTDESC/Extragalactic+Catalog+Development+for+DC2))** Technical description of the protoDC2 extragalactic catalog. Cite as _"Korytov et al 2018 in preparation"_.
 
 * **Image Simulation Speed with PhoSim 3.7 at NERSC (Note: [Google doc](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/edit), [PDF](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/export?format=pdf))** Report on timing tests. Cite as _"Habib et al 2018 in preparation"_.
+
+* **The DC2 Cookbook: Recipes for Emulating the LSST DM Data Release Processing Pipeline (Note: [ipynb](https://github.com/LSSTDESC/DC2_Repo/blob/issue/73/cookbook/Notebooks/DC2Cookbook.ipynb))** Adapted from the DC1 notes. Cite as _"Krughoff et al 2018 in preparation"_.
