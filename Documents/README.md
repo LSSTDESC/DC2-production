@@ -6,5 +6,9 @@ Unless otherwise stated these documents describe work in progress, that has not 
 * **DC2 Plan (Note: [tex](https://github.com/LSSTDESC/DC2_Repo/blob/docs-readme/Documents/DC2_Plan/main.tex), PDF, [folder](https://github.com/LSSTDESC/DC2_Repo/blob/docs-readme/Documents/DC2_Plan/))**. 
 Overview of whole project, including summaries of science uses, initial survey design, available tools, and construction schedule. Cite as _"LSST DESC 2018a, in preparation"_
 
-* **DC2 Run 1.1 Specifications (Note: [gdoc](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/edit#), [PDF](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/export?format=pdf)).** 
+* **DC2 Run 1.1 Specifications (Note: [Google doc](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/edit#), [PDF](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/export?format=pdf)).** 
 Technical details of the Run 1.1 test run. Cite as _"LSST DESC 2018b in preparation"_.
+
+* **protoDC2: A Test Catalog for preparation of the Second DESC Data Challenge (Note: PDF on [DESC confluence](https://confluence.slac.stanford.edu/display/LSSTDESC/Extragalactic+Catalog+Development+for+DC2))** Technical description of the protoDC2 extragalactic catalog. Cite as _"Korytov et al 2018 in preparation"_.
+
+* **Image Simulation Speed with PhoSim 3.7 at NERSC (Note: [Google doc](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/edit), [PDF](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/export?format=pdf))** Report on timing tests. Cite as _"Habib et al 2018 in preparation"_.
