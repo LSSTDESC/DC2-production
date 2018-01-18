@@ -8,6 +8,8 @@ The repository contains all of the issues, tools and validations used for the DC
 
 * [**DC2 Notes and papers**](Documents/README.md)
 
+* [**DC2 Confluence**](https://confluence.slac.stanford.edu/display/LSSTDESC/DC2). DESC members can find details of our bi-weekly telecons here, among other things.
+
 
 ## Get Involved
 
