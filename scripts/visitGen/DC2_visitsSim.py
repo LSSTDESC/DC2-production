@@ -109,9 +109,9 @@ def DC2VisitsSim(outDir, dataTag, simdata, pointingRACol, pointingDecCol,
     
     if (obsHistIndMax==-1):  # asked to plot upto max index
         if (obsHistIndMin==0):
-            movName= 'hIDs_All%s_%s_nside%s.gif'%(index, dataTag, nside)
+            movName= 'hIDs_All%s_%s_nside%s.gif'%(index+2, dataTag, nside)
         else:
-            movName= 'hIDs_%s-%sIndex_%s_nside%s.gif'%(obsHistIndMin, index, dataTag, nside)
+            movName= 'hIDs_%s-%sIndex_%s_nside%s.gif'%(obsHistIndMin, index+1, dataTag, nside)
     else:
         movName= 'hIDs_%s-%sIndex_%s_nside%s.gif'%(obsHistIndMin, obsHistIndMax, dataTag, nside)
     imageio.mimsave(movName, images, **kargs)
