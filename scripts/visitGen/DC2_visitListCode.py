@@ -10,12 +10,11 @@ import lsst.sims.maf.metrics as metrics
 import lsst.sims.maf.metricBundles as metricBundles
 import lsst.sims.maf.utils as mafUtils
 
-from DC1code.intermediates import getSurveyHEALPixRADec, findFOVPixels
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import os
 
-__all__= ['findDC2RegionPixels', 
+__all__= ['findDC2RegionPixels', 'getSurveyHEALPixRADec',
           'findDC2RegionVisitsInfo', 'getSimData',
          'getDC2VisitList']
 
@@ -29,7 +28,28 @@ def returnXYZ(ra, dec):
     ra, dec= np.radians(ra), np.radians(dec)
     c = SkyCoord(ra=ra*u.radian, dec=dec*u.radian)
     return c.cartesian.xyz
-    
+
+def getSurveyHEALPixRADec(bundle):
+    """
+
+    Get the RA, Dec (in radians) corresponding to each HEALPix pixel.
+    Method returns a list of all pixel numbers, based on the HEALPpix
+    grid in the bundle object.
+    # Modified version of getSurveyHEALPixRADec in DC1code.
+
+    Required Parameter
+    ------------------
+    * bundle: a metricBundle object.
+
+    """
+    # create a list of pixelNumbers.
+    pixelNum= []
+    for pix in range(len(bundle.slicer)):
+        if not bundle.metricValues.mask[pix]:   # only consider the unmasked pixels
+            pixelNum.append(pix)
+
+    return pixelNum
+
 def findDC2RegionPixels(nside, regionCorners):
     """
     Returns the HEALPix pixels numbers inside the region defined
@@ -114,8 +134,7 @@ def getDC2VisitList(dbpath, simDataTag, surveyRegionTag, pointingRACol, pointing
     
     # ------ ------  ------ ------  ------ ------  ------ ------ 
     # get the ra, dec of HEALpix pixel centers
-    pixelNum= getSurveyHEALPixRADec({'0': bundle})   # each output is a dicitonary.
-    pixelNum= pixelNum['0']
+    pixelNum= getSurveyHEALPixRADec(bundle)
     
     # ------ ------  ------ ------  ------ ------  ------ ------ 
     # find the fIDs, obsIDs, bands in th region.
