@@ -12,13 +12,6 @@ contaminationmode 0
 # Disable PRNU (Photo Response Non-Uniformity)
 pixelerror 0
 
-# Quick background
-# Use defaults for back* commands
-#backalpha 0.1
-#backbeta 4.0
-#backgamma 1000.0
-#backdelta 1.0
-
 activebuffer 1000
 
 airglowvariation 0.0
