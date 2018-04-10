@@ -9,6 +9,8 @@ Overview of whole project, including summaries of science uses, initial survey d
 * **DC2 Run 1.1 Specifications (Note: [Google doc](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/edit#), [PDF](https://docs.google.com/document/d/1aQOPL9smeDlhtlwDrp39Zuu2q8DKivDaHLQX3_omwOI/export?format=pdf)).** 
 Technical details of the Run 1.1 test run. Cite as _"LSST DESC 2018b in preparation"_.
 
+* **DC2 Run 1.2p PhoSim Specifications (Note: [Google doc](https://docs.google.com/document/d/1cn87h-LY2lyIxaUqWHQVFh2jGvbIf65Hz5hBwQUsqnU/edit#))** Results for PhoSim tests carried out to determine parameter settings for Run 1.2p. 
+
 * **protoDC2: A Test Catalog for preparation of the Second DESC Data Challenge (Note: PDF on [DESC confluence](https://confluence.slac.stanford.edu/display/LSSTDESC/Extragalactic+Catalog+Development+for+DC2))** Technical description of the protoDC2 extragalactic catalog. Cite as _"Korytov et al 2018 in preparation"_.
 
 * **Image Simulation Speed with PhoSim 3.7 at NERSC (Note: [Google doc](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/edit), [PDF](https://docs.google.com/document/d/1muXK0tb6Inylrysd4TmXECLLsYclZNQ2_6pYlwFRwy0/export?format=pdf))** Report on timing tests. Cite as _"Habib et al 2018 in preparation"_.
