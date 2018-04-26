@@ -54,7 +54,7 @@ def load_patch(butler, tract, patch,
         this_data['filter'] = filt
         try:
             cat = butler.get(datasetType='deepCoadd_forced_src',
-                             dataId=this_data)
+                             dataId=this_data).asAstropy()
         except Exception as e:
             print(e)
             continue
