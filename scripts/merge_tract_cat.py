@@ -95,7 +95,7 @@ def prefix_columns(cat, filt, fields_to_skip=()):
         cat.rename_column(oc, nc)
 
 
-def example_load(tract=4849,
+def example_load_tract(tract=4849,
                  repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
                  rerun=None):
     """Test the loading of one tract.
@@ -105,6 +105,20 @@ def example_load(tract=4849,
     if rerun is not None:
         repo = os.path.join(repo, 'rerun', rerun)
     load_tract(repo, tract)
+
+
+def example_load_patch(tract=4849, patch='1,1',
+                       repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
+                       rerun=None):
+    """Test the loading of one tract.
+
+    Default arguments set to run on NERSC DC2 Run.1.1 exploratory reduction.
+    """
+    if rerun is not None:
+        repo = os.path.join(repo, 'rerun', rerun)
+    from lsst.daf.persistence import Butler
+    butler = Butler(repo)
+    load_patch(butler, tract, patch)
 
 
 if __name__ == '__main__':
