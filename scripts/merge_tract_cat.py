@@ -24,9 +24,10 @@ def load_tract(repo, tract, **kwargs):
     datasetType = 'deepCoadd_ref'
 
     partial_data_id = {'tract': tract}
-    ref_subsets = butler.subset(datasetType='deepCoadd_ref',
-                                dataId=partial_data_id)
-    patches = [data_ref.patch for data_ref in ref_subsets]
+#    ref_subsets = butler.subset(datasetType='deepCoadd_ref',
+#                                dataId=partial_data_id)
+#    patches = [data_ref.patch for data_ref in ref_subsets]
+    patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
 
     merged_patch_cats = []
     for patch in patches:
