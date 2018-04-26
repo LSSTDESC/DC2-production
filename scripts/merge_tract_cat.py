@@ -39,7 +39,7 @@ def load_tract(repo, tract, **kwargs):
 
 
 def load_patch(butler, tract, patch,
-               fields_to_join=('objectId'),
+               fields_to_join=('id',),
                filters=('u', 'g', 'r', 'i', 'z', 'y')
                ):
     """Load patch catalogs.  Return merged catalog across filters."""
@@ -68,7 +68,7 @@ def load_patch(butler, tract, patch,
 
         cat = merge_filter_cats[filt]
         # Rename duplicate columns with prefix of filter
-        prefix_columns(cat, filt, fields_to_skip=None)
+        prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
 
     return merged_patch_cat
@@ -89,7 +89,8 @@ def prefix_columns(cat, filt, fields_to_skip=()):
     """
     old_colnames = cat.colnames
     for field in fields_to_skip:
-        old_colnames.pop(field)
+        field_idx = old_colnames.index(field)
+        old_colnames.pop(field_idx)
 
     new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
     for oc, nc in zip(old_colnames, new_colnames):
