@@ -18,7 +18,7 @@ def load_tract(repo, tract, **kwargs):
 
     Returns
     --
-    Pandas dataframe of merged catalog
+    AstroPy Table of merged catalog
     """
     butler = Butler(repo)
     datasetType = 'deepCoadd_ref'
@@ -35,7 +35,7 @@ def load_tract(repo, tract, **kwargs):
         merged_patch_cats.append(this_patch_merged_cat)
 
     merged_tract_cat = vstack(merged_patch_cats)
-    return merged_tract_cat.to_pandas()
+    return merged_tract_cat
 
 
 def load_patch(butler, tract, patch,
@@ -106,7 +106,7 @@ def example_load_tract(tract=4849,
     """
     if rerun is not None:
         repo = os.path.join(repo, 'rerun', rerun)
-    load_tract(repo, tract)
+    return load_tract(repo, tract)
 
 
 def example_load_patch(tract=4849, patch='1,1',
@@ -120,10 +120,17 @@ def example_load_patch(tract=4849, patch='1,1',
         repo = os.path.join(repo, 'rerun', rerun)
     from lsst.daf.persistence import Butler
     butler = Butler(repo)
-    load_patch(butler, tract, patch)
+    return load_patch(butler, tract, patch)
 
 
 if __name__ == '__main__':
     repo, tract = sys.argv[1:]
     tract = int(tract)
     tract_cat = load_tract(repo, tract)
+
+    filebase = 'merged_tract_%d' % tract
+    tract_cat.write(filebase+'.ecsv', format='ascii.ecsv', overwrite=True)
+    ### FITS doesn't like some of the column names
+#    tract_cat.write(filebase+'.fits', format='fits')
+    ### HDF5 doesn't like the header column size.
+#    tract_cat.to_hdf(filebase+'.h5', 'table')
