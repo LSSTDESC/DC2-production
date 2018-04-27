@@ -34,7 +34,8 @@ def load_tract(repo, tract, **kwargs):
 
 def load_patch(butler, tract, patch,
                fields_to_join=('id',),
-               filters=('u', 'g', 'r', 'i', 'z', 'y')
+               filters=('u', 'g', 'r', 'i', 'z', 'y'),
+               trim_colnames_for_fits=False,
                ):
     """Load patch catalogs.  Return merged catalog across filters."""
     # Define the filters and order in which to sort them.:
@@ -65,7 +66,27 @@ def load_patch(butler, tract, patch,
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
 
+    if trim_colnames_for_fits:
+        # FITS column names can't be longer that 68 characters
+        # Trim here to ensure consistency across any format we write this out to
+        trim_long_colnames(merged_patch_cat)
+
     return merged_patch_cat
+
+
+def trim_long_colnames(cat):
+    """Trim long column names in an AstroPy Table by specific replacements."""
+    import re
+    long_short_pairs = [
+        ('GeneralShapeletPsf', 'GSPsf'),
+        ('DoubleShapelet', 'DS'),
+        ('noSecondDerivative', 'NoSecDer')]
+    for long, short in long_short_pairs:
+        long_re = re.compile(long)
+        for col_name in cat.colnames:
+            if long_re.search(col_name):
+                new_col_name =long_re.sub(short, col_name)
+                cat.rename_column(col_name, new_col_name)
 
 
 def prefix_columns(cat, filt, fields_to_skip=()):
