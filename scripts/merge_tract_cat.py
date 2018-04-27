@@ -21,12 +21,6 @@ def load_tract(repo, tract, **kwargs):
     AstroPy Table of merged catalog
     """
     butler = Butler(repo)
-    datasetType = 'deepCoadd_ref'
-
-    partial_data_id = {'tract': tract}
-#    ref_subsets = butler.subset(datasetType='deepCoadd_ref',
-#                                dataId=partial_data_id)
-#    patches = [data_ref.patch for data_ref in ref_subsets]
     patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
 
     merged_patch_cats = []
@@ -98,8 +92,8 @@ def prefix_columns(cat, filt, fields_to_skip=()):
 
 
 def example_load_tract(tract=4849,
-                 repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
-                 rerun=None):
+                       repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
+                       rerun=None):
     """Test the loading of one tract.
 
     Default arguments set to run on NERSC DC2 Run.1.1 exploratory reduction.
