@@ -2,6 +2,7 @@ import os
 import sys
 
 from astropy.table import join, vstack
+import numpy as np
 
 from lsst.daf.persistence import Butler
 
@@ -43,6 +44,8 @@ def load_patch(butler, tract, patch,
     ref_table = butler.get(datasetType='deepCoadd_ref',
                            dataId=tract_patch_data_id).asAstropy()
 
+    isPrimary = ref_table['detect_isPrimary']
+
     merge_filter_cats = {}
     for filt in filters:
         this_data = tract_patch_data_id.copy()
@@ -53,6 +56,17 @@ def load_patch(butler, tract, patch,
         except Exception as e:
             print(e)
             continue
+
+        CoaddCalib = butler.get('deepCoadd_calexp_calib', this_data)
+        CoaddCalib.setThrowOnNegativeFlux(False)
+
+        mag, mag_err = CoaddCalib.getMagnitude(cat['base_PsfFlux_flux'], cat['base_PsfFlux_fluxSigma'])
+
+        cat['mag'] = mag
+        cat['mag_err'] = mag_err
+        cat['SNR'] = np.abs(cat['base_PsfFlux_flux'])/cat['base_PsfFlux_fluxSigma']
+
+        cat = cat[isPrimary]
 
         merge_filter_cats[filt] = cat
 
