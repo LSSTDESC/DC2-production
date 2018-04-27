@@ -34,12 +34,21 @@ def load_tract(repo, tract, patches=None, **kwargs):
     return merged_tract_cat
 
 
-def load_patch(butler, tract, patch,
+def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
                filters=('u', 'g', 'r', 'i', 'z', 'y'),
                trim_colnames_for_fits=False,
                ):
-    """Load patch catalogs.  Return merged catalog across filters."""
+    """Load patch catalogs.  Return merged catalog across filters.
+
+
+    The first argument can be either a butler object or a filename to the repo
+    """
+    if isinstance(butler_or_repo, str):
+        butler = Butler(str)
+    else:
+        butler = butler_or_repo
+
     # Define the filters and order in which to sort them.:
     tract_patch_data_id = {'tract': tract, 'patch': patch}
     ref_table = butler.get(datasetType='deepCoadd_ref',
@@ -125,32 +134,6 @@ def prefix_columns(cat, filt, fields_to_skip=()):
     new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
     for oc, nc in zip(old_colnames, new_colnames):
         cat.rename_column(oc, nc)
-
-
-def example_load_tract(tract=4849,
-                       repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
-                       rerun=None):
-    """Test the loading of one tract.
-
-    Default arguments set to run on NERSC DC2 Run.1.1 exploratory reduction.
-    """
-    if rerun is not None:
-        repo = os.path.join(repo, 'rerun', rerun)
-    return load_tract(repo, tract)
-
-
-def example_load_patch(tract=4849, patch='1,1',
-                       repo='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output',
-                       rerun=None):
-    """Test the loading of one tract.
-
-    Default arguments set to run on NERSC DC2 Run.1.1 exploratory reduction.
-    """
-    if rerun is not None:
-        repo = os.path.join(repo, 'rerun', rerun)
-    from lsst.daf.persistence import Butler
-    butler = Butler(repo)
-    return load_patch(butler, tract, patch)
 
 
 if __name__ == '__main__':
