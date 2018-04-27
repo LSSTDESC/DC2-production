@@ -7,7 +7,7 @@ import numpy as np
 from lsst.daf.persistence import Butler
 
 
-def load_tract(repo, tract, **kwargs):
+def load_tract(repo, tract, patches=None, **kwargs):
     """Merge catalogs from forced-photometry coadds across available filters.
 
     Parameters
@@ -22,7 +22,8 @@ def load_tract(repo, tract, **kwargs):
     AstroPy Table of merged catalog
     """
     butler = Butler(repo)
-    patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+    if patches is None:
+        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
 
     merged_patch_cats = []
     for patch in patches:
@@ -155,7 +156,8 @@ def example_load_patch(tract=4849, patch='1,1',
 if __name__ == '__main__':
     repo, tract = sys.argv[1:]
     tract = int(tract)
-    tract_cat = load_tract(repo, tract)
+    patches_subset = ['1,1', '2,2']
+    tract_cat = load_tract(repo, tract, patches=patches)
 
     filebase = 'merged_tract_%d' % tract
     tract_cat.write(filebase+'.ecsv', format='ascii.ecsv', overwrite=True)
