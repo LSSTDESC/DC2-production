@@ -236,9 +236,30 @@ def prefix_columns(cat, filt, fields_to_skip=()):
 
 
 if __name__ == '__main__':
-    repo, tract = sys.argv[1:]
-    verbose = True
-    tract = int(tract)
-    filebase = 'merged_tract_%d' % tract
-    filename = filebase+'.hdf5'
-    load_and_save_tract(repo, tract, filename, verbose=verbose)
+    from argparse import ArgumentParser, RawTextHelpFormatter
+    usage = """
+    Generate merged static-sky photometry (based on deepCoadd forced photometry)
+
+    Note that the following defines the tracts for the DC2 Run 1.1p processing.
+    DC2_tracts = {}
+    DC2_tracts['Run1.1p'] = (5066, 5064, 5064, 5063, 5062,
+                             4852, 4851, 4850, 4849, 4848,
+                             4640, 4639, 4638, 4637, 4636,
+                             4433, 4432, 4431, 4430, 4429,)
+    """
+    parser = ArgumentParser(description=usage,
+                            formatter_class=RawTextHelpFormatter)
+    parser.add_argument('repo', type=str,
+                        help='Filepath to LSST DM Stack Butler repository.')
+    parser.add_argument('tract', type=int, nargs='+',
+                        help='Skymap tract[s] to process.')
+    parser.add_argument('--verbose', dest='verbose', default=True,
+                        action='store_true', help='Verbose mode.')
+    parser.add_argument('--silent', dest='verbose', action='store_false',
+                        help='Turn off verbosity.')
+    args = parser.parse_args(sys.argv[1:])
+
+    for tract in args.tract:
+        filebase = 'merged_tract_%d' % tract
+        filename = filebase+'.hdf5'
+        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose)
