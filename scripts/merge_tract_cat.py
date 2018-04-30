@@ -5,6 +5,7 @@ from astropy.table import join, vstack
 import numpy as np
 
 from lsst.daf.persistence import Butler
+from lsst.daf.persistence.butlerExceptions import NoResults
 
 
 def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
@@ -34,7 +35,11 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
         this_tablename = '%s_%d_%s' % (tablename, tract, patch)
-        this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        try:
+            this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        except NoResults as e:
+            print(e)
+            continue
         this_patch_merged_cat.to_pandas().to_hdf(filename, this_tablename)
 
 
@@ -58,7 +63,11 @@ def load_tract(repo, tract, patches=None, **kwargs):
 
     merged_patch_cats = []
     for patch in patches:
-        this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        try:
+            this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        except NoResults as e:
+            print(e)
+            continue
         merged_patch_cats.append(this_patch_merged_cat)
 
     merged_tract_cat = vstack(merged_patch_cats)
