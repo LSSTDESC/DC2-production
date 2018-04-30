@@ -8,7 +8,7 @@ from lsst.daf.persistence import Butler
 
 
 def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
-                        overwrite=True, **kwargs):
+                        overwrite=True, verbose=False, **kwargs):
     """Save catalogs to HDF5 from forced-photometry coadds across available filters.
 
     Iterates through patches, saving each in append mode to the save HDF5 file.
@@ -31,6 +31,9 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
         patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
 
     for patch in patches:
+        if verbose:
+            print("Processing tract %d, patch %s" % (tract, patch))
+        this_tablename = '%s_%d_%s' % (tablename, tract, patch)
         this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
         this_patch_merged_cat.to_pandas.to_hdf5(filename, tablename)
 
@@ -166,13 +169,8 @@ def prefix_columns(cat, filt, fields_to_skip=()):
 
 if __name__ == '__main__':
     repo, tract = sys.argv[1:]
+    verbose = True
     tract = int(tract)
     filebase = 'merged_tract_%d' % tract
     filename = filebase+'.hdf5'
-    tract_cat = load_and_save_tract(repo, tract, filename)
-
-#    tract_cat.write(filebase+'.ecsv', format='ascii.ecsv', overwrite=True)
-    ### FITS doesn't like some of the column names
-#    tract_cat.write(filebase+'.fits', format='fits')
-    ### HDF5 doesn't like the header column size.
-#    tract_cat.to_hdf(filebase+'.h5', 'table')
+    load_and_save_tract(repo, tract, filename, verbose=verbose)
