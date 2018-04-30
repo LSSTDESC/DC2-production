@@ -7,6 +7,34 @@ import numpy as np
 from lsst.daf.persistence import Butler
 
 
+def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
+                        overwrite=True, **kwargs):
+    """Save catalogs to HDF5 from forced-photometry coadds across available filters.
+
+    Iterates through patches, saving each in append mode to the save HDF5 file.
+
+    Parameters
+    --
+    tract: int
+        Tract of sky region to load
+    repo: str
+        File location of Butler repository+rerun to load.
+    overwrite: bool
+        Overwrite an existing HDF file.
+
+    Returns
+    --
+    AstroPy Table of merged catalog
+    """
+    butler = Butler(repo)
+    if patches is None:
+        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+
+    for patch in patches:
+        this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        this_patch_merged_cat.to_pandas.to_hdf5(filename, tablename)
+
+
 def load_tract(repo, tract, patches=None, **kwargs):
     """Merge catalogs from forced-photometry coadds across available filters.
 
@@ -139,11 +167,11 @@ def prefix_columns(cat, filt, fields_to_skip=()):
 if __name__ == '__main__':
     repo, tract = sys.argv[1:]
     tract = int(tract)
-    patches_subset = ['1,1', '2,2']
-    tract_cat = load_tract(repo, tract, patches=patches)
-
     filebase = 'merged_tract_%d' % tract
-    tract_cat.write(filebase+'.ecsv', format='ascii.ecsv', overwrite=True)
+    filename = filebase+'.hdf5'
+    tract_cat = load_and_save_tract(repo, tract, filename)
+
+#    tract_cat.write(filebase+'.ecsv', format='ascii.ecsv', overwrite=True)
     ### FITS doesn't like some of the column names
 #    tract_cat.write(filebase+'.fits', format='fits')
     ### HDF5 doesn't like the header column size.
