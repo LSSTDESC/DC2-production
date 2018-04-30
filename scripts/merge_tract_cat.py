@@ -35,7 +35,7 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
             print("Processing tract %d, patch %s" % (tract, patch))
         this_tablename = '%s_%d_%s' % (tablename, tract, patch)
         this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        this_patch_merged_cat.to_pandas.to_hdf5(filename, tablename)
+        this_patch_merged_cat.to_pandas().to_hdf(filename, this_tablename)
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
