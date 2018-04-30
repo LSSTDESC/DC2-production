@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 
@@ -35,7 +34,7 @@ def valid_identifier_name(name):
     return name
 
 
-def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
+def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
                         overwrite=True, verbose=False, **kwargs):
     """Save catalogs to HDF5 from forced-photometry coadds across available filters.
 
@@ -43,16 +42,19 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
 
     Parameters
     --
-    tract: int
-        Tract of sky region to load
     repo: str
         File location of Butler repository+rerun to load.
+    tract: int
+        Tract of sky region to load
+    filename: str
+        Filename for HDF file.
+    key_prefix: str
+        Base for the key in the HDF file.
+        Keys will be of the form "%s_%d_%s" % (keybase, tract, patch)
+        With the addition that the comma will be removed from the patch name
+        to provide a valid Python identifier: e.g., 'coadd_4849_11'
     overwrite: bool
         Overwrite an existing HDF file.
-
-    Returns
-    --
-    AstroPy Table of merged catalog
     """
     butler = Butler(repo)
     if patches is None:
@@ -61,16 +63,15 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
-        this_tablename = '%s_%d_%s' % (tablename, tract, valid_identifier_name(patch))
         try:
-            this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+            patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
         except NoResults as e:
             print(e)
             continue
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
         key = valid_identifier_name(key)
-        this_patch_merged_cat.to_pandas().to_hdf(filename, key)
+        patch_merged_cat.to_pandas().to_hdf(filename, key)
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
@@ -82,6 +83,8 @@ def load_tract(repo, tract, patches=None, **kwargs):
         Tract of sky region to load
     repo: str
         File location of Butler repository+rerun to load.
+    patches: list of str
+        List of patches.  If not specified, will default to '0,0'--'7,7'.
 
     Returns
     --
@@ -111,8 +114,22 @@ def load_patch(butler_or_repo, tract, patch,
                ):
     """Load patch catalogs.  Return merged catalog across filters.
 
+    butler_or_repo: Butler object or str
+        Either a Butler object or a filename to the repo
+    tract: int
+        Tract in skymap
+    patch: str
+        Patch in the tract in the skymap
+    fields_to_join: iterable of str
+        Join the catalogs for each filter on these fields
+    filters: iterable of str
+        Filter names to load
+    trim_colnames_for_fits: bool
+        Trim column names to satisfy the FITS standard character limit of <68.
 
-    The first argument can be either a butler object or a filename to the repo
+    Returns
+    --
+    AstroPy Table of patch catalog merged across filters.
     """
     if isinstance(butler_or_repo, str):
         butler = Butler(str)
@@ -171,7 +188,17 @@ def load_patch(butler_or_repo, tract, patch,
 
 
 def trim_long_colnames(cat):
-    """Trim long column names in an AstroPy Table by specific replacements."""
+    """Trim long column names in an AstroPy Table by specific replacements.
+
+    Intended to help trim down column names to satisfy the FITS standard limit
+    of 68 characters.
+
+    Operates on 'cat' in place.
+
+    Parameters
+    --
+    cat: AstroPy Table
+    """
     import re
     long_short_pairs = [
         ('GeneralShapeletPsf', 'GSPsf'),
@@ -181,7 +208,7 @@ def trim_long_colnames(cat):
         long_re = re.compile(long)
         for col_name in cat.colnames:
             if long_re.search(col_name):
-                new_col_name =long_re.sub(short, col_name)
+                new_col_name = long_re.sub(short, col_name)
                 cat.rename_column(col_name, new_col_name)
 
 
