@@ -126,6 +126,8 @@ def load_patch(butler_or_repo, tract, patch,
             continue
 
         cat = merge_filter_cats[filt]
+        if len(cat) < 1:
+            continue
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
