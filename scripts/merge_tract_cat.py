@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 from astropy.table import join, vstack
@@ -6,6 +7,32 @@ import numpy as np
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
+
+
+def valid_identifier_name(name):
+    """Return a valid Python identifier name from input string.
+
+    For now just strips commas and spaces
+    The full regex to satisfy is
+        good_identifier_name = "^[a-zA-Z_][a-zA-Z0-9_]*$"
+    But that doesn't define the prescription for creating a good one.
+
+    >>> valid_identifier_name('coadd_4849_1,1')
+    'coadd_4849_11'
+    >>> valid_identifier_name('coadd_4849_1,1_2,3')
+    'coadd_4849_11_23'
+    >>> valid_identifier_name('coadd_48^49_1,1_2 3;')
+    'coadd_4849_11_23'
+    >>> valid_identifier_name('2234coadd_48^49_1,1_2 3;')
+    'coadd_4849_11_23'
+    >>> valid_identifier_name('2234,48^49 3;')
+    ''
+    """
+    remove_characters_regex = '[^a-zA-Z0-9_]'
+    name = re.sub(remove_characters_regex, '', name)
+    # Remove beginning characters that are numbers
+    name = re.sub('^[0-9]*', '', name)
+    return name
 
 
 def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
@@ -34,13 +61,16 @@ def load_and_save_tract(repo, tract, filename, tablename='coadd', patches=None,
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
-        this_tablename = '%s_%d_%s' % (tablename, tract, patch)
+        this_tablename = '%s_%d_%s' % (tablename, tract, valid_identifier_name(patch))
         try:
             this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
         except NoResults as e:
             print(e)
             continue
-        this_patch_merged_cat.to_pandas().to_hdf(filename, this_tablename)
+
+        key = '%s_%d_%s' % (key_prefix, tract, patch)
+        key = valid_identifier_name(key)
+        this_patch_merged_cat.to_pandas().to_hdf(filename, key)
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
