@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
     Note that the following defines the tracts for the DC2 Run 1.1p processing.
     DC2_tracts = {}
-    DC2_tracts['Run1.1p'] = (5066, 5064, 5064, 5063, 5062,
+    DC2_tracts['Run1.1p'] = (5066, 5065, 5064, 5063, 5062,
                              4852, 4851, 4850, 4849, 4848,
                              4640, 4639, 4638, 4637, 4636,
                              4433, 4432, 4431, 4430, 4429,)
