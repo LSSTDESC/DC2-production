@@ -72,7 +72,7 @@ if __name__ == "__main__":
     if load_tract_example:
         filebase = 'merged_tract_%d_%s' % (tract, '_'.join(patches))
         tract_cat = example_load_tract(tract=tract, patches=patches)
-        tract_cat.to_pandas().to_hdf(filebase+'.hdf5', 'coadd')
+        tract_cat.to_pandas().to_hdf(filebase+'.hdf5', key='coadd', format='table')
 
     load_patch_example = False
     if load_patch_example:
@@ -80,4 +80,4 @@ if __name__ == "__main__":
         patch_cat = example_load_patch(tract=tract, patch=patch)
 
         filebase = 'merged_tract_%d_%s' % (tract, patch)
-        patch_cat.to_pandas().to_hdf(filebase+'.hdf5', 'coadd')
+        patch_cat.to_pandas().to_hdf(filebase+'.hdf5', key='coadd', format='table')
