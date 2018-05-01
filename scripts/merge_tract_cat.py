@@ -2,10 +2,35 @@ import re
 import sys
 
 from astropy.table import join, vstack
+from astropy.utils.metadata import MergeStrategy, enable_merge_strategies
 import numpy as np
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
+
+
+# Copied from
+# http://docs.astropy.org/en/stable/api/astropy.utils.metadata.enable_merge_strategies.html
+class MergeNumbersAsList(MergeStrategy):
+    """Merge scalar numbers as list.
+
+    Intended for use to merge metadata numbers in catalog metadata."""
+    types = ((int, float), (int, float))
+
+    @classmethod
+    def merge(cls, left, right):
+        return [left, right]
+
+
+class MergeListNumbersAsList(MergeStrategy):
+    """Merge list and scalar numbers as list.
+
+    Intended for use to merge metadata numbers in catalog metadata."""
+    types = ((list), (int, float))
+
+    @classmethod
+    def merge(cls, left, right):
+        return left.append(right)
 
 
 def valid_identifier_name(name):
@@ -177,7 +202,9 @@ def load_patch(butler_or_repo, tract, patch,
             continue
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
-        merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
+        # Merge metadata with concatenation
+        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
+            merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
 
     if trim_colnames_for_fits:
         # FITS column names can't be longer that 68 characters
