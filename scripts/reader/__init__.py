@@ -1,0 +1,1 @@
+from .dc2_static_coadd_reader import *
