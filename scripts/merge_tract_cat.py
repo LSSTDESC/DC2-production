@@ -132,7 +132,7 @@ def load_patch(butler_or_repo, tract, patch,
     AstroPy Table of patch catalog merged across filters.
     """
     if isinstance(butler_or_repo, str):
-        butler = Butler(str)
+        butler = Butler(butler_or_repo)
     else:
         butler = butler_or_repo
 
