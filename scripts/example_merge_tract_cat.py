@@ -72,7 +72,6 @@ if __name__ == "__main__":
     if load_tract_example:
         filebase = 'merged_tract_%d_%s' % (tract, '_'.join(patches))
         tract_cat = example_load_tract(tract=tract, patches=patches)
-        tract_cat.write(filebase+'.ecsv', format='ascii.ecsv')
         tract_cat.to_pandas().to_hdf(filebase+'.hdf5', 'coadd')
 
     load_patch_example = False
@@ -81,12 +80,4 @@ if __name__ == "__main__":
         patch_cat = example_load_patch(tract=tract, patch=patch)
 
         filebase = 'merged_tract_%d_%s' % (tract, patch)
-        patch_cat.write(filebase+'.ecsv', format='ascii.ecsv')
-        patch_cat.write(filebase+'.fits', format='fits')
-        # patch_cat.to_pandas().to_hdf(filebase+'.h5', 'table')
-
-        # Each of the following is expected to fail:
-        ### Column names too long for FITS file standard
-        patch_cat.write(filebase+'.fits', format='fits')
-        ### No PyTables available on Cori:
-        patch_cat.to_pandas().to_hdf(filebase+'.h5', 'table')
+        patch_cat.to_pandas().to_hdf(filebase+'.hdf5', 'coadd')
