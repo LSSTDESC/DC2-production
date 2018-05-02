@@ -56,8 +56,9 @@ def example_load_and_plot(filename=None,
 
 if __name__ == "__main__":
     tract = 4849
+    patch = '2,3'
 
-    load_and_plot_example = True
+    load_and_plot_example = False
     if load_and_plot_example:
         example_load_and_plot()
 
@@ -66,6 +67,12 @@ if __name__ == "__main__":
         filebase = 'merged_tract_%d' % (tract)
         filename = filebase+'.hdf5'
         example_load_and_save_tract(tract, filename)
+
+    load_and_save_patch_example = True
+    if load_and_save_patch_example:
+        filebase = 'merged_tract_patch_%d_%s' % (tract, patch)
+        filename = filebase+'.hdf5'
+        example_load_and_save_tract(tract, filename, patches=[patch])
 
     patches=['1,1', '1,2']
     load_tract_example = False
