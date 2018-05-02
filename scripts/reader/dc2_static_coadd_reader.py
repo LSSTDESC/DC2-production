@@ -10,13 +10,23 @@ __all__ = ['DC2StaticCoaddCatalog']
 
 class DC2StaticCoaddCatalog(BaseGenericCatalog):
 
-    _native_filter_quantities = {'tract', 'patch'}
+    _native_filter_quantities = {'tract', 'patch_ra', 'patch_dec'}
 
-    def _subclass_init(self, base_dir=None, **kwargs):
-        self.base_dir = base_dir or '/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/summary/'
-        assert os.path.isdir(self.base_dir), '{} is not a valid directory'.format(self.base_dir)
-        self._datasets, self._columns = self._generate_native_datasets_and_columns(self.base_dir)
-        assert self._datasets, 'No catalogs were found in {}'.format(self.base_dir)
+    def _subclass_init(self, 
+                       base_dir='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/summary',
+                       filename_pattern=r'merged_tract_\d+\.hdf5',
+                       groupname_pattern=r'coadd_\d+_\d\d$',
+                       use_cache=True,
+                       **kwargs):
+        self._base_dir = base_dir
+        self._filename_re = re.compile(filename_pattern)
+        self._groupname_re = re.compile(groupname_pattern)
+        self.use_cache = bool(use_cache)
+        
+        assert os.path.isdir(self._base_dir), '{} is not a valid directory'.format(self._base_dir)
+        self._datasets, self._columns = self._generate_native_datasets_and_columns()
+        assert self._datasets, 'No catalogs were found in {}'.format(self._base_dir)
+        
         self._dataset_cache = dict()
 
         self._quantity_modifiers = {
@@ -24,22 +34,21 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
             'dec': 'coord_dec',
         }
 
-        for band in 'ugrizY':
+        for band in 'ugrizy':
             self._quantity_modifiers['mag_{}_lsst'.format(band)] = '{}_mag'.format(band.lower())
             self._quantity_modifiers['magerr_{}_lsst'.format(band)] = '{}_mag_err'.format(band.lower())
 
-    @staticmethod
-    def _generate_native_datasets_and_columns(base_dir, filename_re=r'merged_tract_\d+\.hdf5', groupname_re=r'coadd_\d+_\d+$'):
+    def _generate_native_datasets_and_columns(self):
         datasets = list()
         columns = set()
-        for fname in sorted((f for f in os.listdir(base_dir) if re.match(filename_re, f))):
-            fpath = os.path.join(base_dir, fname)
+        for fname in sorted((f for f in os.listdir(self._base_dir) if self._filename_re.match(f))):
+            fpath = os.path.join(self._base_dir, fname)
             datasets_this = list()
             columns_this = set()
             try:
                 with tables.open_file(fpath, 'r') as fh:
                     for key in fh.root._v_children:
-                        if not re.match(groupname_re, key):
+                        if not self._groupname_re.match(key):
                             warnings.warn('{} does not have correct group names; skipped'.format(fname))
                             break
                         if 'axis0' not in fh.root[key]:
@@ -57,12 +66,20 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
     @staticmethod
     def get_dataset_info(dataset):
         items = dataset[1].split('_')
-        return dict(tract=int(items[1]), patch=int(items[2]))
+        return dict(tract=int(items[1]), patch_ra=int(items[2][0]), patch_dec=int(items[2][1]))
 
     @property
-    def available_tract_patches(self):
+    def available_tracts_and_patches(self):
         return [self.get_dataset_info(dataset) for dataset in self._datasets]
 
+    @property
+    def available_tracts(self):
+        return sorted(set(self.get_dataset_info(dataset)['tract'] for dataset in self._datasets))
+    
+    @property
+    def base_dir(self):
+        return self._base_dir
+    
     def clear_cache(self):
         self._dataset_cache = dict()
 
@@ -70,6 +87,8 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
         return pd.read_hdf(*dataset, mode='r')
 
     def load_dataset(self, dataset):
+        if not self.use_cache:
+            return self._load_dataset(dataset)
         if dataset not in self._dataset_cache:
             try:
                 self._dataset_cache[dataset] = self._load_dataset(dataset)
@@ -97,4 +116,3 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
                 else:
                     return d[native_quantity].values
             yield native_quantity_getter
-
