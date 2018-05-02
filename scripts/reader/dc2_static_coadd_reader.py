@@ -10,7 +10,7 @@ __all__ = ['DC2StaticCoaddCatalog']
 
 class DC2StaticCoaddCatalog(BaseGenericCatalog):
 
-    _native_filter_quantities = {'tract', 'patch_ra', 'patch_dec'}
+    _native_filter_quantities = {'tract', 'patch'}
 
     def _subclass_init(self, 
                        base_dir='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/summary',
@@ -23,10 +23,12 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
         self._groupname_re = re.compile(groupname_pattern)
         self.use_cache = bool(use_cache)
         
-        assert os.path.isdir(self._base_dir), '{} is not a valid directory'.format(self._base_dir)
+        if not os.path.isdir(self._base_dir):
+            raise ValueError('`base_dir` {} is not a valid directory'.format(self._base_dir))
         self._datasets, self._columns = self._generate_native_datasets_and_columns()
-        assert self._datasets, 'No catalogs were found in {}'.format(self._base_dir)
-        
+        if not self._datasets:
+            raise RuntimeError('No catalogs were found in `base_dir` {}'.format(self._base_dir))
+
         self._dataset_cache = dict()
 
         self._quantity_modifiers = {
@@ -66,7 +68,7 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
     @staticmethod
     def get_dataset_info(dataset):
         items = dataset[1].split('_')
-        return dict(tract=int(items[1]), patch_ra=int(items[2][0]), patch_dec=int(items[2][1]))
+        return dict(tract=int(items[1]), patch=','.join(items[2]))
 
     @property
     def available_tracts_and_patches(self):
