@@ -7,7 +7,7 @@ and PhoSim. Some notes on validation tests are here: https://docs.google.com/doc
 
 Test | Implemented | Validation Data | Validation Criteria | PhoSim | ImSim | Issue
 ---- | ---- | ---- | ---- | ---- | ---- | ---- 
-Example | :heavy_check_mark: @evevkovacs | :heavy_check_mark: | :heavy_check_mark: COSMOS | :grey_question: |  :grey_question: | #14 #81
+Example | :heavy_check_mark: @evevkovacs | :heavy_check_mark: COSMOS| :heavy_check_mark:  | :grey_question: |  :grey_question: | #14 #81
 Background levels | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
 Noise correlations | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
 Source density | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
