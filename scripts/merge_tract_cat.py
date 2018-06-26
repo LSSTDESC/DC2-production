@@ -93,6 +93,8 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         except NoResults as e:
             print(e)
             continue
+        if len(patch_merged_cat) == 0:
+            continue
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
         key = valid_identifier_name(key)
@@ -125,6 +127,8 @@ def load_tract(repo, tract, patches=None, **kwargs):
             this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
         except NoResults as e:
             print(e)
+            continue
+        if len(this_patch_merged_cat) == 0:
             continue
         merged_patch_cats.append(this_patch_merged_cat)
 
@@ -192,7 +196,7 @@ def load_patch(butler_or_repo, tract, patch,
 
         merge_filter_cats[filt] = cat
 
-    merged_patch_cat = ref_table  # This is not a new copy
+    merged_patch_cat = ref_table[isPrimary]
     for filt in filters:
         if filt not in merge_filter_cats:
             continue
