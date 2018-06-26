@@ -1,7 +1,7 @@
 import re
 import sys
 
-from astropy.table import join, vstack
+from astropy.table import join, vstack, Table
 from astropy.utils.metadata import MergeStrategy, enable_merge_strategies
 import numpy as np
 
@@ -88,12 +88,10 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
-        try:
-            patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        except NoResults as e:
-            print(e)
-            continue
+        patch_merged_cat = load_patch(butler, tract, patch, verbose=verbose, **kwargs)
         if len(patch_merged_cat) == 0:
+            if verbose:
+                print("  No good entries for tract %d, patch %s" % (tract, patch))
             continue
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
@@ -123,13 +121,12 @@ def load_tract(repo, tract, patches=None, **kwargs):
 
     merged_patch_cats = []
     for patch in patches:
-        try:
-            this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        except NoResults as e:
-            print(e)
+        this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
+        if this_patch_merged_cat == 0:
+            if verbose:
+                print("  No good entries for tract %d, patch %s" % (tract, patch))
             continue
-        if len(this_patch_merged_cat) == 0:
-            continue
+
         merged_patch_cats.append(this_patch_merged_cat)
 
     merged_tract_cat = vstack(merged_patch_cats)
@@ -140,6 +137,7 @@ def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
                filters=('u', 'g', 'r', 'i', 'z', 'y'),
                trim_colnames_for_fits=False,
+               verbose=False
                ):
     """Load patch catalogs.  Return merged catalog across filters.
 
@@ -167,10 +165,21 @@ def load_patch(butler_or_repo, tract, patch,
 
     # Define the filters and order in which to sort them.:
     tract_patch_data_id = {'tract': tract, 'patch': patch}
-    ref_table = butler.get(datasetType='deepCoadd_ref',
-                           dataId=tract_patch_data_id).asAstropy()
+    try:
+        ref_table = butler.get(datasetType='deepCoadd_ref',
+                               dataId=tract_patch_data_id).asAstropy()
+    except NoResults as e:
+        if verbose:
+            print(" ", e)
+        return Table()
+
 
     isPrimary = ref_table['detect_isPrimary']
+    ref_table = ref_table[isPrimary]
+    if len(ref_table) == 0:
+        if verbose:
+            print("  No good isPrimary entries for tract %d, patch %s" % (tract, patch))
+        return ref_table
 
     merge_filter_cats = {}
     for filt in filters:
@@ -179,8 +188,9 @@ def load_patch(butler_or_repo, tract, patch,
         try:
             cat = butler.get(datasetType='deepCoadd_forced_src',
                              dataId=this_data).asAstropy()
-        except Exception as e:
-            print(e)
+        except NoResults as e:
+            if verbose:
+                print(" ", e)
             continue
 
         CoaddCalib = butler.get('deepCoadd_calexp_calib', this_data)
@@ -196,7 +206,7 @@ def load_patch(butler_or_repo, tract, patch,
 
         merge_filter_cats[filt] = cat
 
-    merged_patch_cat = ref_table[isPrimary]
+    merged_patch_cat = ref_table
     for filt in filters:
         if filt not in merge_filter_cats:
             continue
