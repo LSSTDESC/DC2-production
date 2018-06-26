@@ -122,11 +122,8 @@ def load_tract(repo, tract, patches=None, **kwargs):
     merged_patch_cats = []
     for patch in patches:
         this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        if this_patch_merged_cat == 0:
-            if verbose:
-                print("  No good entries for tract %d, patch %s" % (tract, patch))
-            continue
-
+        # Event if this_patch_merged_cat is an empty Table, it's still fine to append to the list here.
+        # They will get vstacked away below.
         merged_patch_cats.append(this_patch_merged_cat)
 
     merged_tract_cat = vstack(merged_patch_cats)
