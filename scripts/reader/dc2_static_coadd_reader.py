@@ -13,7 +13,7 @@ class DC2StaticCoaddCatalog(BaseGenericCatalog):
     _native_filter_quantities = {'tract', 'patch'}
 
     def _subclass_init(self, 
-                       base_dir='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/summary',
+                       base_dir='/global/projecta/projectdirs/lsst/global/in2p3/Run1.1/summary',
                        filename_pattern=r'merged_tract_\d+\.hdf5',
                        groupname_pattern=r'coadd_\d+_\d\d$',
                        use_cache=True,
