@@ -295,9 +295,15 @@ if __name__ == '__main__':
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
+    parser.add_argument('--hsc', dest='hsc', default='False',
+                        help='Uses HSC filters')
     args = parser.parse_args(sys.argv[1:])
 
     for tract in args.tract:
         filebase = 'merged_tract_%d' % tract
         filename = filebase+'.hdf5'
-        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose)
+        if args.hsc:
+            load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
+                                filters=('HSC-U', 'HSC-G', 'HSC-R', 'HSC-I', 'HSC-Z', 'HSC-Y'))
+        else:
+            load_and_save_tract(args.repo, tract, filename, verbose=args.verbose)
