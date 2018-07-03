@@ -295,7 +295,7 @@ if __name__ == '__main__':
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
-    parser.add_argument('--hsc', dest='hsc', default='False',
+    parser.add_argument('--hsc', dest='hsc', action='store_false',
                         help='Uses HSC filters')
     args = parser.parse_args(sys.argv[1:])
 
