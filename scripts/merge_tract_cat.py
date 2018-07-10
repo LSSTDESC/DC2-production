@@ -82,8 +82,13 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         Overwrite an existing HDF file.
     """
     butler = Butler(repo)
+
     if patches is None:
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+        # Extract the patches for this tract from the skymap
+        skymap = butler.get(datasetType='deepCoadd_skyMap')
+        numpatches = skymap.generateTract(tract).getNumPatches()
+        nx, ny = numpatches.getX(), numpatches.getY()
+        patches = ['%d,%d' % (i, j) for i in range(nx) for j in range(ny)]
 
     for patch in patches:
         if verbose:
@@ -302,13 +307,11 @@ if __name__ == '__main__':
     if args.hsc:
         filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
                    'z': 'HSC-Z', 'y': 'HSC-Y'}
-        patches = ['%d,%d' % (i, j) for i in range(9) for j in range(9)] 
     else:
         filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
 
     for tract in args.tract:
         filebase = 'merged_tract_%d' % tract
         filename = filebase + '.hdf5'
-        load_and_save_tract(args.repo, tract, filename, patches=patches, verbose=args.verbose,
+        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
                             filters=filters)
