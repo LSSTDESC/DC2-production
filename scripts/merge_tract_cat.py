@@ -86,9 +86,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
     if patches is None:
         # Extract the patches for this tract from the skymap
         skymap = butler.get(datasetType='deepCoadd_skyMap')
-        numpatches = skymap.generateTract(tract).getNumPatches()
-        nx, ny = numpatches.getX(), numpatches.getY()
-        patches = ['%d,%d' % (i, j) for i in range(nx) for j in range(ny)]
+        patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
     for patch in patches:
         if verbose:
