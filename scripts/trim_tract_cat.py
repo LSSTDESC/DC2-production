@@ -76,36 +76,39 @@ def generate_columns_to_keep():
     return columns_to_keep
 
 
-def load_into_pandas(datafile, key_prefix='coadd'):
+def load_trim_save_patch(infile, outfile, patch, key_prefix='coadd',
+                         verbose=False):
     import re
-    r = re.search('merged_tract_([0-9]+)\.', datafile)
+    r = re.search('merged_tract_([0-9]+)\.', infile)
     tract = int(r[1])
 
+    key = "%s_%s_%s" % (key_prefix, tract, patch)
+    try:
+        df = pd.read_hdf(infile, key=key)
+    except KeyError as e:
+        if verbose:
+            print(e)
+        return
+
+    columns_to_keep_present = list(set(columns_to_keep).intersection(df.columns))
+    trim_df = df[columns_to_keep_present]
+    trim_df.to_hdf(outfile, key=key)
+
+
+def make_trim_file(infile, outfile=None):
     # Note '%d%d' instead of '%d,%d'
     nx, ny = 8, 8
     patches = ['%d%d' % (i, j) for i in range(nx) for j in range(ny)]
 
-    dfs = []
+    if outfile is None:
+        dirname = os.path.dirname(infile)
+        basename = os.path.basename(infile)
+        outfile = os.path.join(dirname, "trim_"+basename)
+
     for patch in patches:
-        key = '%s_%d_%s' % (key_prefix, tract, patch)
-        try:
-            df = pd.read_hdf(datafile, key=key)
-        except:
-            continue
-        dfs.append(df)
-
-    df = pd.concat(dfs)
-    return df
-
-
-def make_trim_file(infile, outfile):
-    data = load_into_pandas(infile)
-
-    trim_data = data[columns_to_keep]
-    trim_data.write(outfile)
+        load_trim_save_patch(infile, outfile, patch)
 
 
 if __name__ == "__main__":
-    import sys
-    infile, outfile = sys.argv[1:3]
-    make_trim_file(infile, outfile)
+    for infile in sys.argv[1:]:
+        make_trim_file(infile)
