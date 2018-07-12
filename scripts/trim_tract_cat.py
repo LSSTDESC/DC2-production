@@ -95,7 +95,7 @@ def load_trim_save_patch(infile, outfile, patch, key_prefix='coadd',
     trim_df.to_hdf(outfile, key=key)
 
 
-def make_trim_file(infile, outfile=None):
+def make_trim_file(infile, outfile=None, clobber=True):
     # Note '%d%d' instead of '%d,%d'
     nx, ny = 8, 8
     patches = ['%d%d' % (i, j) for i in range(nx) for j in range(ny)]
@@ -104,6 +104,11 @@ def make_trim_file(infile, outfile=None):
         dirname = os.path.dirname(infile)
         basename = os.path.basename(infile)
         outfile = os.path.join(dirname, "trim_"+basename)
+
+    # Remove existing outputfile
+    if clobber:
+        if os.path.exists(outfile):
+            os.remove(outfile)
 
     for patch in patches:
         load_trim_save_patch(infile, outfile, patch)
