@@ -64,7 +64,7 @@ def convert_hdf_fixed_to_table(infile, outfile=None, clobber=True, verbose=False
 
 
 if __name__ == "__main__":
-    verbose = True
+    verbose = False
     clobber = False
     files = sys.argv[1:]
     for file in files:
