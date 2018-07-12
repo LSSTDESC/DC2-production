@@ -82,8 +82,11 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         Overwrite an existing HDF file.
     """
     butler = Butler(repo)
+
     if patches is None:
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+        # Extract the patches for this tract from the skymap
+        skymap = butler.get(datasetType='deepCoadd_skyMap')
+        patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
     for patch in patches:
         if verbose:
@@ -116,8 +119,11 @@ def load_tract(repo, tract, patches=None, **kwargs):
     AstroPy Table of merged catalog
     """
     butler = Butler(repo)
+
     if patches is None:
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+        # Extract the patches for this tract from the skymap
+        skymap = butler.get(datasetType='deepCoadd_skyMap')
+        patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
     merged_patch_cats = []
     for patch in patches:
