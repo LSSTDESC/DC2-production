@@ -15,10 +15,10 @@ def change_resol(mapin,mask,nsideout):
     bin_count = np.bincount(pix_nums,weights=mapin[np.where(mask>0)[0]],minlength=12*nsideout**2)
     return bin_count
 
-def cic_analysis(data,mask_comp=0.9,nboot=20,nameout=None):
+def cic_analysis(data,mask,mask_comp=0.9,nboot=20,nameout=None):
     ra = data['ra']
     dec = data['dec']
-    mask = np.ones(12*2048**2)
+    mask = hp.ud_grade(mask,nside_out=2048)
     m0 = create_map(ra,dec,mask,nside=2048)
     map_arr = [change_resol(m0,mask,32*2**i) for i in range(0,6)]
     sigma = np.zeros(len(map_arr))
@@ -28,12 +28,12 @@ def cic_analysis(data,mask_comp=0.9,nboot=20,nameout=None):
     dskw = np.zeros(len(map_arr))
     dkurt = np.zeros(len(map_arr))
     Nup = np.zeros(len(map_arr))
-    scale_arr = npzeros(len(map_arr))
+    scale_arr = np.zeros(len(map_arr))
     for isize in range(0,len(map_arr)):
         map_index = isize
         nside = hp.get_nside(map_arr[map_index])
         new_mask = hp.ud_grade(mask,nside_out=nside)
-        scale_arr[isize] = np.sqrt(hp.nside2pixelarea(nside, degrees=True))
+        scale_arr[isize] = np.sqrt(hp.nside2pixarea(nside, degrees=True))
         masked = new_mask > mask_comp
         Ngal = np.sum(1.0*map_arr[map_index][masked]/new_mask[masked])
         Npix = np.count_nonzero(masked)
@@ -50,7 +50,7 @@ def cic_analysis(data,mask_comp=0.9,nboot=20,nameout=None):
             nbb=nboot
         if nbb>0:
             sigma_b = np.std(np.random.choice(delta_map,(len(delta_map),nbb)),axis=1) 
-            skw_b = skw(np.random.choice(delta_map,(len(delta_map),nbb)),axis=1)
+            skw_b = skew(np.random.choice(delta_map,(len(delta_map),nbb)),axis=1)
             kurt_b = kurtosis(np.random.choice(delta_map,(len(delta_map),nbb)),axis=1)
             dsigma[isize]=np.std(sigma_b**2)
             dskw[isize]=np.std(skw_b)
