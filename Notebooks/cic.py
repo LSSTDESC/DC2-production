@@ -2,6 +2,20 @@ import numpy as np
 from scipy.stats import skew, kurtosis
 import healpy as hp
 
+def binned_statistic(x, values, func, nbins, range):
+    '''The usage is approximately the same as the scipy one
+    from https://stackoverflow.com/questions/26783719/effic
+    iently-get-indices-of-histogram-bins-in-python'''
+    from scipy.sparse import csr_matrix
+    r0, r1 = range
+    mask = (x > r0) &  (x < r1)
+    x = x[mask]
+    values = values[mask]
+    N = len(values)
+    digitized = (float(nbins) / (r1-r0) * (x-r0)).astype(int)
+    S = csr_matrix((values, [digitized, np.arange(N)]), shape=(nbins, N))
+    return np.array([func(group) for group in np.split(S.data, S.indptr[1:-1])])
+
 def create_map(ra,dec,mask,nside=4096):
     pix_nums = hp.ang2pix(nside,np.pi/2-dec*np.pi/180.,np.pi/180*ra)
     goodpix = np.in1d(pix_nums,np.where(mask>0)[0])
