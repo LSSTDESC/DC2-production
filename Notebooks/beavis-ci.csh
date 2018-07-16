@@ -93,26 +93,29 @@ git clone git@github.com:LSSTDESC/DC2_Repo.git
 cd DC2_Repo/Notebooks
 
 if ($html) then
-    echo "Making static HTML pages from the available notebooks:"
+    echo "Making static HTML pages from the available master branch notebooks:"
     set outputformat = "HTML"
     set ext = "html"
     set branch = "html"
 else
-    echo "Rendering the available notebooks:"
+    echo "Rendering the available master branch notebooks:"
     set outputformat = "notebook"
     set ext = "nbconvert.ipynb"
     set branch = "rendered" 
 endif
+mkdir -p log
+set webdir = "https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
+
 ls -l *.ipynb
 
 set outputs = ()
 foreach notebook ( *.ipynb )
     # Rename files to make them easier to work with:
     set ipynbfile = `echo "$notebook" | sed s/' '/'_'/g`
-    mv "$notebook" $ipynbfile
-    set logfile = $cwd/$ipynbfile:r.log
+    if ($ipynbfile != "$notebook") mv -f "$notebook" $ipynbfile
+    set logfile = $cwd/log/$ipynbfile:r.log
     jupyter nbconvert --ExecutePreprocessor.kernel_name=desc-stack \
-                      --ExecutePreprocessor.timeout=600 --to HTML \
+                      --ExecutePreprocessor.timeout=600 --to $outputformat \
                       --execute $ipynbfile >& $logfile
     set output = $ipynbfile:r.$ext
     if ( -e $output ) then
@@ -140,8 +143,9 @@ if ( $?GITHUB_USERNAME && $?GITHUB_API_KEY ) then
     git checkout --orphan $branch
     git rm -rf .
     cd Notebooks
-    git add -f $outputss
-    git commit -m "pushed rendered notebooks"
+    git add -f $outputs
+    git add -f log
+    git commit -m "pushed rendered notebooks and log files"
     git push -q -f \
         https://${GITHUB_USERNAME}:${GITHUB_API_KEY}@github.com/LSSTDESC/DC2_Repo  $branch
     echo "Done!"
@@ -157,6 +161,8 @@ else
     echo "...No GITHUB_API_KEY and/or GITHUB_USERNAME set, giving up."
 endif
 
+echo "beavis-ci finished: view the results at "
+echo "   $webdir   "
 
 CLEANUP:
 cd ../../
