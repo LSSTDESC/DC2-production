@@ -1,15 +1,9 @@
 # DC2 Notebooks
 
-This directory contains notebooks with demonstration material
-convering how to access and use the DC2 datasets.
+This directory contains tutorial and demonstration notebooks convering how to access and use the DC2 datasets. 
+See the index table below for links to the notebook code, and an auto-rendered view of the notebook with outputs. 
+Notes on how to contribute more notebooks, and how the rendering is made, are at the bottom of the page.
 
-Not all of these notebooks should be expected to just work with no
-modifications. They are written by various group members and
-downloaded from SSim meeting presentations. For this reason, you may
-sometimes have to modify the expected input file locations or obtain
-the needed input files etc. However, the information in these files
-will give you the background you need to write your own analysis and
-validation programs.
 
 | Notebook | Short description | Links | Owner  |
 |----------|-------------------|-------|--------|
@@ -23,3 +17,15 @@ validation programs.
 | FoF Catalog Matching | Using the Friends of Friends algorithm to match two catalogs | [ipynb](FoFCatalogMatching%20Histogram.ipynb), [rendered](https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/FoFCatalogMatching_Histogram.nbconvert.ipynb), [log](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/FoFCatalogMatching_Histogram.log)  | [Yao-Yuan Mao](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao) |
 | PhoSim Instrumental Configuration | Inspecting a PhoSim segmentation file | [ipynb](PhoSim%20Instrumental%20Configuration.ipynb), [rendered](https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/PhoSim_Instrumental_Configuration.nbconvert.ipynb), [log](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/PhoSim_Instrumental_Configuration.log)  | [Chris Walter](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@cwwalter) |
 
+
+----
+## Notes for Contributors
+Both tutorial and demo notebooks are hugely useful resources - pull requests are most welcome! 
+* Before you commit a notebook, please make sure that a) it runs to completion and b) the outputs are cleared (to avoid repo bloat). 
+* Please do update the index table above, carefully copying and adapting the URLs. 
+* The "owner" of a notebook (that's you, as contributor!) is responsible for accepting proposed modifications to it (by collaboration), and making sure that it does not go stale (by fixing issues posted about it). 
+* Every tutorial notebook needs an owner/last verified header, a statement of its goals (learning objectives) in the first markdown cell, and enough explanatory markdown (with links to docs, papers etc) to make the notebook make sense.
+
+### Continuous Integration
+All the notebooks in the folder can be run on Cori using the [`beavis-ci` script](beavis-ci.csh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. At present, DC2_Repo admin permissions are needed to execute this push. 
+> If the link to a rendered notebook yields a 404 error, please check the corresponding log file and issue the notebook's owner.
