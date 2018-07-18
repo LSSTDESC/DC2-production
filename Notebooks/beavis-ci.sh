@@ -99,7 +99,7 @@ webdir="https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
 ls -l *.ipynb
 
 declare -a outputs
-for notebook in *Stamps.ipynb; do
+for notebook in *.ipynb; do
     # Rename files to make them easier to work with:
     ipynbfile="$( echo "$notebook" | sed s/' '/'_'/g )"
     if [ $ipynbfile != "$notebook" ]; then
