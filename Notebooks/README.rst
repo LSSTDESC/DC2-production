@@ -1,6 +1,5 @@
-#############
 DC2 Notebooks
-#############
+=============
 
 This directory contains tutorial and demonstration notebooks convering how to access and use the DC2 datasets.
 See the index table below for links to the notebook code, and an auto-rendered view of the notebook with outputs.
@@ -77,8 +76,9 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - [Chris Walter](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@cwwalter)
 
 ----
+
 Notes for Contributors
-======================
+----------------------
 Both tutorial and demo notebooks are hugely useful resources - pull requests are most welcome!
 * Before you commit a notebook, please make sure that a) it runs to completion and b) the outputs are cleared (to avoid repo bloat).
 * Please do update the index table above, carefully copying and adapting the URLs.
