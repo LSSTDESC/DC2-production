@@ -168,7 +168,7 @@ else
     git checkout --orphan $branch
     git rm -rf .
     cd Notebooks
-    git add -f $outputs
+    git add -f "$outputs"
     git add -f log
     git commit -m "pushed rendered notebooks and log files"
     git push -q -f \
