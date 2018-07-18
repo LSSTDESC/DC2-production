@@ -8,13 +8,14 @@
 #   Enable occasional integration and testing. Like travis-ci but dumber.
 #
 # COMMENTS:
-#   Makes "rendered" notebooks and deploys them to a "rendered" orphan
-#   branch, pushed to GitHub for web display.
+#   Makes "rendered" versions of all the notebooks listed in the README.rst 
+#   and deploys them to a "rendered" orphan branch, pushed to GitHub for web display.
 #
 # INPUTS:
 #
 # OPTIONAL INPUTS:
 #   -h --help     Print this header
+#   -a --all      Run all the notebooks in the folder instead of the ones in the README
 #   -u --username GITHUB_USERNAME, defaults to the environment variable
 #   -k --key      GITHUB_API_KEY, defaults to the environment variable
 #   -n --no-push  Only run the notebooks, don't deploy the outputs
@@ -32,6 +33,7 @@
 HELP=0
 just_testing=0
 html=0
+all=0
 src="$0"
 
 while [ $# -gt 0 ]; do
@@ -42,6 +44,9 @@ while [ $# -gt 0 ]; do
             ;;
         -n|--no-push)
             just_testing=1
+            ;;
+        -a|--all)
+            all=1
             ;;
         -u|--username)
             shift
@@ -83,12 +88,12 @@ git clone git@github.com:LSSTDESC/DC2_Repo.git
 cd DC2_Repo/Notebooks
 
 if [ $html -gt 0 ]; then
-    echo "Making static HTML pages from the available master branch notebooks:"
+    echo "Making static HTML pages from the master branch notebooks:"
     outputformat="HTML"
     ext="html"
     branch="html"
 else
-    echo "Rendering the available master branch notebooks:"
+    echo "Rendering the master branch notebooks:"
     outputformat="notebook"
     ext="nbconvert.ipynb"
     branch="rendered"
@@ -96,23 +101,50 @@ fi
 mkdir -p log
 webdir="https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
 
-ls -l *.ipynb
-
-declare -a outputs
+# Some notebooks have whitespace in their names - fix this first:
 for notebook in *.ipynb; do
-    # Rename files to make them easier to work with:
     ipynbfile="$( echo "$notebook" | sed s/' '/'_'/g )"
     if [ $ipynbfile != "$notebook" ]; then
         mv -f "$notebook" $ipynbfile
     fi
-    stem=$PWD/log/$ipynbfile
+done
+
+# Which notebooks to run? Either all of them, or the ones listed in README.rst:
+if [ $all -eq 0 ]; then
+    notebooks="$( grep ipynb README.rst |& grep -v "No such file" | grep -v rendered | grep -v html | cut -d"<" -f2 | cut -d">" -f1 | sed s/%20/'_'/g )" 
+fi
+# If README.rst is not present or empty of ipynb instances, default to running everything:
+if [ $all -gt 0 ] || [ ${#notebooks[0]} -eq 0 ]; then
+    notebooks="$( ls *.ipynb )"
+fi
+echo "$notebooks"
+
+# Now loop over notebooks, running them one by one:
+declare -a outputs
+for notebook in $notebooks; do
+
+    # Rename files to make them easier to work with:
+    stem=$PWD/log/$notebook
     logfile=${stem%.*}.log
     svgfile=${stem%.*}.svg
-    echo "Running nbconvert on $notebook ..."
+
+    # Check the notebook exists:
+    if [ -e "$notebook" ]; then
+        echo "Running nbconvert on $notebook ..."    
+    else
+        echo "WARNING: could not find $notebook, setting build status to unknown."
+        echo "$notebook: No such file in master branch" > $logfile
+        cp ../../../.badges/unknown.svg $svgfile
+        continue
+    fi
+
+    # Run the notebook:
     jupyter nbconvert --ExecutePreprocessor.kernel_name=desc-stack \
                       --ExecutePreprocessor.timeout=600 --to $outputformat \
-                      --execute $ipynbfile &> $logfile
-    output=${ipynbfile%.*}.$ext
+                      --execute $notebook &> $logfile
+    
+    # Set the build status according to the output:
+    output=${notebook%.*}.$ext
     if [ -e $output ]; then
         outputs=( $outputs $output )
         echo "SUCCESS: $output produced."
@@ -121,6 +153,7 @@ for notebook in *.ipynb; do
         echo "WARNING: $output was not created, read the log in $logfile for details."
         cp ../../../.badges/failing.svg $svgfile
     fi
+    
 done
 
 if [ $just_testing -gt 0 ]; then
