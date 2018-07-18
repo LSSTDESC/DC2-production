@@ -145,6 +145,7 @@ for notebook in $notebooks; do
     
     # Set the build status according to the output:
     output=${notebook%.*}.$ext
+
     if [ -e $output ]; then
         outputs=( $outputs $output )
         echo "SUCCESS: $output produced."
