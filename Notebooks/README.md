@@ -1,7 +1,7 @@
 # DC2 Notebooks
 
 This directory contains notebooks with demonstration material
-convering how to access and use the DC2 datasets. 
+convering how to access and use the DC2 datasets.
 
 Not all of these notebooks should be expected to just work with no
 modifications. They are written by various group members and
@@ -17,3 +17,5 @@ validation programs.
 | LSST Stack matching code | Spatial matching of objects using the DM Stack | [ipynb](Notebooks/LSST_Stack_matching_code.ipynb), [html](http://htmlpreview.github.io/?https://github.com/LSSTDESC/DC2_Repo/blob/html/Notebooks/LSST_Stack_matching_code.html) | [Jim Chiang](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87)   |
 | Plotting the Run 1.2 skymap | Visualize the tracts and patches on the sky | [ipynb](Notebooks/Plotting_the_Run1.1p_skymap.ipynb), [html](http://htmlpreview.github.io/?https://github.com/LSSTDESC/DC2_Repo/blob/html/Notebooks/Plotting_the_Run1.1p_skymap.html) | [Jim Chiang](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87) |
 | DC2 Coadd Run1.1p Butler Access HSC selection | Use the Butler to apply the HSC object selection cuts | [ipynb](Notebooks/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.ipynb), [html](http://htmlpreview.github.io/?https://github.com/LSSTDESC/DC2_Repo/blob/html/Notebooks/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.html) | [Jim Chiang](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87) |
+| DC2 Coadd Run1.1p GCR Tutorial Part I: GCR access | Use the GCR for simple access to the coadd catalogs | [ipynb](Notebooks/DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20I:%20GCR%20Access.ipynb), | [Francois Lanusse](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL), [Javier Sanchez](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez) |
+| DC2 Coadd Run1.1p GCR Tutorial Part II: Lensing Cuts | Use the GCR to build a lensing sample similar to the HSC Y1 shape catalog | [ipynb](Notebooks/DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20II:%20Lensing%20Cuts.ipynb), | [Francois Lanusse](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL), [Javier Sanchez](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez) |
