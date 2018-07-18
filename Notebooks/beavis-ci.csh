@@ -114,6 +114,8 @@ foreach notebook ( *.ipynb )
     set ipynbfile = `echo "$notebook" | sed s/' '/'_'/g`
     if ($ipynbfile != "$notebook") mv -f "$notebook" $ipynbfile
     set logfile = $cwd/log/$ipynbfile:r.log
+    set svgfile = $cwd/log/$ipynbfile:r.svg
+    echo "Running nbconvert on $notebook ..."
     jupyter nbconvert --ExecutePreprocessor.kernel_name=desc-stack \
                       --ExecutePreprocessor.timeout=600 --to $outputformat \
                       --execute $ipynbfile >& $logfile
@@ -121,8 +123,10 @@ foreach notebook ( *.ipynb )
     if ( -e $output ) then
         set outputs = ( $outputs $output )
         echo "SUCCESS: $output produced."
+        cp ../../../.badges/passing.svg $svgfile
     else
         echo "WARNING: $output was not created, read the log in $logfile for details."
+        cp ../../../.badges/failing.svg $svgfile
     endif
 end
 
