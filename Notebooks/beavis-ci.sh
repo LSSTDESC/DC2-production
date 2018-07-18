@@ -25,7 +25,7 @@
 #
 # EXAMPLES:
 #
-#   ./beavis-ci.sh -u drphilmarshall -k a0573fc078b7e8f5c10660e1f29e58678bf4d118
+#   ./beavis-ci.sh -u $GITHUB_USERNAME -k $GITHUB_API_KEY
 #
 #-
 # ======================================================================

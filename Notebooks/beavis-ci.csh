@@ -8,8 +8,8 @@
 #   Enable occasional integration and testing. Like travis-ci but dumber.
 #
 # COMMENTS:
-#   Makes "rendered" notebooks and deploys them to a "rendered" orphan 
-#   branch, pushed to GitHub for web display. 
+#   Makes "rendered" notebooks and deploys them to a "rendered" orphan
+#   branch, pushed to GitHub for web display.
 #
 # INPUTS:
 #
@@ -25,7 +25,7 @@
 #
 # EXAMPLES:
 #
-#   ./beavis-ci.csh -u drphilmarshall -k a0573fc078b7e8f5c10660e1f29e58678bf4d118
+#   ./beavis-ci.csh -u $GITHUB_USERNAME -k $GITHUB_API_KEY
 #
 #-
 # ======================================================================
@@ -70,7 +70,7 @@ while ( $#argv > 0 )
         shift argv
         set GITHUB_USERNAME = $argv[1]
         shift argv
-        breaksw   
+        breaksw
     case -k:
         shift argv
         set GITHUB_API_KEY = $argv[1]
@@ -80,11 +80,11 @@ while ( $#argv > 0 )
         shift argv
         set GITHUB_API_KEY = $argv[1]
         shift argv
-        breaksw 
+        breaksw
     case --{html}:
         shift argv
         set html = 1
-        breaksw  
+        breaksw
     endsw
 end
 
@@ -106,7 +106,7 @@ endif
 
 echo "Cloning the DC2_Repo into the .beavis workspace:"
 
-# Check out a fresh clone in a temporary hidden folder, over-writing 
+# Check out a fresh clone in a temporary hidden folder, over-writing
 # any previous edition:
 \rm -rf .beavis ; mkdir .beavis ; cd .beavis
 git clone git@github.com:LSSTDESC/DC2_Repo.git
@@ -121,7 +121,7 @@ else
     echo "Rendering the available master branch notebooks:"
     set outputformat = "notebook"
     set ext = "nbconvert.ipynb"
-    set branch = "rendered" 
+    set branch = "rendered"
 endif
 mkdir -p log
 set webdir = "https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
