@@ -39,7 +39,7 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
 Notes for Contributors
 ----------------------
 Both tutorial and demo notebooks are hugely useful resources - pull requests are most welcome!
-* Before you commit a notebook, please make sure that a) it runs to completion and b) the outputs are cleared (to avoid repo bloat).
+* Before you commit a notebook, please make sure that a) it runs to completion and b) the outputs are cleared (to avoid both repo bloat and conflicts on every run due to semantically equivalent but bitwise-distinct output blobs).
 * Please do update the index table above, carefully copying and adapting the URLs.
 * The "owner" of a notebook (that's you, as contributor!) is responsible for accepting proposed modifications to it (by collaboration), and making sure that it does not go stale (by fixing issues posted about it).
 * Every tutorial notebook needs an owner/last verified header, a statement of its goals (learning objectives) in the first markdown cell, and enough explanatory markdown (with links to docs, papers etc) to make the notebook make sense.
