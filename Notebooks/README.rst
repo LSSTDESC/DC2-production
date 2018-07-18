@@ -47,6 +47,25 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Michael Wood-Vasey <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@wmwv>`_
 
 
+   * - DC2 Coadd Run1.1p GCR Tutorial Part I: GCR access
+     - Use the GCR for simple access to the coadd catalogs
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20I:%20GCR%20Access.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.log
+
+     - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
+
+
+   * - DC2 Coadd Run1.1p GCR Tutorial Part II: Lensing Cuts
+     - Use the GCR to build a lensing sample similar to the HSC Y1 shape catalog
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20II:%20Lensing%20Cuts.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.log
+
+     - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
+
    * - DC2 Postage Stamps
      - Make some small cutout images and visualize them
      - `ipynb <DC2%20Postage%20Stamps.ipynb>`_,
