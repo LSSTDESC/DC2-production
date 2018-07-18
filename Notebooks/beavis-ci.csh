@@ -18,6 +18,7 @@
 #   -u --username GITHUB_USERNAME, defaults to the environment variable
 #   -k --key      GITHUB_API_KEY, defaults to the environment variable
 #   -n --no-push  Only run the notebooks, don't deploy the outputs
+#   -f --force    Go ahead with deployment, no waiting
 #   --html        Make html outputs instead
 #
 # OUTPUTS:
@@ -32,6 +33,7 @@
 set help = 0
 set just_testing = 0
 set html = 0
+set force = 0
 
 while ( $#argv > 0 )
     switch ($argv[1])
@@ -42,6 +44,14 @@ while ( $#argv > 0 )
     case --{help}:
         shift argv
         set help = 1
+        breaksw
+    case -f:
+        shift argv
+        set force = 1
+        breaksw
+    case --{force}:
+        shift argv
+        set force = 1
         breaksw
     case -n:
         shift argv
@@ -139,8 +149,10 @@ if ( $?GITHUB_USERNAME && $?GITHUB_API_KEY ) then
 
     echo "...with key $GITHUB_API_KEY and username $GITHUB_USERNAME"
 
-    echo -n "If this looks OK, hit any key to continue..."
-    set goforit = $<
+    if ($force == 0) then
+        echo -n "If this looks OK, hit any key to continue..."
+        set goforit = $<
+    endif
 
     cd ../
     git branch -D $branch >& /dev/null
