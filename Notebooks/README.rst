@@ -49,7 +49,7 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
 
    * - DC2 Coadd Run1.1p GCR Tutorial Part I: GCR access
      - Use the GCR for simple access to the coadd catalogs
-     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20I:%20GCR%20Access.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.nbconvert.ipynb>`_
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20I%3A%20GCR%20Access.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.nbconvert.ipynb>`_
 
        .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.svg
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.log
@@ -59,7 +59,7 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
 
    * - DC2 Coadd Run1.1p GCR Tutorial Part II: Lensing Cuts
      - Use the GCR to build a lensing sample similar to the HSC Y1 shape catalog
-     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20II:%20Lensing%20Cuts.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.nbconvert.ipynb>`_
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20II%3A%20Lensing%20Cuts.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.nbconvert.ipynb>`_
 
        .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.svg
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_II:_Lensing_Cuts.log
