@@ -94,6 +94,16 @@ if ($help) then
 endif
 
 echo "Welcome to beavis-ci: manual occasional integration"
+
+if ( $just_testing == 0 ) then
+  if ( $?GITHUB_USERNAME && $?GITHUB_API_KEY ) then
+    echo "with deployment via GitHub token $GITHUB_API_KEY and username $GITHUB_USERNAME"
+  else
+    echo "No GITHUB_API_KEY and/or GITHUB_USERNAME set, giving up."
+    goto FINISH
+  endif
+endif
+
 echo "Cloning the DC2_Repo into the .beavis workspace:"
 
 # Check out a fresh clone in a temporary hidden folder, over-writing 
@@ -144,13 +154,9 @@ if $just_testing goto CLEANUP
 # Otherwise:
 
 echo "Attempting to push the rendered outputs to GitHub in an orphan branch..."
-# Check for GitHub credentials and then push the pages up:
-if ( $?GITHUB_USERNAME && $?GITHUB_API_KEY ) then
-
-    echo "...with key $GITHUB_API_KEY and username $GITHUB_USERNAME"
 
     if ($force == 0) then
-        echo -n "If this looks OK, hit any key to continue..."
+        echo -n "If you are ready, hit any key to continue..."
         set goforit = $<
     endif
 
@@ -172,10 +178,6 @@ if ( $?GITHUB_USERNAME && $?GITHUB_API_KEY ) then
     echo ""
 
     git status
-
-else
-    echo "...No GITHUB_API_KEY and/or GITHUB_USERNAME set, giving up."
-endif
 
 echo "beavis-ci finished: view the results at "
 echo "   $webdir   "
