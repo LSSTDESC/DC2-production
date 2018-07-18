@@ -6,7 +6,7 @@ See the index table below for links to the notebook code, and an auto-rendered v
 Notes on how to contribute more notebooks, and how the rendering is made, are at the bottom of the page.
 
 .. list-table::
-   :widths: 10 10 10 15 15
+   :widths: 10 20 10 10
    :header-rows: 1
 
    * - Notebook
