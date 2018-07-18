@@ -18,10 +18,10 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - Use the GCR to apply the HSC object selection cuts
      - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb>`_,
        `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb>`_
-       
+
        .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.svg
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.log
-       
+
      - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
 
