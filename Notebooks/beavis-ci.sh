@@ -18,7 +18,6 @@
 #   -u --username GITHUB_USERNAME, defaults to the environment variable
 #   -k --key      GITHUB_API_KEY, defaults to the environment variable
 #   -n --no-push  Only run the notebooks, don't deploy the outputs
-#   -f --force    Go ahead with deployment, no waiting
 #   --html        Make html outputs instead
 #
 # OUTPUTS:
@@ -33,7 +32,6 @@
 HELP=0
 just_testing=0
 html=0
-force=0
 src="$0"
 
 while [ $# -gt 0 ]; do
@@ -41,9 +39,6 @@ while [ $# -gt 0 ]; do
     case $key in
         -h|--help)
             HELP=1
-            ;;
-        -f|--force)
-            force=1
             ;;
         -n|--no-push)
             just_testing=1
@@ -104,9 +99,9 @@ webdir="https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
 ls -l *.ipynb
 
 declare -a outputs
-for notebook in *.ipynb; do
+for notebook in *Stamps.ipynb; do
     # Rename files to make them easier to work with:
-    ipynbfile=`echo "$notebook" | sed s/' '/'_'/g`
+    ipynbfile="$( echo "$notebook" | sed s/' '/'_'/g )"
     if [ $ipynbfile != "$notebook" ]; then
         mv -f "$notebook" $ipynbfile
     fi
@@ -117,7 +112,7 @@ for notebook in *.ipynb; do
     jupyter nbconvert --ExecutePreprocessor.kernel_name=desc-stack \
                       --ExecutePreprocessor.timeout=600 --to $outputformat \
                       --execute $ipynbfile &> $logfile
-    output=$ipynbfile:r.$ext
+    output=${ipynbfile%.*}.$ext
     if [ -e $output ]; then
         outputs=( $outputs $output )
         echo "SUCCESS: $output produced."
@@ -133,11 +128,6 @@ if [ $just_testing -gt 0 ]; then
 
 else
     echo "Attempting to push the rendered outputs to GitHub in an orphan branch..."
-
-    if [ $force -gt 0 ]; then
-        echo -n "If you are ready, hit any key to continue..."
-        read goforit
-    fi
 
     cd ../
     git branch -D $branch >& /dev/null
