@@ -17,17 +17,17 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
 
    * - DC2 Reference Catalog Reader
      - Simple example of reading the reference catalog
-     - [ipynb](DC2%20Reference%20Catalog%20Reader.ipynb),
-       [rendered](https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Reference_Catalog_Reader.nbconvert.ipynb)
+     - `ipynb <DC2%20Reference%20Catalog%20Reader.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Reference_Catalog_Reader.nbconvert.ipynb>`_
        [![](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Reference_Catalog_Reader.svg)](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Reference_Catalog_Reader.log)
-     - [Anze Slosar](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@slosar)
+     - `Anze Slosar <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@slosar>`_
 
    * - DC2 Coadd Run1.1p GCR access HSC selection
      - Use the GCR to apply the HSC object selection cuts
-     - [ipynb](DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb),
-       [rendered](https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb)
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb>`_
        [![](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.svg)](https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.log)
-     - [Yao-Yuan Mao](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao)
+     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
    * - Plotting the Run 1.2 skymap
      - Visualize the tracts and patches on the sky - [ipynb](Plotting_the_Run1.1p_skymap.ipynb),
