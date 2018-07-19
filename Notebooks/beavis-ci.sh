@@ -68,6 +68,7 @@ if [ $HELP -gt 0 ]; then
   exit 1
 fi
 
+date
 echo "Welcome to beavis-ci: manual occasional integration"
 
 if [ $no_push -eq 0 ]; then
@@ -188,5 +189,6 @@ echo "beavis-ci finished: view the results at "
 echo "   $webdir   "
 
 cd ../../
+date
 
 # ======================================================================
