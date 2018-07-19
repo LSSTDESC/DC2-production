@@ -126,6 +126,6 @@ Both tutorial and demo notebooks are hugely useful resources - pull requests are
 
 Continuous Integration
 ----------------------
-All the notebooks in the folder can be run on Cori using the [`beavis-ci` script](beavis-ci.csh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. At present, DC2_Repo admin permissions are needed to execute this push.
+All the notebooks in the master branch of this folder are run every 6 hours on Cori using the [`beavis-ci` script](beavis-ci.sh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. (At present, it seems that DC2_Repo admin permissions are needed to execute this push, but in principle anyone could run this script.)
 
-    If the link to a rendered notebook yields a 404 error, please check the corresponding log file and issue the notebook's owner.
+    If the link to a rendered notebook yields a 404 error, please check the corresponding log file (by clicking on the "build:failing" badge) and issue the notebook's owner.
