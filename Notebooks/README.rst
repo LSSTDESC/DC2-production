@@ -66,6 +66,17 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
 
      - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
 
+
+   * - DC2 Coadd Run1.1p GCR tutorial -- Part III: Guided Challenges
+     - Use the GCR to solve some typical data analysis problems
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20III%3A%20Guided Challenges.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.log
+
+     - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
+
+
    * - DC2 Postage Stamps
      - Make some small cutout images and visualize them
      - `ipynb <DC2%20Postage%20Stamps.ipynb>`_,
@@ -99,6 +110,39 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
 
+   * - N vs z distributions
+     - Extract, plot and explore the differential number counts of galaxies 
+     - `ipynb <N_vs_z_distributions.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/N_vs_z_distributions.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/N_vs_z_distributions.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/N_vs_z_distributions.log
+
+     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
+
+
+   * - protoDC2 Halo Occupation Distribution
+     - Compute and plot the HOD for the protoDC2 extragalactic catalog 
+     - `ipynb <protoDC2%20HOD.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/protoDC2_HOD.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/protoDC2_HOD.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/protoDC2_HOD.log
+
+     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
+
+
+   * - protoDC2 halo mass relations
+     - Compute and plot the relations between halo mass and other quantities in the protoDC2 extragalactic catalog 
+     - `ipynb <protoDC2%20mass%20relations.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/protoDC2_mass_relations.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/protoDC2_mass_relations.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/protoDC2_mass_relations.log
+
+     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
+
+
    * - PhoSim Instrumental Configuration
      - Inspecting a PhoSim segmentation file
      - `ipynb <PhoSim%20Instrumental%20Configuration.ipynb>`_,
@@ -128,4 +172,4 @@ Continuous Integration
 ----------------------
 All the notebooks in the master branch of this folder are run every 6 hours on Cori using the [`beavis-ci` script](beavis-ci.sh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. (At present, it seems that DC2_Repo admin permissions are needed to execute this push, but in principle anyone could run this script.)
 
-    If the link to a rendered notebook yields a 404 error, please check the corresponding log file (by clicking on the "build:failing" badge) and issue the notebook's owner.
+    If the link to a rendered notebook yields a 404 error, please check the corresponding log file (by clicking on the "build:failing" badge) and issue the notebook's owner. If it looks like something has gone wron with the cron job (like, none of the notebook builds are passing, or the logs indicate some problem with the run environment, [issue @drphilmarshall](https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@drphilmarshall)).
