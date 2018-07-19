@@ -31,7 +31,7 @@
 # ======================================================================
 
 HELP=0
-just_testing=0
+no_push=0
 html=0
 all=0
 src="$0"
@@ -43,7 +43,7 @@ while [ $# -gt 0 ]; do
             HELP=1
             ;;
         -n|--no-push)
-            just_testing=1
+            no_push=1
             ;;
         -a|--all)
             all=1
@@ -70,7 +70,7 @@ fi
 
 echo "Welcome to beavis-ci: manual occasional integration"
 
-if [ $just_testing -eq 0 ]; then
+if [ $no_push -eq 0 ]; then
   if [ -z $GITHUB_USERNAME ] || [ -z $GITHUB_API_KEY ]; then
       echo "No GITHUB_API_KEY and/or GITHUB_USERNAME set, giving up."
       exit 1
@@ -147,7 +147,7 @@ for notebook in $notebooks; do
     output=${notebook%.*}.$ext
 
     if [ -e $output ]; then
-        outputs=( $outputs $output )
+        outputs+=( $output )
         echo "SUCCESS: $output produced."
         cp ../../../.badges/passing.svg $svgfile
     else
@@ -157,7 +157,7 @@ for notebook in $notebooks; do
     
 done
 
-if [ $just_testing -gt 0 ]; then
+if [ $no_push -gt 0 ]; then
     sleep 0
 
 else
@@ -168,16 +168,16 @@ else
     git checkout --orphan $branch
     git rm -rf .
     cd Notebooks
-    git add -f "$outputs"
+    git add -f "${outputs[@]}"
     git add -f log
     git commit -m "pushed rendered notebooks and log files"
     git push -q -f \
         https://${GITHUB_USERNAME}:${GITHUB_API_KEY}@github.com/LSSTDESC/DC2_Repo  $branch
     echo "Done!"
-    git checkout $branch
+    git checkout master
 
     echo ""
-    echo "Please read the above output very carefully to see that things are OK. To check we've come back to the dev branch correctly, here's a git status:"
+    echo "Please read the above output very carefully to see that things are OK. To check we've come back to the master branch correctly, here's a git status:"
     echo ""
 
     git status
@@ -188,7 +188,5 @@ echo "beavis-ci finished: view the results at "
 echo "   $webdir   "
 
 cd ../../
-# \rm -rf .beavis
-# Uncomment the above when script works!
 
 # ======================================================================
