@@ -140,7 +140,8 @@ for notebook in $notebooks; do
     fi
 
     # Run the notebook:
-    jupyter nbconvert --ExecutePreprocessor.kernel_name=desc-stack \
+    /usr/common/software/python/3.6-anaconda-4.4/bin/jupyter nbconvert \
+                      --ExecutePreprocessor.kernel_name=desc-stack \
                       --ExecutePreprocessor.timeout=600 --to $outputformat \
                       --execute $notebook &> $logfile
     
