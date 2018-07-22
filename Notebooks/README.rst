@@ -144,6 +144,28 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
 
+   * - protoDC2 cluster colors
+     - Access the protoDC2 extragalactic catalog with the GCR, and explore colors in galaxy clusters
+     - `ipynb <ProtoDC2_Cluster_Colors.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/ProtoDC2_Cluster_Colors.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/ProtoDC2_Cluster_Colors.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/ProtoDC2_Cluster_Colors.log
+
+     - `Dan Korytov <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@dkorytov>`_
+
+
+   * - protoDC2 cluster members
+     - Extract cluster member galaxies from the protoDC2 extragalactic catalog and plot them on the sky
+     - `ipynb <ProtoDC2_Cluster_Member_Cutout.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/ProtoDC2_Cluster_Member_Cutout.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/ProtoDC2_Cluster_Member_Cutout.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/ProtoDC2_Cluster_Member_Cutout.log
+
+     - `Dan Korytov <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@dkorytov>`_
+
+
    * - PhoSim Instrumental Configuration
      - Inspecting a PhoSim segmentation file
      - `ipynb <PhoSim%20Instrumental%20Configuration.ipynb>`_,
@@ -163,14 +185,14 @@ Both tutorial and demo notebooks are hugely useful resources - pull requests are
 
 * Before you commit a notebook, please make sure that a) it runs to completion and b) the outputs are cleared (to avoid both repo bloat and conflicts on every run due to semantically equivalent but bitwise-distinct output blobs).
 
-* Please do update the index table above, carefully copying and adapting the URLs, and making sure that all the lines in the table are correctly aligned (or else the table will not display). *Pro-tip: use the "preview changes" tab in the online GitHub editor to check that the table is correct before committing.*
+* Please update the index table above, carefully copying and adapting the URLs, and making sure that all the lines in the table are correctly aligned (or else the table will not display). *Pro-tip: use the "preview changes" tab in the online GitHub editor to check that the table is correct before committing.*  Adding your notebook to the table will trigger the automatic testing of it once your PR is merged (see the "Semi-continuous Integration" section below).
 
-* The "owner" of a notebook (that's you, as contributor!) is responsible for accepting proposed modifications to it (by collaboration), and making sure that it does not go stale (by fixing issues posted about it).
+* The "owner" of a notebook (that's you, as its contributor!) is responsible for accepting proposed modifications to it (by collaboration), and making sure that it does not go stale (by fixing issues posted about it).
 
 * Every tutorial notebook needs an owner/last verified header, a statement of its goals (learning objectives) in the first markdown cell, and enough explanatory markdown (with links to docs, papers etc) to make the notebook make sense.
 
-Continuous Integration
-----------------------
-All the notebooks in the master branch of this folder are run every 6 hours on Cori using the [`beavis-ci` script](beavis-ci.sh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. (At present, it seems that DC2_Repo admin permissions are needed to execute this push, but in principle anyone could run this script.)
+Semi-continuous Integration
+---------------------------
+All the notebooks listed in the table above (and on the master branch) are run every 6 hours on Cori using the [`beavis-ci` script](beavis-ci.sh), which then pushes them to an orphan "rendered" branch so that the outputs can be viewed. (At present, it seems that DC2_Repo admin permissions are needed to execute this push, but in principle anyone could run this script.)
 
     If the link to a rendered notebook yields a 404 error, please check the corresponding log file (by clicking on the "build:failing" badge) and issue the notebook's owner. If it looks like something has gone wron with the cron job (like, none of the notebook builds are passing, or the logs indicate some problem with the run environment, `issue @drphilmarshall <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@drphilmarshall>`_.
