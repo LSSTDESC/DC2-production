@@ -82,8 +82,11 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         Overwrite an existing HDF file.
     """
     butler = Butler(repo)
+
     if patches is None:
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+        # Extract the patches for this tract from the skymap
+        skymap = butler.get(datasetType='deepCoadd_skyMap')
+        patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
     for patch in patches:
         if verbose:
@@ -116,8 +119,11 @@ def load_tract(repo, tract, patches=None, **kwargs):
     AstroPy Table of merged catalog
     """
     butler = Butler(repo)
+
     if patches is None:
-        patches = ['%d,%d' % (i, j) for i in range(8) for j in range(8)]
+        # Extract the patches for this tract from the skymap
+        skymap = butler.get(datasetType='deepCoadd_skyMap')
+        patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
     merged_patch_cats = []
     for patch in patches:
@@ -132,7 +138,7 @@ def load_tract(repo, tract, patches=None, **kwargs):
 
 def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
-               filters=('u', 'g', 'r', 'i', 'z', 'y'),
+               filters={'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'},
                trim_colnames_for_fits=False,
                verbose=False
                ):
@@ -181,7 +187,7 @@ def load_patch(butler_or_repo, tract, patch,
     merge_filter_cats = {}
     for filt in filters:
         this_data = tract_patch_data_id.copy()
-        this_data['filter'] = filt
+        this_data['filter'] = filters[filt]
         try:
             cat = butler.get(datasetType='deepCoadd_forced_src',
                              dataId=this_data).asAstropy()
@@ -295,9 +301,18 @@ if __name__ == '__main__':
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
+    parser.add_argument('--hsc', dest='hsc', action='store_true',
+                        help='Uses HSC filters')
     args = parser.parse_args(sys.argv[1:])
+
+    if args.hsc:
+        filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
+                   'z': 'HSC-Z', 'y': 'HSC-Y'}
+    else:
+        filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
 
     for tract in args.tract:
         filebase = 'merged_tract_%d' % tract
-        filename = filebase+'.hdf5'
-        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose)
+        filename = filebase + '.hdf5'
+        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
+                            filters=filters)
