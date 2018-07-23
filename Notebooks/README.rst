@@ -68,9 +68,9 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
 
 
-   * - DC2 Coadd Run1.1p GCR tutorial -- Part III: Guided Challenges
+   * - DC2 Coadd Run1.1p GCR Tutorial Part III: Guided Challenges
      - Use the GCR to solve some typical data analysis problems
-     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20III%3A%20Guided Challenges.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.nbconvert.ipynb>`_
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20III%3A%20Guided%20Challenges.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.nbconvert.ipynb>`_
 
        .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.svg
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_III:_Guided_Challenges.log
