@@ -69,7 +69,7 @@ if [ $HELP -gt 0 ]; then
 fi
 
 date
-echo "Welcome to beavis-ci: manual occasional integration"
+echo "Welcome to beavis-ci: occasional integration and testing"
 
 if [ $no_push -eq 0 ]; then
   if [ -z $GITHUB_USERNAME ] || [ -z $GITHUB_API_KEY ]; then
@@ -112,7 +112,7 @@ done
 
 # Which notebooks to run? Either all of them, or the ones listed in README.rst:
 if [ $all -eq 0 ]; then
-    notebooks="$( grep ipynb README.rst |& grep -v "No such file" | grep -v rendered | grep -v html | cut -d"<" -f2 | cut -d">" -f1 | sed s/%20/'_'/g )" 
+    notebooks="$( grep '`ipynb' README.rst |& grep -v "No such file" | cut -d"<" -f2 | cut -d">" -f1 | sed s/'%20'/'_'/g | sed s/'%3A'/':'/g )" 
 fi
 # If README.rst is not present or empty of ipynb instances, default to running everything:
 if [ $all -gt 0 ] || [ ${#notebooks[0]} -eq 0 ]; then
