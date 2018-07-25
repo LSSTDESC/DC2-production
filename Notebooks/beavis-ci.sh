@@ -18,6 +18,7 @@
 #   -a --all      Run all the notebooks in the folder instead of the ones in the README
 #   -u --username GITHUB_USERNAME, defaults to the environment variable
 #   -k --key      GITHUB_API_KEY, defaults to the environment variable
+#   -b --branch   Test the notebooks in a dev branch. Outputs still go to "rendered"
 #   -n --no-push  Only run the notebooks, don't deploy the outputs
 #   --html        Make html outputs instead
 #
@@ -35,6 +36,7 @@ no_push=0
 html=0
 all=0
 src="$0"
+branch='master'
 
 while [ $# -gt 0 ]; do
     key="$1"
@@ -58,6 +60,10 @@ while [ $# -gt 0 ]; do
             ;;
         --html)
             html=1
+            ;;
+        -b|--branch)
+            shift
+            branch="$1"
             ;;
     esac
     shift
@@ -87,17 +93,18 @@ echo "Cloning the DC2_Repo into the .beavis workspace:"
 \rm -rf .beavis ; mkdir .beavis ; cd .beavis
 git clone git@github.com:LSSTDESC/DC2_Repo.git
 cd DC2_Repo/Notebooks
+git checkout $branch
 
 if [ $html -gt 0 ]; then
     echo "Making static HTML pages from the master branch notebooks:"
     outputformat="HTML"
     ext="html"
-    branch="html"
+    target="html"
 else
     echo "Rendering the master branch notebooks:"
     outputformat="notebook"
     ext="nbconvert.ipynb"
-    branch="rendered"
+    target="rendered"
 fi
 mkdir -p log
 webdir="https://github.com/LSSTDESC/DC2_Repo/tree/${branch}/Notebooks"
@@ -118,6 +125,7 @@ fi
 if [ $all -gt 0 ] || [ ${#notebooks[0]} -eq 0 ]; then
     notebooks="$( ls *.ipynb )"
 fi
+
 echo "$notebooks"
 
 # Now loop over notebooks, running them one by one:
@@ -134,7 +142,7 @@ for notebook in $notebooks; do
         echo "Running nbconvert on $notebook ..."    
     else
         echo "WARNING: could not find $notebook, setting build status to unknown."
-        echo "$notebook: No such file in master branch" > $logfile
+        echo "$notebook: No such file in $branch branch" > $logfile
         cp ../../../.badges/unknown.svg $svgfile
         continue
     fi
@@ -166,20 +174,20 @@ else
     echo "Attempting to push the rendered outputs to GitHub in an orphan branch..."
 
     cd ../
-    git branch -D $branch >& /dev/null
-    git checkout --orphan $branch
+    git branch -D $target >& /dev/null
+    git checkout --orphan $target
     git rm -rf .
     cd Notebooks
     git add -f "${outputs[@]}"
     git add -f log
     git commit -m "pushed rendered notebooks and log files"
     git push -q -f \
-        https://${GITHUB_USERNAME}:${GITHUB_API_KEY}@github.com/LSSTDESC/DC2_Repo  $branch
+        https://${GITHUB_USERNAME}:${GITHUB_API_KEY}@github.com/LSSTDESC/DC2_Repo  $target
     echo "Done!"
     git checkout master
 
     echo ""
-    echo "Please read the above output very carefully to see that things are OK. To check we've come back to the master branch correctly, here's a git status:"
+    echo "Please read the above output very carefully to see that things are OK. To check we've come back to our starting point correctly, here's a git status:"
     echo ""
 
     git status
