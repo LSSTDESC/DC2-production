@@ -15,17 +15,6 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - Owner
 
 
-   * - DC2 Coadd Run1.1p GCR access HSC selection
-     - Use the GCR to apply the HSC object selection cuts
-     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb>`_,
-       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb>`_
-
-       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.svg
-          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.log
-
-     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
-
-
    * - DC2 Coadd Run1.1p Butler Access HSC selection
      - Use the Butler to apply the HSC object selection cuts
      - `ipynb <DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.ipynb>`_,
@@ -46,6 +35,17 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.log
 
      - `Michael Wood-Vasey <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@wmwv>`_
+
+
+   * - DC2 Coadd Run1.1p GCR access HSC selection
+     - Use the GCR to apply the HSC object selection cuts
+     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.log
+
+     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
 
    * - DC2 Coadd Run1.1p GCR Tutorial Part I: GCR access
