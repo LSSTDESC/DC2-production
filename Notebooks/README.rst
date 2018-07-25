@@ -15,39 +15,6 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - Owner
 
 
-   * - DC2 Coadd Run1.1p GCR access HSC selection
-     - Use the GCR to apply the HSC object selection cuts
-     - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20access%20--%20HSC%20selection.ipynb>`_,
-       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.nbconvert.ipynb>`_
-
-       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.svg
-          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_GCR_access_--_HSC_selection.log
-
-     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
-
-
-   * - DC2 Coadd Run1.1p Butler Access HSC selection
-     - Use the Butler to apply the HSC object selection cuts
-     - `ipynb <DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.ipynb>`_,
-       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.nbconvert.ipynb>`_
-
-       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.svg
-          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.log
-
-     - `Jim Chiang <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87>`_
-
-
-   * - DC2 Coadd Run1.1p direct access, color-color stellar locus
-     - Directly access the Run 1.1p coadd catalogs and explore the stellar locus
-     - `ipynb <DC2%20Coadd%20Run1.1p%20direct%20access%20--%20color-color%20stellar%20locus.ipynb>`_,
-       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.nbconvert.ipynb>`_
-
-       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.svg
-          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.log
-
-     - `Michael Wood-Vasey <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@wmwv>`_
-
-
    * - DC2 Coadd Run1.1p GCR Tutorial Part I: GCR access
      - Use the GCR for simple access to the coadd catalogs
      - `ipynb <DC2%20Coadd%20Run1.1p%20GCR%20tutorial%20--%20Part%20I%3A%20GCR%20Access.ipynb>`_, `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_GCR_tutorial_--_Part_I:_GCR_Access.nbconvert.ipynb>`_
@@ -78,6 +45,28 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Francois Lanusse <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@EiffL>`_, `Javier Sanchez <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@fjaviersanchez>`_
 
 
+   * - DC2 Coadd Run1.1p direct access, color-color stellar locus
+     - Directly access the Run 1.1p coadd catalogs and explore the stellar locus
+     - `ipynb <DC2%20Coadd%20Run1.1p%20direct%20access%20--%20color-color%20stellar%20locus.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.log
+
+     - `Michael Wood-Vasey <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@wmwv>`_
+
+
+   * - DC2 Coadd Run1.1p Butler Access HSC selection
+     - Use the Butler to apply the HSC object selection cuts
+     - `ipynb <DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Coadd_Run1.1p_Butler_Access_HSC_selection.log
+
+     - `Jim Chiang <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87>`_
+
+
    * - DC2 Postage Stamps
      - Make some small cutout images and visualize them
      - `ipynb <DC2%20Postage%20Stamps.ipynb>`_,
@@ -87,6 +76,17 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_Postage_Stamps.log
 
      - `Michael Wood-Vasey <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@wmwv>`_
+     
+     
+   * - Plotting Run1.1p skymap
+     - Use the data butler to obtain information on the skyMap used in the coadd analyses performed by the DRP pipeline.  
+     - `ipynb <Plotting_the_Run1.1p_skymap.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/Plotting_the_Run1.1p_skymap.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/Plotting_the_Run1.1p_skymap.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/Plotting_the_Run1.1p_skymap.log
+
+     - `Jim Chiang <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@jchiang87>`_
 
 
    * - LSST Stack matching code
@@ -111,7 +111,18 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
      - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
 
 
-   * - N vs z distributions
+   * - DC2 Truth Catalog
+     - Example of accessing DC2 truth catalog with GCR
+     - `ipynb <DC2_truth_example.ipynb>`_,
+       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/DC2_truth_example.nbconvert.ipynb>`_
+
+       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_truth_example.svg
+          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/DC2_truth_example.log
+
+     - `Scott Daniel <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@danielsf>`_
+
+
+   * - protoDC2 redshift distributions
      - Extract, plot and explore the differential number counts of galaxies 
      - `ipynb <N_vs_z_distributions.ipynb>`_,
        `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/N_vs_z_distributions.nbconvert.ipynb>`_
@@ -119,7 +130,7 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
        .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/N_vs_z_distributions.svg
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/N_vs_z_distributions.log
 
-     - `Yao-Yuan Mao <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@yymao>`_
+     - `Eve Kovacs <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@evevkovacs>`_
 
 
    * - protoDC2 Halo Occupation Distribution
@@ -164,17 +175,6 @@ Notes on how to contribute more notebooks, and how the rendering is made, are at
           :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/ProtoDC2_Cluster_Member_Cutout.log
 
      - `Dan Korytov <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@dkorytov>`_
-
-
-   * - PhoSim Instrumental Configuration
-     - Inspecting a PhoSim segmentation file
-     - `ipynb <PhoSim%20Instrumental%20Configuration.ipynb>`_,
-       `rendered <https://nbviewer.jupyter.org/github/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/PhoSim_Instrumental_Configuration.nbconvert.ipynb>`_
-
-       .. image:: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/PhoSim_Instrumental_Configuration.svg
-          :target: https://github.com/LSSTDESC/DC2_Repo/blob/rendered/Notebooks/log/PhoSim_Instrumental_Configuration.log
-
-     - `Chris Walter <https://github.com/LSSTDESC/DC2_Repo/issues/new?body=@cwwalter>`_
 
 
 ----
