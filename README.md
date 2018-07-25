@@ -10,6 +10,8 @@ The repository contains all of the issues, tools and validations used for the DC
 
 * [**DC2 Confluence**](https://confluence.slac.stanford.edu/display/LSSTDESC/DC2). DESC members can find details of our bi-weekly telecons here, among other things.
 
+* [**DC2 Product Overview**](https://confluence.slac.stanford.edu/display/LSSTDESC/DC2+Data+Product+Overview).  Guide to currently available data products from DC2.
+
 
 ## Get Involved
 
