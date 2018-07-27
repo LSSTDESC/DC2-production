@@ -1,0 +1,17 @@
+distributed:
+  worker:
+    memory:
+      target: False  # Avoid spilling to disk
+      spill: False  # Avoid spilling to disk
+      pause: 0.80  # fraction at which we pause worker threads
+      terminate: 0.95  # fraction at which we terminate the worker
+
+jobqueue:
+    slurm:
+        cores: 64
+        memory: 128GB
+        processes: 2
+        queue: debug
+        walltime: '00:10:00'
+        job-extra: ['-C haswell', '-L SCRATCH, cscratch1']
+
