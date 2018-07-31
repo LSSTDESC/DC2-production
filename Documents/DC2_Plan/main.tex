@@ -323,6 +323,22 @@ The high-level need for the PZIncomplete project from the DC2 data is to be able
 
 These are the main requirements on DC2 for developing and testing N(z) calibration with spatial cross-correlations, PZCalibrate. First, the survey should cover a large amount of area in the range of thousands of square degrees assuring that there is sufficient signal to noise in the cross-correlation signal. Second, the simulation should contain complex bias galaxy bias evolution with redshift for galaxies of different types such that we can test mitigating its effect. The simulation should also contain galaxies out to $\rm{z} \sim 3$ to test how well we can calibrate redshift-color degeneracies that exist for faint objects at low and high redshift. In addition we require lensing magnification to be present as it is a contaminant of the cross-correlation signal. Not meeting this requirements will diminish our ability to develop and test methods for mitigating systematics in cross-correlation redshifts and degrade our ability to hit the error targets on both the mean and width of the calibrated redshift distributions needed for LSS measurements. We expect both bias evolution and magnification systematics to be present at a level greater than required in the DESC SRD.
 
+For the WL working group, the primary needs to enable their DC2 projects are as follows.  The galaxy
+properties must be set such that there is realistic blending to LSST full depth (which places some
+constraint on the number counts as a function of magnitude and the clustering properties).  To
+enable tests of the $3\times 2$-point analysis, the galaxy clustering should have reasonable trends
+with luminosity, redshift, and spatial scale.  To stress test the shear inference methods, the
+galaxy morphology should go beyond simple co-elliptical models.  While a bulge$+$disk model
+nominally meets this criterion if the two components are permitted to have different shapes, even
+better is some form of irregularity that goes beyond the simple parametric galaxy models that are
+often used to describe galaxy light profiles.  The photometric redshifts should have a realistic
+level of complexity, which should be ensured by the PZ requirements described above.  The
+extragalactic catalogs should include a variety of intrinsic alignment models for testing mitigation
+schemes, though they do not have to go into the image simulations.  Other features of the
+simulations that are important beyond the specification of galaxy properties include PSFs that serve
+as a realistically complex test of PSF modeling methods (atmospheric plus optical PSFs, rather than
+parametric models with simple spatial variation); and at least some image artifacts.
+
 \section{DC2 Simulation Pipeline and Workflow}
 
 \begin{figure}[!htb]
