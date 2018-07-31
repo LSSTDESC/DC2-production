@@ -1,0 +1,42 @@
+[NbConvertApp] Converting notebook DC2_Coadd_Run1.1p_direct_access_--_color-color_stellar_locus.ipynb to notebook
+Traceback (most recent call last):
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbformat/reader.py", line 14, in parse_json
+    nb_dict = json.loads(s, **kwargs)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/json/__init__.py", line 354, in loads
+    return _default_decoder.decode(s)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/json/decoder.py", line 355, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 520 column 5 (char 15951)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/common/software/python/3.6-anaconda-4.4/bin/jupyter-nbconvert", line 11, in <module>
+    load_entry_point('nbconvert==5.1.1', 'console_scripts', 'jupyter-nbconvert')()
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/jupyter_core/application.py", line 266, in launch_instance
+    return super(JupyterApp, cls).launch_instance(argv=argv, **kwargs)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/traitlets/config/application.py", line 658, in launch_instance
+    app.start()
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/nbconvertapp.py", line 305, in start
+    self.convert_notebooks()
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/nbconvertapp.py", line 473, in convert_notebooks
+    self.convert_single_notebook(notebook_filename)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/nbconvertapp.py", line 444, in convert_single_notebook
+    output, resources = self.export_single_notebook(notebook_filename, resources, input_buffer=input_buffer)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/nbconvertapp.py", line 373, in export_single_notebook
+    output, resources = self.exporter.from_filename(notebook_filename, resources=resources)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/exporters/exporter.py", line 171, in from_filename
+    return self.from_file(f, resources=resources, **kw)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbconvert/exporters/exporter.py", line 189, in from_file
+    return self.from_notebook_node(nbformat.read(file_stream, as_version=4), resources=resources, **kw)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbformat/__init__.py", line 141, in read
+    return reads(fp.read(), as_version, **kwargs)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbformat/__init__.py", line 74, in reads
+    nb = reader.reads(s, **kwargs)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbformat/reader.py", line 58, in reads
+    nb_dict = parse_json(s, **kwargs)
+  File "/usr/common/software/python/3.6-anaconda-4.4/lib/python3.6/site-packages/nbformat/reader.py", line 17, in parse_json
+    raise NotJSONError(("Notebook does not appear to be JSON: %r" % s)[:77] + "...")
+nbformat.reader.NotJSONError: Notebook does not appear to be JSON: '{\n "cells": [\n  {\n   "cell_type": "m...

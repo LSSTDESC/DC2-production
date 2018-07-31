@@ -1,0 +1,12 @@
+[NbConvertApp] Converting notebook DC2_truth_example.ipynb to notebook
+[NbConvertApp] Executing notebook with kernel: desc-stack
+/global/common/software/lsst/common/miniconda/kernels/stack.sh: illegal option -- f
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 20: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 21: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 22: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 23: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 24: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 25: module: command not found
+/global/common/software/lsst/cori-haswell-gcc/stack//setup_current_sims.sh: line 26: module: command not found
+Now setup any necessary stack packages such as: setup lsst_distrib or lsst_sims
+[NbConvertApp] Writing 50617 bytes to DC2_truth_example.nbconvert.ipynb
