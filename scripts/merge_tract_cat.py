@@ -63,7 +63,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
                         overwrite=True, verbose=False, **kwargs):
     """Save catalogs to HDF5 from forced-photometry coadds across available filters.
 
-    Iterates through patches, saving each in append mode to the save HDF5 file.
+    Iterates through patches, saving each in append mode to the same HDF5 file.
 
     Parameters
     --
@@ -80,6 +80,11 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         to provide a valid Python identifier: e.g., 'coadd_4849_11'
     overwrite: bool
         Overwrite an existing HDF file.
+
+    Returns
+    --
+    column_names : list of str
+        The union of the list of column names written into the tract file.
     """
     butler = Butler(repo)
 
@@ -88,6 +93,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
+    column_names = set()
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
@@ -101,6 +107,9 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
         key = valid_identifier_name(key)
         patch_merged_cat.to_pandas().to_hdf(filename, key, format='fixed')
 
+        column_names.update(patch_merged_cat.columns)
+
+    return column_names
 
 def load_tract(repo, tract, patches=None, **kwargs):
     """Merge catalogs from forced-photometry coadds across available filters.
@@ -279,10 +288,29 @@ def prefix_columns(cat, filt, fields_to_skip=()):
         cat.rename_column(oc, nc)
 
 
+def make_schema_file(columns, yaml_file):
+    """Save the column names, descriptions, and types to a YAML file.
+
+    Parameters
+    --
+    columns: List of str
+        String describing the column names
+    yaml_file: str
+        file path of YAML file to write
+
+    Future
+    --
+    Will take column objects that know their name, description, and units.
+    """
+    data = {k: {} for k in columns}
+    with open(yaml_file, 'w') as outfile:
+        yaml.dump(data, outfile)
+
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
-    Generate merged static-sky photometry (based on deepCoadd forced photometry)
+    Generate merged static-sky photometry catalog (based on deepCoadd forced photometry)
 
     Note that the following defines the tracts for the DC2 Run 1.1p processing.
     DC2_tracts = {}
@@ -303,6 +331,8 @@ if __name__ == '__main__':
                         help='Turn off verbosity.')
     parser.add_argument('--hsc', dest='hsc', action='store_true',
                         help='Uses HSC filters')
+    parser.add_argument('--schemafile', help='Name of schema YAML file to generate.',
+                        default='schema.yaml')
     args = parser.parse_args(sys.argv[1:])
 
     if args.hsc:
@@ -311,8 +341,12 @@ if __name__ == '__main__':
     else:
         filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
 
+    column_names = set()
     for tract in args.tract:
         filebase = 'merged_tract_%d' % tract
         filename = filebase + '.hdf5'
-        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
-                            filters=filters)
+        these_columns = load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
+                                            filters=filters)
+        column_names.update(these_columns)
+
+    make_schema_file(list(column_names), args.schemafile)
