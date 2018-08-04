@@ -28,3 +28,9 @@ Tree rings | :grey_question:  | :grey_question: | :grey_question: | :grey_questi
 Saturation and blooming | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
 Readout noise | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
 Hot pixels | :grey_question:  | :grey_question: | :grey_question: | :grey_question: | :grey_question: | :grey_question: 
+
+# validate_drp measurement of metrics from the LSST Science Requirements Document
+
+This directory also contains the scripts and YAML files use to run a check against calexp source catalogs.
+Currently there are Run 1.2p scripts and configs that read 10 randomly selected visits from each filter.
+
