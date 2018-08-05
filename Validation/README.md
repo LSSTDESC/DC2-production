@@ -34,3 +34,5 @@ Hot pixels | :grey_question:  | :grey_question: | :grey_question: | :grey_questi
 This directory also contains the scripts and YAML files use to run a check against calexp source catalogs.
 Currently there are Run 1.2p scripts and configs that read 10 randomly selected visits from each filter.
 
+Running at NERSC on /projecta, it takes ~20 minutes per filter to run validateDrp.py on 10 visits.
+
