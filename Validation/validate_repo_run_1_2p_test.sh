@@ -7,12 +7,12 @@
 source /global/common/software/lsst/cori-haswell-gcc/stack/w.2018.26_sim2.9.0-v2/loadLSST.bash
 
 setup lsst_distrib
-# 2018-08-04  MWV: I needed local versions of obs_lsstCam and a small change to validate_drp
-#  By the time anyone wants to re-run this, these should both be in lsst_distrib.
+# 2018-08-06  MWV: I needed local versions of obs_lsstCam because it wasn't in w_2018_26
+#  I added a small change to validate_drp that has been merged to master and will be in w_2018_32.
+#  By the time anyone wants to re-run this, these should both be in the latest lsst_distrib weekly.
 # If you need to run them right now and don't have permission to access my account:
 # git clone git@github.com:lsst/obs_lsstCam
 # git clone git@github.com:lsst/validate_drp
-# cd validate_drp; git checkout tickets/DM-15323
 setup -r ~wmwv/local/lsst/obs_lsstCam
 setup -k -r ~wmwv/local/lsst/validate_drp
 
