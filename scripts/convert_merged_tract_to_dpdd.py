@@ -10,30 +10,62 @@ import numpy as np
 import pandas as pd
 
 import GCRCatalogs
-# Load the coadd catalog
-catalog = GCRCatalogs.load_catalog('dc2_coadd_run1.1p')
+from GCR import GCRQuery
 
 def load_catalog(tract, reader='dc2_coadd_run1.1p'):
     ### load catalog
     config = {}
 
-    trim_config = config.copy()
-    trim_config['filename_pattern'] = r'trim_merged_tract_\d+\.hdf5$'
-
     trim_thistract_config = config.copy()
-    trim_thistract_config['filename_pattern'] = 
+    trim_thistract_config['filename_pattern'] = \
         'trim_merged_tract_{:04d}\.hdf5$'.format(tract)
 
-    return GCRCatalogs.load_catalog(reader, config)
+    return GCRCatalogs.load_catalog(reader, trim_thistract_config)
 
 
-def convert_columns_to_dpdd(tract, reader='dc2_coadd_run1.1p'):
-    """Use the GCR reader to do this.
+def convert_tract_to_dpdd_and_save(tract, reader='dc2_coadd_run1.1p'):
+    """Use the GCR reader to load and save DPDD columns for a given tract.
 
-    Question:  Should we use GCR to actually just do the conversion?
+    This is done in one function because we're doing this chunk-by-chunk.
+    There is probably some more functional perpsective that might regain some modularity.
     """
     cat = load_catalog(tract, reader=reader)
-    
+    columns = cat.list_all_native_quantities()
+    tracts_and_patches = cat.available_tracts_and_patches
+
+    # tract is an int
+    # but patch is a string (e.g., '01' for '0,1')
+    outfile_format = '{base}_tract_{tract:04d}_patch_{patch:s}.{suffix}'
+    for tp in tracts_and_patches:
+        tract = tp['tract']
+        # Reformat '0,1'->'01'
+        patch = ''.join(tp['patch'].split(','))
+        print(['tract == {tract:04d}'.format(**tp),
+               'patch == "{patch:s}"'.format(**tp)])
+
+        tract_patch_filter = [
+            GCRQuery('tract == {tract:04d}'.format(**tp)),
+            GCRQuery('patch == "{patch:s}"'.format(**tp))]
+        print(tract_patch_filter)
+        quantities = cat.get_quantities(columns, native_filters=tract_patch_filter)
+        df = pd.DataFrame.from_dict(q)
+
+        outfile = outfile_format.format(base='dpdd_object', suffix='hdf5',
+                                        **tp)
+        df.to_hdf(outfile)
+
+
+def save_trim_cat_to_hdf(tract, outfile):
+    df_iterator = convert_columns_to_dpdd(tract)
+    for df in df_iterator:
+        print(df)
+        df.to_hdf(outfile)
+
+
+def save_trim_cat_to_fits(tract, outfile):
+    df = convert_columns_to_dpdd(tract)
+    cat = Table(df)
+    cat.write(outfile)
 
 
 def convert_trim_cat_to_dpdd(infile, outfile, clobber=True):
