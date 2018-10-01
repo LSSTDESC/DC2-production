@@ -4,16 +4,20 @@ validation can be put in this directory.
 ### How To Generate Object Tables from DM processing outputs
 * The Run 1.1p Object table summary files were generated with
 
+```
 REPO=/global/projecta/projectdirs/lsst/global/in2p3/Run1.1/output
 python merged_tract_cat.py ${REPO} 5066 5065 5064 5063 5062 4852 4851 4850 4849 4848 4640 4639 4638 4637 4636 4433 4432 4431 4430 4429
+```
 
 It took many hours.
 This can be trivially parallelized with one invocation per tract.  E.g.,
 
+```
 python merged_tract_cat.py ${REPO} 5066
 python merged_tract_cat.py ${REPO} 5065
 ...
 python merged_tract_cat.py ${REPO} 4429
+```
 
 While they are hitting the same filesystem, they are not hitting the same files.
 
