@@ -15,24 +15,36 @@ from GCR import GCRQuery
 
 def load_catalog(tract, reader='dc2_coadd_run1.1p'):
     ### load catalog
-    config = {}
-
-    trim_thistract_config = config.copy()
+    trim_thistract_config = {}
     trim_thistract_config['filename_pattern'] = \
         'trim_merged_tract_{:04d}\.hdf5$'.format(tract)
 
     return GCRCatalogs.load_catalog(reader, trim_thistract_config)
 
 
-def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p',
-                          key_prefix='object',
-                          verbose=True):
-    """Use the GCR reader to load and save DPDD columns for a given tract.
+def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
+    """Use the GCR reader to load and save DPDD columns for a given tract."""
+    trim_config = {}
+    trim_config['filename_pattern'] = 'trim_merged_tract_.*\.hdf5$'
+
+    cat = GCRCatalogs.load_catalog(reader, trim_config)
+    convert_cat_to_dpdd(cat, **kwargs)
+
+
+def convert_tract_to_dpdd(tract, key_prefix='object', **kwargs):
+    """Use the GCR reader to load and save DPDD columns for a given tract."""
+    cat = load_catalog(tract, **kwargs)
+    convert_cat_to_dpdd(cat, **kwargs)
+
+
+def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
+                        key_prefix='object',
+                        verbose=True, **kwargs):
+    """Save DPDD columns for all tracts, patches in a input GCR catalog.
 
     This is done in one function because we're doing this chunk-by-chunk.
     There is perhaps some more functional perspective that might regain some modularity.
     """
-    cat = load_catalog(tract, reader=reader)
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
 
@@ -78,11 +90,16 @@ if __name__ == "__main__":
     """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
-    parser.add_argument('tract', type=int, nargs='+',
+    parser.add_argument('--tract', type=int, nargs='+', default=[],
                         help='Skymap tract[s] to process.  Default is all.')
+    parser.add_argument('--reader', default='dc2_coadd_run1.1p',
+                        help='GCR reader to use.')
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
-    
+
+    if len(args.tract) == 0:
+        convert_all_to_dpdd(reader=args.reader)
+
     for tract in args.tract:
-        convert_tract_to_dpdd(tract)
+        convert_tract_to_dpdd(tract, reader=args.reader)
