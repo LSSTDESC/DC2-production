@@ -71,9 +71,7 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
         key = '{key_prefix:s}_{tract:04d}_{patch:s}'.format(**info)
         df.to_hdf(outfile_base+'.hdf5', key=key)
 
-        # Can't get Parquet support on NERSC set up quite right
-        # Need PyArrow or fastparquet
-        # df.to_parquet(outfile_base+'.parquet')
+        df.to_parquet(outfile_base+'.parquet', engine='fastparquet', compression='gzip')
 
         if verbose:
             print("Writing FITS DPDD file for ", tract, patch)
