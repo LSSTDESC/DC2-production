@@ -44,6 +44,10 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
 
     This is done in one function because we're doing this chunk-by-chunk.
     There is perhaps some more functional perspective that might regain some modularity.
+
+    TODO: Exploring writing HDF and Parquet files in tracts because those file formats
+    allow easy writing and integration to existing files.
+    Keep FITS files in patches.
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
@@ -82,10 +86,27 @@ if __name__ == "__main__":
     import sys
 
     from argparse import ArgumentParser, RawTextHelpFormatter
-    usage = """Convert merged_tract_cat object files to HDF5, FITS, Parquet
-    files labeled with DPDD names, and restricted to only the available columns in the DPDD
-    plus tract and patch for convenience.
-    """
+    usage = """
+Produce HDF5, FITS, Parquet output files from DC2 merged_tract object files.
+The output files will have columns as those specified in the LSST DPDD (https://ls.st/dpdd),
+plus 'tract' and 'patch' for convenience.
+
+Example:
+
+To produce files from tract 4850:
+
+python %(prog)s --tract 4850
+
+To produce files for all available tracts call with no arguments:
+
+python %(prog)s
+
+To specify a different reader and produce files for all available tracts:
+
+python %(prog)s --reader dc2_object_run1.2p
+
+[2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet, but should soon.]
+"""
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
