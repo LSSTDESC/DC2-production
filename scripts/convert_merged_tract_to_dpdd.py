@@ -47,46 +47,52 @@ def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
 
 
 def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
-                        key_prefix='object',
-                        verbose=True, **kwargs):
-    """Save DPDD columns for all tracts, patches in a input GCR catalog.
-
-    This is done in one function because we're doing this chunk-by-chunk.
+                        **kwargs):
+    """Save DPDD-named columns files for all tracts, patches from input GCR catalog.
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
 
-    # tract is an int
-    # but patch is a string (e.g., '01' for '0,1')
-    outfile_base_format = '{base}_tract_{tract:04d}_patch_{patch:s}'
     quantities = cat.get_quantities(columns, return_iterator=True)
     for quantities_this_patch in quantities:
-        if 'tract' not in quantities_this_patch or len(quantities_this_patch) < 1:
-            continue
+        write_quantities_to_files(quantities_this_patch, **kwargs)
+ 
+def write_quantities_to_files(quantities_this_patch,
+                              hdf_key_prefix='object',
+                              parquet_compression='gzip',
+                              verbose=True,
+                              **kwargs):
+    """Write out quantitites to HDF, FITs, and Parquet files."""
+    df = pd.DataFrame.from_dict(quantities_this_patch)
 
-        df = pd.DataFrame.from_dict(quantities_this_patch)
+    # We we know that our GCR reader will chunk by tract+patch
+    # So we take the tract and patch in the first entry
+    # as the identifying tract, patch for all.
+    tract, patch = quantities_this_patch['tract'][0], quantities_this_patch['patch'][0]
+    patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
-        # We we know that our GCR reader will chunk by tract+patch
-        # So we take the tract and patch in the first entry
-        # as the identifying tract, patch for all.
-        tract, patch = quantities_this_patch['tract'][0], quantities_this_patch['patch'][0]
-        patch = patch.replace(',', '')  # Convert '0,1'->'01'
-        info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
-                'key_prefix': key_prefix}
-        outfile_base = outfile_base_format.format(**info)
+    outfile_base_format = '{base}_tract_{tract:04d}_patch_{patch:s}'
+    # tract is an int
+    # but patch is a string (e.g., '01' for '0,1')
+    key_format = '{key_prefix:s}_{tract:04d}_{patch:s}'
+    info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
+            'key_prefix': hdf_key_prefix}
+    outfile_base = outfile_base_format.format(**info)
 
-        if verbose:
-            print("Writing HDF5 DPDD file for ", tract, patch)
-        key = '{key_prefix:s}_{tract:04d}_{patch:s}'.format(**info)
-        df.to_hdf(outfile_base+'.hdf5', key=key)
+    if verbose:
+        print("Writing HDF5 DPDD file for", tract, patch)
+    key = key_format.format(**info)
+    df.to_hdf(outfile_base+'.hdf5', key=key)
 
-        df.to_parquet(outfile_base+'.parquet',
-                      engine='fastparquet',
-                      compression='gzip')
+    if verbose:
+        print("Writing Parquet DPDD file for", tract, patch)
+    df.to_parquet(outfile_base+'.parquet',
+                  engine='fastparquet',
+                  compression=parquet_compression)
 
-        if verbose:
-            print("Writing FITS DPDD file for ", tract, patch)
-        Table.from_pandas(df).write(outfile_base+'.fits')
+    if verbose:
+        print("Writing FITS DPDD file for", tract, patch)
+    Table.from_pandas(df).write(outfile_base+'.fits')
 
 
 if __name__ == "__main__":
