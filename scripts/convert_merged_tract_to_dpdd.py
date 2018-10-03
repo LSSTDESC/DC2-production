@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
-"""Take merged_tract HDF trim cat file and convert to a DPDD version.
+"""Take LSST DESC DC2 Generic Catalog Reader accessible Object table
+(merged_tract HDF trim cat file) and produce output files labeled with DPDD names.
 
-Output in HDF, FITS, or Parquet"""
+Output in HDF, FITS, and Parquet
+
+Requires generic-catalog-reader, LSSTDESC/gcr-catalog, and either pyarrow or fastparquet.
+"""
 
 import sys
 
@@ -13,27 +17,20 @@ import pandas as pd
 import GCRCatalogs
 from GCR import GCRQuery
 
-def load_catalog(tract, reader='dc2_coadd_run1.1p'):
-    ### load catalog
-    trim_thistract_config = {}
-    trim_thistract_config['filename_pattern'] = \
-        'trim_merged_tract_{:04d}\.hdf5$'.format(tract)
-
-    return GCRCatalogs.load_catalog(reader, trim_thistract_config)
-
-
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
-    """Use the GCR reader to load and save DPDD columns for a given tract."""
-    trim_config = {}
-    trim_config['filename_pattern'] = 'trim_merged_tract_.*\.hdf5$'
-
+    """Produce DPDD output files for all available tracts known to GCR 'reader'."""
+    trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     cat = GCRCatalogs.load_catalog(reader, trim_config)
+
     convert_cat_to_dpdd(cat, **kwargs)
 
 
-def convert_tract_to_dpdd(tract, key_prefix='object', **kwargs):
-    """Use the GCR reader to load and save DPDD columns for a given tract."""
-    cat = load_catalog(tract, **kwargs)
+def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
+    """Produce DPDD output files for specified 'tract' and GCR 'reader'."""
+    trim_thistract_config = {
+        'filename_pattern': 'trim_merged_tract_{:04d}\.hdf5$'.format(tract)}
+    cat = GCRCatalogs.load_catalog(reader, trim_thistract_config)
+
     convert_cat_to_dpdd(cat, **kwargs)
 
 
