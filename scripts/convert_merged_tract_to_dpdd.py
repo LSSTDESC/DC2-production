@@ -60,17 +60,17 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
     # but patch is a string (e.g., '01' for '0,1')
     outfile_base_format = '{base}_tract_{tract:04d}_patch_{patch:s}'
     quantities = cat.get_quantities(columns, return_iterator=True)
-    for q in quantities:
-        if 'tract' not in q or len(q) < 1:
+    for quantities_this_patch in quantities:
+        if 'tract' not in quantities_this_patch or len(quantities_this_patch) < 1:
             continue
 
-        df = pd.DataFrame.from_dict(q)
+        df = pd.DataFrame.from_dict(quantities_this_patch)
 
         # We we know that our GCR reader will chunk by tract+patch
         # So we take the tract and patch in the first entry
         # as the identifying tract, patch for all.
-        tract, patch = q['tract'][0], q['patch'][0]
-        patch = ''.join(patch.split(','))
+        tract, patch = quantities_this_patch['tract'][0], quantities_this_patch['patch'][0]
+        patch = patch.replace(',', '')  # Convert '0,1'->'01'
         info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
                 'key_prefix': key_prefix}
         outfile_base = outfile_base_format.format(**info)
