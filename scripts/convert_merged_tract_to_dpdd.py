@@ -1,24 +1,36 @@
 #!/usr/bin/env python
 
 """Take LSST DESC DC2 Generic Catalog Reader accessible Object table
-(merged_tract HDF trim cat file) and produce output files labeled with DPDD names.
+(merged_tract trim cat file) and produce output files labeled with DPDD names.
 
 Output in HDF, FITS, and Parquet
 
-Requires generic-catalog-reader, LSSTDESC/gcr-catalog, and either pyarrow or fastparquet.
+For each format there is one file per tract+patch.
+
+TODO: Exploring writing HDF and Parquet files in full tracts
+because those file formats allow easy writing to existing files.
+Keep FITS files in tracdt+patch.
+
+Requires
+
+pandas  # version >= 0.21
+generic-catalog-reader
+LSSTDESC/gcr-catalog
+
+and either
+pyarrow or fastparquet.
 """
 
 import sys
 
 from astropy.table import Table
-import numpy as np
 import pandas as pd
 
 import GCRCatalogs
-from GCR import GCRQuery
+
 
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for all available tracts known to GCR 'reader'."""
+    """Produce DPDD output files for all available tracts in GCR 'reader'."""
     trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     cat = GCRCatalogs.load_catalog(reader, trim_config)
 
@@ -40,11 +52,6 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
     """Save DPDD columns for all tracts, patches in a input GCR catalog.
 
     This is done in one function because we're doing this chunk-by-chunk.
-    There is perhaps some more functional perspective that might regain some modularity.
-
-    TODO: Exploring writing HDF and Parquet files in tracts because those file formats
-    allow easy writing and integration to existing files.
-    Keep FITS files in patches.
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
@@ -59,12 +66,13 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
 
         df = pd.DataFrame.from_dict(q)
 
-        # We implicitly know that we will chunk by tract+patch
-        # So we can take the tract and patch in the first entry as the tract and patch
+        # We we know that our GCR reader will chunk by tract+patch
+        # So we take the tract and patch in the first entry
+        # as the identifying tract, patch for all.
         tract, patch = q['tract'][0], q['patch'][0]
         patch = ''.join(patch.split(','))
         info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
-               'key_prefix': key_prefix}
+                'key_prefix': key_prefix}
         outfile_base = outfile_base_format.format(**info)
 
         if verbose:
@@ -72,7 +80,9 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
         key = '{key_prefix:s}_{tract:04d}_{patch:s}'.format(**info)
         df.to_hdf(outfile_base+'.hdf5', key=key)
 
-        df.to_parquet(outfile_base+'.parquet', engine='fastparquet', compression='gzip')
+        df.to_parquet(outfile_base+'.parquet',
+                      engine='fastparquet',
+                      compression='gzip')
 
         if verbose:
             print("Writing FITS DPDD file for ", tract, patch)
@@ -80,13 +90,11 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
 
 
 if __name__ == "__main__":
-    import sys
-
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
 Produce HDF5, FITS, Parquet output files from DC2 merged_tract object files.
-The output files will have columns as those specified in the LSST DPDD (https://ls.st/dpdd),
-plus 'tract' and 'patch' for convenience.
+The output files will have columns those specified in the LSST DPDD
+(https://ls.st/dpdd), plus 'tract' and 'patch' for convenience.
 
 Example:
 
@@ -102,7 +110,7 @@ To specify a different reader and produce files for all available tracts:
 
 python %(prog)s --reader dc2_object_run1.2p
 
-[2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet, but should soon.]
+[2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
