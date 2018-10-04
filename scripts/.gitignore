@@ -112,3 +112,9 @@ Session.vim
 
 .noseids
 .vscode/
+
+# Output files
+*.hdf
+*.hdf5
+*.fits
+*.parquet

@@ -2,7 +2,7 @@ General scripts need for tasks related to the DC2 production and
 validation can be put in this directory.
 
 ### How To Generate Object Tables from DM processing outputs
-* The Run 1.1p Object table summary files were generated with
+1. The Run 1.1p Object table summary files were generated with
 
 ```
 REPO=/global/projecta/projectdirs/lsst/global/in2p3/Run1.1/output
@@ -39,4 +39,25 @@ config = {'base_dir': '/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/ob
 GCRCatalogs.load_catalog('dc2_coadd_run1.1p', config)
 ```
 
-* Generating DPDD-named column files in HDF, FITS, or Parquet is the subject of ongoing work in the `u/wmwv/hdf-to-parquet` branch.
+2. Generate "Trimmed" Object Tables
+These files have only the columns necessary to reconstruct the DPDD.
+They maintain their original column names.  
+
+The Run 1.1p Object trimmed object tables were generated with
+
+```
+python trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.1/object_catalog/merged_tract_cat_*.hdf5
+```
+
+This operates directly on the HDF5 files, with no dependence on the Generic Catalog Reader or the DM Stack.
+
+3. Generate DPDD-column only Object Tables in HDF, FITS, and Parquet
+Produce stand-alone files with columns named as in the DPDD.
+In addition to renaming columns, this also translates to derived columns that are based on several input columns.
+For speed, this is done by default on the already trimmed object tables (from the step just above).  But it would be possible to do it directly from the full Object merged_tract_cat files instead.
+
+```
+python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.1p
+```
+
+Will generate these files for all tracts available through the `dc2_coadd_run1.1p` reader. 
