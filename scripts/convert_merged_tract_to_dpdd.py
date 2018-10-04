@@ -87,20 +87,20 @@ def write_dataframe_to_files(df,
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
     if verbose:
-        print("Writing HDF5 DPDD file for", tract, patch)
+        print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
     key = key_format.format(**info)
     df.to_hdf(outfile_base_tract+'.hdf5', key=key)
 
     # In principle, Parquet should be really happy with files appended to HDFS-type storage
     # But the Pandas implementation doesn't expose this ability.
     if verbose:
-        print("Writing Parquet DPDD file for", tract, patch)
+        print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
     df.to_parquet(outfile_base_tract_patch+'.parquet',
                   engine='fastparquet',
                   compression=parquet_compression)
 
     if verbose:
-        print("Writing FITS DPDD file for", tract, patch)
+        print("Writing {} {} to FITS DPDD file.".format(tract, patch))
     Table.from_pandas(df).write(outfile_base_tract_patch+'.fits')
 
 
