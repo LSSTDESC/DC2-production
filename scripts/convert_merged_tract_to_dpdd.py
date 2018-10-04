@@ -71,28 +71,32 @@ def write_quantities_to_files(quantities_this_patch,
     tract, patch = quantities_this_patch['tract'][0], quantities_this_patch['patch'][0]
     patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
-    outfile_base_format = '{base}_tract_{tract:04d}_patch_{patch:s}'
+    outfile_base_tract_format = '{base}_tract_{tract:04d}'
+    outfile_base_tract_patch_format = '{base}_tract_{tract:04d}_patch_{patch:s}'
     # tract is an int
     # but patch is a string (e.g., '01' for '0,1')
     key_format = '{key_prefix:s}_{tract:04d}_{patch:s}'
     info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
             'key_prefix': hdf_key_prefix}
-    outfile_base = outfile_base_format.format(**info)
+    outfile_base_tract = outfile_base_tract_format.format(**info)
+    outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
     if verbose:
         print("Writing HDF5 DPDD file for", tract, patch)
     key = key_format.format(**info)
-    df.to_hdf(outfile_base+'.hdf5', key=key)
+    df.to_hdf(outfile_base_tract+'.hdf5', key=key)
 
+    # In principle, Parquet should be really happy with files appended to HDFS-type storage
+    # But the Pandas implementation doesn't expose this ability.
     if verbose:
         print("Writing Parquet DPDD file for", tract, patch)
-    df.to_parquet(outfile_base+'.parquet',
+    df.to_parquet(outfile_base_tract_patch+'.parquet',
                   engine='fastparquet',
                   compression=parquet_compression)
 
     if verbose:
         print("Writing FITS DPDD file for", tract, patch)
-    Table.from_pandas(df).write(outfile_base+'.fits')
+    Table.from_pandas(df).write(outfile_base_tract_patch+'.fits')
 
 
 if __name__ == "__main__":
