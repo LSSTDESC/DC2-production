@@ -55,20 +55,25 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
 
     quantities = cat.get_quantities(columns, return_iterator=True)
     for quantities_this_patch in quantities:
-        write_quantities_to_files(quantities_this_patch, **kwargs)
- 
-def write_quantities_to_files(quantities_this_patch,
-                              hdf_key_prefix='object',
-                              parquet_compression='gzip',
-                              verbose=True,
-                              **kwargs):
-    """Write out quantitites to HDF, FITs, and Parquet files."""
-    df = pd.DataFrame.from_dict(quantities_this_patch)
+        quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
+        write_dataframe_to_files(quantities_this_patch, **kwargs)
 
-    # We we know that our GCR reader will chunk by tract+patch
+
+def write_dataframe_to_files(df,
+                             filename_prefix='dpdd_object',
+                             hdf_key_prefix='object',
+                             parquet_compression='gzip',
+                             verbose=True,
+                             **kwargs):
+    """Write out dataframe to HDF, FITS, and Parquet files.
+
+    Choose file names based on tract (HDF) or tract+path (FITS, Parquet).
+    """
+
+    # We know that our GCR reader will chunk by tract+patch
     # So we take the tract and patch in the first entry
     # as the identifying tract, patch for all.
-    tract, patch = quantities_this_patch['tract'][0], quantities_this_patch['patch'][0]
+    tract, patch = df['tract'][0], df['patch'][0]
     patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
     outfile_base_tract_format = '{base}_tract_{tract:04d}'
@@ -76,7 +81,7 @@ def write_quantities_to_files(quantities_this_patch,
     # tract is an int
     # but patch is a string (e.g., '01' for '0,1')
     key_format = '{key_prefix:s}_{tract:04d}_{patch:s}'
-    info = {'base': 'dpdd_object', 'tract': tract, 'patch': patch,
+    info = {'base': filename_prefix, 'tract': tract, 'patch': patch,
             'key_prefix': hdf_key_prefix}
     outfile_base_tract = outfile_base_tract_format.format(**info)
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
