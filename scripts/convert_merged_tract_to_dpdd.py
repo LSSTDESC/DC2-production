@@ -23,32 +23,78 @@ pyarrow or fastparquet.
 
 import sys
 
-from astropy.table import Table
 import pandas as pd
+from astropy.table import Table
 
 import GCRCatalogs
 
-
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for all available tracts in GCR 'reader'."""
+    """Produce DPDD output files for all available tracts in GCR 'reader'.
+
+    The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'.
+
+    Parameters
+    ----------
+    reader : str, optional
+        GCR reader to use. Must match an existing yaml file.
+        Default is dc2_coadd_run1.1p
+
+    Other Parameters
+    ----------------
+    **kwargs
+        *kwargs* are optional properties writing the dataframe to files.
+        See `write_dataframe_to_files` for more information.
+
+    """
     trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     cat = GCRCatalogs.load_catalog(reader, trim_config)
 
     convert_cat_to_dpdd(cat, **kwargs)
 
-
 def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for specified 'tract' and GCR 'reader'."""
+    """Produce DPDD output files for specified 'tract' and GCR 'reader'.
+
+    The input filename is expected to match 'trim_merged_tract_{:04d}\.hdf5$'.
+
+    Parameters
+    ----------
+    tract : int
+        Skymap tract to process.
+    reader : str, optional
+        GCR reader to use. Must match an existing yaml file.
+        Default is dc2_coadd_run1.1p
+
+    Other Parameters
+    ----------------
+    **kwargs
+        *kwargs* are optional properties writing the dataframe to files.
+        See `write_dataframe_to_files` for more information.
+
+    """
     trim_thistract_config = {
         'filename_pattern': 'trim_merged_tract_{:04d}\.hdf5$'.format(tract)}
     cat = GCRCatalogs.load_catalog(reader, trim_thistract_config)
 
     convert_cat_to_dpdd(cat, **kwargs)
 
+def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
+    """Save DPDD-named columns files for all tracts,
+    patches from input GCR catalog.
 
-def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
-                        **kwargs):
-    """Save DPDD-named columns files for all tracts, patches from input GCR catalog.
+    Parameters
+    ----------
+    cat : DC2ObjectCatalog instance
+        Catalog instance returned by `GCRCatalogs.load_catalog`.
+    reader : str, optional
+        GCR reader to use. Must match an existing yaml file.
+        Default is dc2_coadd_run1.1p
+
+    Other Parameters
+    ----------------
+    **kwargs
+        *kwargs* are optional properties writing the dataframe to files.
+        See `write_dataframe_to_files` for more information.
+
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
@@ -57,7 +103,6 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p',
     for quantities_this_patch in quantities:
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
         write_dataframe_to_files(quantities_this_patch, **kwargs)
-
 
 def write_dataframe_to_files(
         df,
@@ -69,7 +114,7 @@ def write_dataframe_to_files(
         **kwargs):
     """Write out dataframe to HDF, FITS, and Parquet files.
 
-    Choose file names based on tract (HDF) or tract+path (FITS, Parquet).
+    Choose file names based on tract (HDF) or tract + patch (FITS, Parquet).
 
     Parameters
     ----------
@@ -95,34 +140,40 @@ def write_dataframe_to_files(
     tract, patch = df['tract'][0], df['patch'][0]
     patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
+    # Normalise output filename
     outfile_base_tract_format = '{base}_tract_{tract:04d}'
     outfile_base_tract_patch_format = \
         '{base}_tract_{tract:04d}_patch_{patch:s}'
+
     # tract is an int
     # but patch is a string (e.g., '01' for '0,1')
     key_format = '{key_prefix:s}_{tract:04d}_{patch:s}'
-    info = {'base': filename_prefix, 'tract': tract, 'patch': patch,
-            'key_prefix': hdf_key_prefix}
+    info = {
+        'base': filename_prefix,
+        'tract': tract,
+        'patch': patch,
+        'key_prefix': hdf_key_prefix}
     outfile_base_tract = outfile_base_tract_format.format(**info)
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
     if verbose:
         print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
     key = key_format.format(**info)
-    df.to_hdf(outfile_base_tract+'.hdf5', key=key)
+    df.to_hdf(outfile_base_tract + '.hdf5', key=key)
 
     # In principle, Parquet should be really happy
     # with files appended to HDFS-type storage
     # But the Pandas implementation doesn't expose this ability.
     if verbose:
         print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    df.to_parquet(outfile_base_tract_patch+'.parquet',
-                  engine=parquet_engine,
-                  compression=parquet_compression)
+    df.to_parquet(
+        outfile_base_tract_patch + '.parquet',
+        engine=parquet_engine,
+        compression=parquet_compression)
 
     if verbose:
         print("Writing {} {} to FITS DPDD file.".format(tract, patch))
-    Table.from_pandas(df).write(outfile_base_tract_patch+'.fits')
+    Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
 
 
 if __name__ == "__main__":
@@ -131,6 +182,9 @@ if __name__ == "__main__":
 Produce HDF5, FITS, Parquet output files from DC2 merged_tract object files.
 The output files will have columns those specified in the LSST DPDD
 (https://ls.st/dpdd), plus 'tract' and 'patch' for convenience.
+
+The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'
+(all tracts) or 'trim_merged_tract_{:04d}\.hdf5$' (one tract).
 
 Example:
 
