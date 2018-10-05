@@ -110,8 +110,7 @@ def write_dataframe_to_files(
         hdf_key_prefix='object',
         parquet_compression='gzip',
         parquet_engine='fastparquet',
-        verbose=True,
-        **kwargs):
+        verbose=True):
     """Write out dataframe to HDF, FITS, and Parquet files.
 
     Choose file names based on tract (HDF) or tract + patch (FITS, Parquet).
