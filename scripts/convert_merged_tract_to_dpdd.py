@@ -109,6 +109,7 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
         write_dataframe_to_files(quantities_this_patch, **kwargs)
 
+
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
