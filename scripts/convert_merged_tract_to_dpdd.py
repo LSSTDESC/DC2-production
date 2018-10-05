@@ -23,8 +23,8 @@ pyarrow or fastparquet.
 
 import sys
 
-import pandas as pd
 from astropy.table import Table
+import pandas as pd
 
 import GCRCatalogs
 
@@ -122,11 +122,11 @@ def write_dataframe_to_files(
     filename_prefix : str, optional
         Prefix to be added to the output filename. Default is 'dpdd_object'.
     hdf_key_prefix : str, optional
-        Prefix to be added to the output filename. Default is 'object'.
-        NOTE: Is this redundant with previous arg?
+        Group name within the output HDF5 file. Default is 'object'.
     parquet_compression : str, optional
         Compression algorithm to use when writing Parquet files.
-        Available: gzip, snappy, lzo, uncompressed. Default is gzip.
+        Potential: gzip, snappy, lzo, uncompressed. Default is gzip.
+        Availability depends on the engine used.
     parquet_engine : str, optional
         Engine to write parquet on disk. Available: fastparquet, pyarrow.
         Default is fastparquet.
@@ -182,9 +182,6 @@ Produce HDF5, FITS, Parquet output files from DC2 merged_tract object files.
 The output files will have columns those specified in the LSST DPDD
 (https://ls.st/dpdd), plus 'tract' and 'patch' for convenience.
 
-The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'
-(all tracts) or 'trim_merged_tract_{:04d}\.hdf5$' (one tract).
-
 Example:
 
 To produce files from tract 4850:
@@ -208,7 +205,8 @@ python %(prog)s
 
 Available engines are fastparquet (default) and pyarrow. Note that they need
 to be installed on your machine to be used (pip install PARQUET_ENGINE --user).
-Available compression algorithms are gzip (default), snappy, lzo, uncompressed.
+Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
+Availability depends on the engine used.
 
 [2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
 
@@ -224,7 +222,8 @@ Available compression algorithms are gzip (default), snappy, lzo, uncompressed.
 Available: fastparquet (default) or pyarrow.""")
     parser.add_argument('--parquet_compression', default='gzip',
                         help="""Compression algorithm to use.
-Available: gzip (default), snappy, lzo, uncompressed""")
+Potential: gzip (default), snappy, lzo, uncompressed.
+Availability depends on the engine used.""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
