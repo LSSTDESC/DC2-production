@@ -24,8 +24,8 @@ pyarrow or fastparquet.
 import os
 import sys
 
-import pandas as pd
 from astropy.table import Table
+import pandas as pd
 
 import GCRCatalogs
 
@@ -201,9 +201,6 @@ if __name__ == "__main__":
 Produce HDF5, FITS, Parquet output files from DC2 merged_tract object files.
 The output files will have columns those specified in the LSST DPDD
 (https://ls.st/dpdd), plus 'tract' and 'patch' for convenience.
-
-The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'
-(all tracts) or 'trim_merged_tract_{:04d}\.hdf5$' (one tract).
 
 Example:
 
