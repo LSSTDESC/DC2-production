@@ -114,6 +114,7 @@ def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
         hdf_key_prefix='object',
+        parquet_scheme='hive',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
         append=True,
@@ -178,6 +179,7 @@ def write_dataframe_to_files(
     parquet_append = append and os.path.exists(parquet_file)
     df.to_parquet(parquet_file,
                   append=parquet_append,
+                  file_scheme=parquet_scheme,
                   engine=parquet_engine,
                   compression=parquet_compression)
 # Consider uses a file format other than 'simple' to enable partition.
