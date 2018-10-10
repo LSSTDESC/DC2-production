@@ -100,17 +100,22 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     columns.extend(['tract', 'patch'])
 
     quantities = cat.get_quantities(columns, return_iterator=True)
+    append=False
     for quantities_this_patch in quantities:
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
-        write_dataframe_to_files(quantities_this_patch, **kwargs)
+        write_dataframe_to_files(quantities_this_patch, append=append, **kwargs)
+        append=True
+
 
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
         hdf_key_prefix='object',
-        parquet_compression='gzip',
         parquet_engine='fastparquet',
-        verbose=True):
+        parquet_compression='gzip',
+        append=False,
+        verbose=True,
+        **kwargs):
     """Write out dataframe to HDF, FITS, and Parquet files.
 
     Choose file names based on tract (HDF) or tract + patch (FITS, Parquet).
@@ -158,17 +163,17 @@ def write_dataframe_to_files(
     if verbose:
         print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
     key = key_format.format(**info)
-    df.to_hdf(outfile_base_tract + '.hdf5', key=key)
+    df.to_hdf(outfile_base_tract+'.hdf5', key=key, append=append, format='table')
 
-    # In principle, Parquet should be really happy
-    # with files appended to HDFS-type storage
-    # But the Pandas implementation doesn't expose this ability.
     if verbose:
         print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    df.to_parquet(
-        outfile_base_tract_patch + '.parquet',
-        engine=parquet_engine,
-        compression=parquet_compression)
+    df.to_parquet(outfile_base_tract+'.parquet',
+                  append=append,
+                  engine=parquet_engine,
+                  compression=parquet_compression)
+# Consider uses a file format other than 'simple' to enable partition.
+# e.g., format='hive', format='drill'
+#                  partition_on=('tract', 'patch'))
 
     if verbose:
         print("Writing {} {} to FITS DPDD file.".format(tract, patch))
