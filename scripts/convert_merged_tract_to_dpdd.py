@@ -21,6 +21,7 @@ and either
 pyarrow or fastparquet.
 """
 
+import os
 import sys
 
 from astropy.table import Table
@@ -100,11 +101,9 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     columns.extend(['tract', 'patch'])
 
     quantities = cat.get_quantities(columns, return_iterator=True)
-    append=False
     for quantities_this_patch in quantities:
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
-        write_dataframe_to_files(quantities_this_patch, append=append, **kwargs)
-        append=True
+        write_dataframe_to_files(quantities_this_patch, **kwargs)
 
 
 def write_dataframe_to_files(
@@ -113,7 +112,7 @@ def write_dataframe_to_files(
         hdf_key_prefix='object',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
-        append=False,
+        append=True,
         verbose=True,
         **kwargs):
     """Write out dataframe to HDF, FITS, and Parquet files.
@@ -163,12 +162,18 @@ def write_dataframe_to_files(
     if verbose:
         print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
     key = key_format.format(**info)
-    df.to_hdf(outfile_base_tract+'.hdf5', key=key, append=append, format='table')
+    hdf_file = outfile_base_tract+'.hdf5'
+    # Append iff the file already exists
+    hdf_append = append and os.path.exists(hdf_file)
+    df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
     if verbose:
         print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    df.to_parquet(outfile_base_tract+'.parquet',
-                  append=append,
+    parquet_file = outfile_base_tract+'.parquet'
+    # Append iff the file already exists
+    parquet_append = append and os.path.exists(parquet_file)
+    df.to_parquet(parquet_file,
+                  append=parquet_append,
                   engine=parquet_engine,
                   compression=parquet_compression)
 # Consider uses a file format other than 'simple' to enable partition.
