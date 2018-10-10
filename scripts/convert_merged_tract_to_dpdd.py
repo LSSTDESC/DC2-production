@@ -49,6 +49,8 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     """
     trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     cat = GCRCatalogs.load_catalog(reader, trim_config)
+    # We don't want to use the cache because we know we are just going through the data once.
+    cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
 
@@ -75,6 +77,8 @@ def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
     trim_thistract_config = {
         'filename_pattern': 'trim_merged_tract_{:04d}\.hdf5$'.format(tract)}
     cat = GCRCatalogs.load_catalog(reader, trim_thistract_config)
+    # We don't want to use the cache because we know we are just going through the data once.
+    cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
 
