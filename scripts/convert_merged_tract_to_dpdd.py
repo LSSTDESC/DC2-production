@@ -29,7 +29,6 @@ import pandas as pd
 
 import GCRCatalogs
 
-
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for all available tracts in GCR 'reader'.
 
@@ -54,7 +53,6 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
-
 
 def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for specified 'tract' and GCR 'reader'.
@@ -84,8 +82,7 @@ def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
 
     convert_cat_to_dpdd(cat, **kwargs)
 
-
-def convert_cat_to_dpdd(cat, **kwargs):
+def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     """Save DPDD-named columns files for all tracts,
     patches from input GCR catalog.
 
@@ -111,7 +108,6 @@ def convert_cat_to_dpdd(cat, **kwargs):
     for quantities_this_patch in quantities:
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
         write_dataframe_to_files(quantities_this_patch, **kwargs)
-
 
 def write_dataframe_to_files(
         df,
