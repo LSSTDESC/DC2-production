@@ -2,7 +2,7 @@ import os
 
 from merge_tract_cat import load_patch, load_tract, load_and_save_tract
 
-REPO = os.getenv('DM_REPO')
+REPO = '/global/projecta/projectdirs/lsst/global/in2p3/Run1.1-test2/output'
 
 
 def example_load_and_save_tract(tract=4849, filename='test.hdf5', patches=None, repo=REPO, rerun=None):
@@ -12,7 +12,7 @@ def example_load_and_save_tract(tract=4849, filename='test.hdf5', patches=None, 
     """
     if rerun is not None:
         repo = os.path.join(repo, 'rerun', rerun)
-    return load_and_save_tract(repo, tract, filename, patches=patches,verbose=True)
+    return load_and_save_tract(repo, tract, filename, patches=patches)
 
 
 def example_load_tract(tract=4849, patches=None, repo=REPO, rerun=None):
@@ -58,12 +58,9 @@ if __name__ == "__main__":
     tract = 4849
     patch = '2,3'
 
-
-    load_and_save_patch_example = True
-    if load_and_save_patch_example:
-        filebase = 'merged_tract_patch_%d_%s' % (tract, patch)
-        filename = filebase+'.hdf5'
-        example_load_and_save_tract(tract, filename, patches=[patch])
+    load_and_plot_example = False
+    if load_and_plot_example:
+        example_load_and_plot()
 
     load_and_save_tract_example = False
     if load_and_save_tract_example:
@@ -71,9 +68,11 @@ if __name__ == "__main__":
         filename = filebase+'.hdf5'
         example_load_and_save_tract(tract, filename)
 
-    load_and_plot_example = False
-    if load_and_plot_example:
-        example_load_and_plot()
+    load_and_save_patch_example = True
+    if load_and_save_patch_example:
+        filebase = 'merged_tract_patch_%d_%s' % (tract, patch)
+        filename = filebase+'.hdf5'
+        example_load_and_save_tract(tract, filename, patches=[patch])
 
     patches=['1,1', '1,2']
     load_tract_example = False
