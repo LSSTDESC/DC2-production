@@ -60,11 +60,13 @@ columns_to_keep = \
 
 
 def generate_columns_to_keep():
+#SP : fix some typo but still does not work because gc.get_quantity_modifier.items() outdated
+    import sys
     import GCRCatalogs
-    gc = GCRCatalogs.load('dc2_coadd_run1.1p_tract4850')
+    gc = GCRCatalogs.load_catalog('dc2_coadd_run1.1p_tract4850')
 
     columns_to_keep = []
-    for k, v in gc.quantity_modifiers.items():
+    for k, v in gc.get_quantity_modifier.items():
         if isinstance(v, str):
             columns_to_keep.append(v)
         else:  # assume it's an iterable of stings
