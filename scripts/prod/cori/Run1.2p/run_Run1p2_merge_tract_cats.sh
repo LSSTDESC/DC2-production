@@ -13,6 +13,7 @@ TRACT=$1
 
 #python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
 
+#for the moment (just for functinal tests)
 python singlePatch.py
 
 
