@@ -132,13 +132,18 @@ def write_dataframe_to_files(
         Prefix to be added to the output filename. Default is 'dpdd_object'.
     hdf_key_prefix : str, optional
         Group name within the output HDF5 file. Default is 'object'.
+    parquet_scheme : str, optional   ['simple' or 'hive']
+            'simple' stores everything in one file per tract
+            'hive' stores one directory with a _metadata file and then
+                the columns partitioned into row groups.
+            Default is simple
+    parquet_engine : str, optional
+        Engine to write parquet on disk. Available: fastparquet, pyarrow.
+        Default is fastparquet.
     parquet_compression : str, optional
         Compression algorithm to use when writing Parquet files.
         Potential: gzip, snappy, lzo, uncompressed. Default is gzip.
         Availability depends on the engine used.
-    parquet_engine : str, optional
-        Engine to write parquet on disk. Available: fastparquet, pyarrow.
-        Default is fastparquet.
     verbose : boolean, optional
         If True, print out debug messages. Default is True.
     """
