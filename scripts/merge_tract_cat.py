@@ -179,6 +179,7 @@ def load_patch(butler_or_repo, tract, patch,
 
 
     isPrimary = ref_table['detect_isPrimary']
+    print("REF_TABLE ISPRIMARY {tract:04d} {patch:s}: {len_ref_table:d} {num_is_primary:d}".format(**tract_patch_data_id, len_ref_table=len(ref_table), num_is_primary=sum(isPrimary)))
     ref_table = ref_table[isPrimary]
     if len(ref_table) == 0:
         if verbose:
