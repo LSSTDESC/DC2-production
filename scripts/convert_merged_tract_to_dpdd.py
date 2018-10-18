@@ -54,6 +54,7 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
 
     convert_cat_to_dpdd(cat, **kwargs)
 
+
 def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for specified 'tract' and GCR 'reader'.
 
@@ -82,7 +83,8 @@ def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
 
     convert_cat_to_dpdd(cat, **kwargs)
 
-def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
+
+def convert_cat_to_dpdd(cat, **kwargs):
     """Save DPDD-named columns files for all tracts,
     patches from input GCR catalog.
 
@@ -90,16 +92,12 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     ----------
     cat : DC2ObjectCatalog instance
         Catalog instance returned by `GCRCatalogs.load_catalog`.
-    reader : str, optional
-        GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
 
     Other Parameters
     ----------------
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
-
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
@@ -108,6 +106,7 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     for quantities_this_patch in quantities:
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
         write_dataframe_to_files(quantities_this_patch, **kwargs)
+
 
 def write_dataframe_to_files(
         df,
