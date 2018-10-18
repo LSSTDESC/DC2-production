@@ -56,15 +56,23 @@ columns_to_keep = \
  'z_base_SdssShape_psf_xx', 'z_base_SdssShape_psf_xy',
  'z_base_SdssShape_psf_yy', 'z_base_SdssShape_xx', 'z_base_SdssShape_xy',
  'z_base_SdssShape_yy', 'z_mag', 'z_mag_err', 'z_modelfit_CModel_flux',
- 'z_modelfit_CModel_fluxSigma']
+ 'z_modelfit_CModel_fluxSigma',
+ 'u_modelfit_mag','u_modelfit_mag_err','u_modelfit_SNR',
+ 'g_modelfit_mag','g_modelfit_mag_err','g_modelfit_SNR',
+ 'r_modelfit_mag','r_modelfit_mag_err','r_modelfit_SNR',
+ 'i_modelfit_mag','i_modelfit_mag_err','i_modelfit_SNR',
+ 'z_modelfit_mag','z_modelfit_mag_err','z_modelfit_SNR',
+ 'y_modelfit_mag','y_modelfit_mag_err','y_modelfit_SNR'
+]
 
 
 def generate_columns_to_keep():
+#SP : Does not work because gc.get_quantity_modifier.items() outdated
     import GCRCatalogs
-    gc = GCRCatalogs.load('dc2_coadd_run1.1p_tract4850')
+    gc = GCRCatalogs.load_catalog('dc2_coadd_run1.1p_tract4850')
 
     columns_to_keep = []
-    for k, v in gc.quantity_modifiers.items():
+    for k, v in gc.get_quantity_modifier.items():
         if isinstance(v, str):
             columns_to_keep.append(v)
         else:  # assume it's an iterable of stings

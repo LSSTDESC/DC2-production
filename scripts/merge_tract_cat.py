@@ -205,6 +205,13 @@ def load_patch(butler_or_repo, tract, patch,
         cat['mag_err'] = mag_err
         cat['SNR'] = np.abs(cat['base_PsfFlux_flux'])/cat['base_PsfFlux_fluxSigma']
 
+        modelfit_mag, modelfit_mag_err = CoaddCalib.getMagnitude(cat['modelfit_CModel_flux'], cat['modelfit_CModel_fluxSigma'])
+
+        cat['modelfit_mag'] = modelfit_mag
+        cat['modelfit_mag_err'] = modelfit_mag_err
+        cat['modelfit_SNR'] = np.abs(cat['modelfit_CModel_flux'])/cat['modelfit_CModel_fluxSigma']
+
+
         cat = cat[isPrimary]
 
         merge_filter_cats[filt] = cat

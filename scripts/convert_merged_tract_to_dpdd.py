@@ -29,7 +29,6 @@ import pandas as pd
 
 import GCRCatalogs
 
-
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for all available tracts in GCR 'reader'.
 
@@ -93,16 +92,12 @@ def convert_cat_to_dpdd(cat, **kwargs):
     ----------
     cat : DC2ObjectCatalog instance
         Catalog instance returned by `GCRCatalogs.load_catalog`.
-    reader : str, optional
-        GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
 
     Other Parameters
     ----------------
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
-
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
