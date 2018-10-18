@@ -221,13 +221,17 @@ You can also specify the engine to use to write parquet files, and the
 compression algorithm to use:
 
 python %(prog)s
-    [--parquet_engine PARQUET_ENGINE]
-    [--parquet_compression PARQUET_COMPRESSION]
+    --parquet_scheme hive
+    --parquet_engine fastparquet
+    --parquet_compression gzip
 
-Available engines are fastparquet (default) and pyarrow. Note that they need
-to be installed on your machine to be used (pip install PARQUET_ENGINE --user).
+The selected engine needs to be installed on your machine to use.  E.g.,
+
+pip install fastparquet --user
+pip install pyarrow --user
+
 Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
-Availability depends on the engine used.
+Availability depends on the installation of the engine used.
 
 [2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
 
@@ -235,16 +239,21 @@ Availability depends on the engine used.
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
-                        help='Skymap tract[s] to process. Default is all.')
+                        help='Skymap tract[s] to process.')
     parser.add_argument('--reader', default='dc2_coadd_run1.1p',
-                        help='GCR reader to use.')
+                        help='GCR reader to use. (default: %(default)s)')
+    parser.add_argument('--parquet_scheme', default='hive',
+                        choices=['hive', 'simple'],
+                        help="""Parquet storage scheme. (default: %(default)s)
+'simple': one file.
+'hive': one directory with a metadata file and
+the data partitioned into row groups.""")
     parser.add_argument('--parquet_engine', default='fastparquet',
-                        help="""Parquet engine to use.
-Available: fastparquet (default) or pyarrow.""")
+                        choices=['fastparquet', 'pyarrow'],
+                        help="""Parquet engine to use. (default: %(default)s)""")
     parser.add_argument('--parquet_compression', default='gzip',
-                        help="""Compression algorithm to use.
-Potential: gzip (default), snappy, lzo, uncompressed.
-Availability depends on the engine used.""")
+                        choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
+                        help="""Parquet compression algorithm to use. (default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
