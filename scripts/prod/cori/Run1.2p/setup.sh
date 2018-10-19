@@ -9,7 +9,7 @@
 #
 #  author S. Plaszczynski 9/oct 18 (plaszczy@lal.in2p3.fr)
 #
-
+HERE=$PWD
 #stack version
 if [ -z "${STACK_VERSION}" ] ; then
 export STACK_VERSION=lsstdesc/stack-jupyter:w_2018_30-run1.2-v2
