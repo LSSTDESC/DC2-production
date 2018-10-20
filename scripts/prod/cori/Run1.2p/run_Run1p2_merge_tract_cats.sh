@@ -8,8 +8,8 @@ echo "stack init done"
 #
 cd ${OUTPUT_DIR}
 
-echo "running on tract=$TRACT"
 TRACT=$1
+echo "running on tract=$TRACT"
 
 #python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
 

@@ -4,6 +4,7 @@ sys.path.insert(0,os.getenv('SCRIPT_DIR'))
 from merge_tract_cat import load_and_save_tract
 
 repo=os.getenv('DM_REPO')
+print(repo)
 
 tract=4849
 patch=["1,1"]

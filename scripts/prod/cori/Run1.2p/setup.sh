@@ -27,7 +27,8 @@ fi
 #output DIR
 if [ -z "${OUTPUT_DIR}" ] ; then
 #export OUTPUT_DIR=${DM_REPO}/summary
-export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
+#export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
+export OUTPUT_DIR=/global/cscratch1/sd/plaszczy/Run1.2p
 fi
 mkdir -p ${OUTPUT_DIR}
 
