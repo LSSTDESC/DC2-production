@@ -21,6 +21,7 @@ and either
 pyarrow or fastparquet.
 """
 
+import os
 import sys
 
 from astropy.table import Table
@@ -48,8 +49,11 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     """
     trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     cat = GCRCatalogs.load_catalog(reader, trim_config)
+    # We don't want to use the cache because we know we are just going through the data once.
+    cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
+
 
 def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for specified 'tract' and GCR 'reader'.
@@ -74,10 +78,13 @@ def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
     trim_thistract_config = {
         'filename_pattern': 'trim_merged_tract_{:04d}\.hdf5$'.format(tract)}
     cat = GCRCatalogs.load_catalog(reader, trim_thistract_config)
+    # We don't want to use the cache because we know we are just going through the data once.
+    cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
 
-def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
+
+def convert_cat_to_dpdd(cat, **kwargs):
     """Save DPDD-named columns files for all tracts,
     patches from input GCR catalog.
 
@@ -85,16 +92,12 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
     ----------
     cat : DC2ObjectCatalog instance
         Catalog instance returned by `GCRCatalogs.load_catalog`.
-    reader : str, optional
-        GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
 
     Other Parameters
     ----------------
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
-
     """
     columns = cat.list_all_quantities()
     columns.extend(['tract', 'patch'])
@@ -104,13 +107,17 @@ def convert_cat_to_dpdd(cat, reader='dc2_coadd_run1.1p', **kwargs):
         quantities_this_patch = pd.DataFrame.from_dict(quantities_this_patch)
         write_dataframe_to_files(quantities_this_patch, **kwargs)
 
+
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
         hdf_key_prefix='object',
-        parquet_compression='gzip',
+        parquet_scheme='hive',
         parquet_engine='fastparquet',
-        verbose=True):
+        parquet_compression='gzip',
+        append=True,
+        verbose=True,
+        **kwargs):
     """Write out dataframe to HDF, FITS, and Parquet files.
 
     Choose file names based on tract (HDF) or tract + patch (FITS, Parquet).
@@ -123,13 +130,18 @@ def write_dataframe_to_files(
         Prefix to be added to the output filename. Default is 'dpdd_object'.
     hdf_key_prefix : str, optional
         Group name within the output HDF5 file. Default is 'object'.
+    parquet_scheme : str, optional   ['simple' or 'hive']
+            'simple' stores everything in one file per tract
+            'hive' stores one directory with a _metadata file and then
+                the columns partitioned into row groups.
+            Default is simple
+    parquet_engine : str, optional
+        Engine to write parquet on disk. Available: fastparquet, pyarrow.
+        Default is fastparquet.
     parquet_compression : str, optional
         Compression algorithm to use when writing Parquet files.
         Potential: gzip, snappy, lzo, uncompressed. Default is gzip.
         Availability depends on the engine used.
-    parquet_engine : str, optional
-        Engine to write parquet on disk. Available: fastparquet, pyarrow.
-        Default is fastparquet.
     verbose : boolean, optional
         If True, print out debug messages. Default is True.
     """
@@ -158,17 +170,24 @@ def write_dataframe_to_files(
     if verbose:
         print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
     key = key_format.format(**info)
-    df.to_hdf(outfile_base_tract + '.hdf5', key=key)
+    hdf_file = outfile_base_tract+'.hdf5'
+    # Append iff the file already exists
+    hdf_append = append and os.path.exists(hdf_file)
+    df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
-    # In principle, Parquet should be really happy
-    # with files appended to HDFS-type storage
-    # But the Pandas implementation doesn't expose this ability.
     if verbose:
         print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    df.to_parquet(
-        outfile_base_tract_patch + '.parquet',
-        engine=parquet_engine,
-        compression=parquet_compression)
+    parquet_file = outfile_base_tract+'.parquet'
+    # Append iff the file already exists
+    parquet_append = append and os.path.exists(parquet_file)
+    df.to_parquet(parquet_file,
+                  append=parquet_append,
+                  file_scheme=parquet_scheme,
+                  engine=parquet_engine,
+                  compression=parquet_compression)
+# Consider uses a file format other than 'simple' to enable partition.
+# e.g., format='hive', format='drill'
+#                  partition_on=('tract', 'patch'))
 
     if verbose:
         print("Writing {} {} to FITS DPDD file.".format(tract, patch))
@@ -200,13 +219,17 @@ You can also specify the engine to use to write parquet files, and the
 compression algorithm to use:
 
 python %(prog)s
-    [--parquet_engine PARQUET_ENGINE]
-    [--parquet_compression PARQUET_COMPRESSION]
+    --parquet_scheme hive
+    --parquet_engine fastparquet
+    --parquet_compression gzip
 
-Available engines are fastparquet (default) and pyarrow. Note that they need
-to be installed on your machine to be used (pip install PARQUET_ENGINE --user).
+The selected engine needs to be installed on your machine to use.  E.g.,
+
+pip install fastparquet --user
+pip install pyarrow --user
+
 Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
-Availability depends on the engine used.
+Availability depends on the installation of the engine used.
 
 [2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
 
@@ -214,16 +237,21 @@ Availability depends on the engine used.
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
-                        help='Skymap tract[s] to process. Default is all.')
+                        help='Skymap tract[s] to process.')
     parser.add_argument('--reader', default='dc2_coadd_run1.1p',
-                        help='GCR reader to use.')
+                        help='GCR reader to use. (default: %(default)s)')
+    parser.add_argument('--parquet_scheme', default='hive',
+                        choices=['hive', 'simple'],
+                        help="""Parquet storage scheme. (default: %(default)s)
+'simple': one file.
+'hive': one directory with a metadata file and
+the data partitioned into row groups.""")
     parser.add_argument('--parquet_engine', default='fastparquet',
-                        help="""Parquet engine to use.
-Available: fastparquet (default) or pyarrow.""")
+                        choices=['fastparquet', 'pyarrow'],
+                        help="""Parquet engine to use. (default: %(default)s)""")
     parser.add_argument('--parquet_compression', default='gzip',
-                        help="""Compression algorithm to use.
-Potential: gzip (default), snappy, lzo, uncompressed.
-Availability depends on the engine used.""")
+                        choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
+                        help="""Parquet compression algorithm to use. (default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])

@@ -67,8 +67,7 @@ columns_to_keep = \
 
 
 def generate_columns_to_keep():
-#SP : fix some typo but still does not work because gc.get_quantity_modifier.items() outdated
-    import sys
+#SP : Does not work because gc.get_quantity_modifier.items() outdated
     import GCRCatalogs
     gc = GCRCatalogs.load_catalog('dc2_coadd_run1.1p_tract4850')
 
