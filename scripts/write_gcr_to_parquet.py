@@ -126,9 +126,10 @@ To produce files for all data call with:
 
 python %(prog)s
 
-To specify a different reader and produce files for all available tracts:
+To specify a different reader
 
 python %(prog)s --reader dc2_object_run1.2p
+python %(prog)s --reader dc2_truth_run1.2_static
 
 You can also specify the engine to use to write parquet files, and the
 compression algorithm to use:
