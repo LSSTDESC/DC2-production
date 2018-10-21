@@ -15,7 +15,6 @@ pyarrow or fastparquet.
 import os
 import sys
 
-from astropy.table import Table
 import pandas as pd
 
 import GCRCatalogs
@@ -156,19 +155,17 @@ Availability depends on the installation of the engine used.
                         help='GCR reader to use. (default: %(default)s)')
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
-                        help="""
-Parquet storage scheme. (default: %(default)s)
-'simple': one file.
+                        help="""'simple': one file.
 'hive': one directory with a metadata file and
-the data partitioned into row groups.""")
+the data partitioned into row groups.
+(default: %(default)s)
+""")
     parser.add_argument('--parquet_engine', default='fastparquet',
                         choices=['fastparquet', 'pyarrow'],
-                        help="""
-Parquet engine to use. (default: %(default)s)""")
+                        help="""(default: %(default)s)""")
     parser.add_argument('--parquet_compression', default='gzip',
                         choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
-                        help="""
-Parquet compression algorithm to use. (default: %(default)s)""")
+                        help="""(default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
