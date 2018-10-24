@@ -99,7 +99,7 @@ def write_dataframe_to_files(
         If True, print out debug messages. Default is True.
     """
     # Normalise output filename
-    outfile = '{}.{}'.format(filename_prefix, 'parquet')
+    parquet_file = '{}.{}'.format(filename_prefix, 'parquet')
 
     if verbose:
         print("Writing chunk {} to Parquet file.".format(df))
