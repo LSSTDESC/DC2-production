@@ -221,7 +221,8 @@ def load_patch(butler_or_repo, tract, patch,
 
         cat['mag'] = mag
         cat['mag_err'] = mag_err
-        cat['SNR'] = np.abs(cat[flux_names['psf_flux']])/cat[flux_names['psf_flux']]
+        cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
+                            cat[flux_names['psf_flux_err']])
 
         modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']],
                                                             cat[flux_names['modelfit_flux_err']])
