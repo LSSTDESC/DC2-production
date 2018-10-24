@@ -196,21 +196,21 @@ def load_patch(butler_or_repo, tract, patch,
                 print(" ", e)
             continue
 
-        CoaddCalib = butler.get('deepCoadd_calexp_calib', this_data)
-        CoaddCalib.setThrowOnNegativeFlux(False)
+        calib = butler.get('deepCoadd_calexp_calib', this_data)
+        calib.setThrowOnNegativeFlux(False)
 
-        mag, mag_err = CoaddCalib.getMagnitude(cat['base_PsfFlux_instFlux'], cat['base_PsfFlux_instFluxErr'])
+        import pdb; pdb.set_trace();
+        mag, mag_err = calib.getMagnitude(cat['base_PsfFlux_instFlux'], cat['base_PsfFlux_instFluxErr'])
 
         cat['mag'] = mag
         cat['mag_err'] = mag_err
         cat['SNR'] = np.abs(cat['base_PsfFlux_instFlux'])/cat['base_PsfFlux_instFluxErr']
 
-        modelfit_mag, modelfit_mag_err = CoaddCalib.getMagnitude(cat['modelfit_CModel_instFlux'], cat['modelfit_CModel_instFluxErr'])
+        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat['modelfit_CModel_instFlux'], cat['modelfit_CModel_instFluxErr'])
 
         cat['modelfit_mag'] = modelfit_mag
         cat['modelfit_mag_err'] = modelfit_mag_err
         cat['modelfit_SNR'] = np.abs(cat['modelfit_CModel_instFlux'])/cat['modelfit_CModel_instFluxErr']
-
 
         cat = cat[isPrimary]
 
