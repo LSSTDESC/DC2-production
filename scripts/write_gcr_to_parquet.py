@@ -20,10 +20,8 @@ import pandas as pd
 import GCRCatalogs
 
 
-def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for all available tracts in GCR 'reader'.
-
-    The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'.
+def convert_all_to_parquet(reader='dc2_coadd_run1.1p', **kwargs):
+    """Produce output files for all available GCR 'reader'.
 
     Parameters
     ----------
@@ -43,10 +41,10 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     # when we know we are just going through the data once.
     cat.use_cache = False
 
-    convert_cat_to_dpdd(cat, **kwargs)
+    convert_cat_to_parquet(cat, **kwargs)
 
 
-def convert_cat_to_dpdd(cat, include_native=True, **kwargs):
+def convert_cat_to_parquet(cat, include_native=True, **kwargs):
     """Save columns from input GCR catalog.
 
     Parameters
@@ -145,9 +143,6 @@ pip install pyarrow --user
 
 Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
 Availability depends on the installation of the engine used.
-
-[2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
-
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
@@ -170,7 +165,7 @@ the data partitioned into row groups.
 
     args = parser.parse_args(sys.argv[1:])
 
-    convert_all_to_dpdd(
+    convert_cat_to_parquet(
         reader=args.reader,
         parquet_engine=args.parquet_engine,
         parquet_compression=args.parquet_compression)
