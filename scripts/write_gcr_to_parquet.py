@@ -146,8 +146,7 @@ Availability depends on the installation of the engine used.
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
-    parser.add_argument('--reader', default='dc2_coadd_run1.1p',
-                        help='GCR reader to use. (default: %(default)s)')
+    parser.add_argument('--reader', help='GCR reader to use.')
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
                         help="""'simple': one file.
@@ -165,7 +164,8 @@ the data partitioned into row groups.
 
     args = parser.parse_args(sys.argv[1:])
 
-    convert_cat_to_parquet(
-        reader=args.reader,
+    convert_all_to_parquet(
+        args.reader,
+        parquet_scheme=args.parquet_scheme,
         parquet_engine=args.parquet_engine,
         parquet_compression=args.parquet_compression)
