@@ -205,6 +205,8 @@ def load_patch(butler_or_repo, tract, patch,
                 print(" ", e)
             continue
 
+        if verbose:
+            print("AFW photometry catalog schema version: {}".format(cat.schema.VERSION))
         flux_names = flux_field_names_per_schema_version[cat.schema.VERSION]
 
         # Convert the AFW table to an AstroPy table
