@@ -140,7 +140,8 @@ def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
                filters={'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'},
                trim_colnames_for_fits=False,
-               verbose=False
+               verbose=False,
+               debug=False
                ):
     """Load patch catalogs.  Return merged catalog across filters.
 
@@ -205,7 +206,7 @@ def load_patch(butler_or_repo, tract, patch,
                 print(" ", e)
             continue
 
-        if verbose:
+        if debug:
             print("AFW photometry catalog schema version: {}".format(cat.schema.VERSION))
         flux_names = flux_field_names_per_schema_version[cat.schema.VERSION]
 
