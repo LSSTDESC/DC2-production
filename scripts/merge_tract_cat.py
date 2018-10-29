@@ -140,7 +140,8 @@ def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
                filters={'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'},
                trim_colnames_for_fits=False,
-               verbose=False
+               verbose=False,
+               debug=False
                ):
     """Load patch catalogs.  Return merged catalog across filters.
 
@@ -184,33 +185,53 @@ def load_patch(butler_or_repo, tract, patch,
             print("  No good isPrimary entries for tract %d, patch %s" % (tract, patch))
         return ref_table
 
+    flux_field_names_per_schema_version = {
+        1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma',
+              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxSigma'},
+        2: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxErr',
+              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxErr'},
+        3: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr',
+              'modelfit_flux': 'modelfit_CModel_instFlux', 'modelfit_flux_err': 'modelfit_CModel_instFluxErr'},
+    }
+
     merge_filter_cats = {}
     for filt in filters:
         this_data = tract_patch_data_id.copy()
         this_data['filter'] = filters[filt]
         try:
             cat = butler.get(datasetType='deepCoadd_forced_src',
-                             dataId=this_data).asAstropy()
+                             dataId=this_data)
         except NoResults as e:
             if verbose:
                 print(" ", e)
             continue
 
-        CoaddCalib = butler.get('deepCoadd_calexp_calib', this_data)
-        CoaddCalib.setThrowOnNegativeFlux(False)
+        if debug:
+            print("AFW photometry catalog schema version: {}".format(cat.schema.VERSION))
+        flux_names = flux_field_names_per_schema_version[cat.schema.VERSION]
 
-        mag, mag_err = CoaddCalib.getMagnitude(cat['base_PsfFlux_flux'], cat['base_PsfFlux_fluxSigma'])
+        # Convert the AFW table to an AstroPy table
+        # because it's much easier to add column to an AstroPy table
+        # than it is to set up a new schema for an AFW table.
+        cat = cat.asAstropy()
+
+        calib = butler.get('deepCoadd_calexp_calib', this_data)
+        calib.setThrowOnNegativeFlux(False)
+
+        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']], cat[flux_names['psf_flux_err']])
 
         cat['mag'] = mag
         cat['mag_err'] = mag_err
-        cat['SNR'] = np.abs(cat['base_PsfFlux_flux'])/cat['base_PsfFlux_fluxSigma']
+        cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
+                            cat[flux_names['psf_flux_err']])
 
-        modelfit_mag, modelfit_mag_err = CoaddCalib.getMagnitude(cat['modelfit_CModel_flux'], cat['modelfit_CModel_fluxSigma'])
+        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']],
+                                                            cat[flux_names['modelfit_flux_err']])
 
         cat['modelfit_mag'] = modelfit_mag
         cat['modelfit_mag_err'] = modelfit_mag_err
-        cat['modelfit_SNR'] = np.abs(cat['modelfit_CModel_flux'])/cat['modelfit_CModel_fluxSigma']
-
+        cat['modelfit_SNR'] = np.abs(cat[flux_names['modelfit_flux']] /
+                                     cat[flux_names['modelfit_flux_err']])
 
         cat = cat[isPrimary]
 
