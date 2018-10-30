@@ -14,6 +14,5 @@ echo "running on tract=$TRACT"
 #python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
 
 #for the moment (just for functinal tests)
-python $HERE/singlePatch.py
+time python $HERE/singlePatch.py
 #python $HERE/checkButler.py
-

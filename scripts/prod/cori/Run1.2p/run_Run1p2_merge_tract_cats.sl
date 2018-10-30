@@ -7,8 +7,8 @@
 #SBATCH -t 00:20:00
 #SBATCH -q debug
 #SBATCH -C haswell
-#SBATCH --license=projecta
 #SBATCH --image=lsstdesc/stack-jupyter:w_2018_30-run1.2-v2
+#SBATCH -L SCRATCH
 
 pwd
 echo "HERE=$HERE"
