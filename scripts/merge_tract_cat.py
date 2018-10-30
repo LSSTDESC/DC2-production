@@ -325,6 +325,8 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
+    parser.add_argument('--name', default='object',
+                        help='Base name of files: <name>_tract_5062.hdf5')
     parser.add_argument('--verbose', dest='verbose', default=True,
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
@@ -340,7 +342,7 @@ if __name__ == '__main__':
         filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
 
     for tract in args.tract:
-        filebase = 'merged_tract_%d' % tract
+        filebase = '{:s}_tract_{:d}'.format(args.name, tract)
         filename = filebase + '.hdf5'
         load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
                             filters=filters)
