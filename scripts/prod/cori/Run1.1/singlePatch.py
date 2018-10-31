@@ -5,6 +5,8 @@ from merge_tract_cat import load_and_save_tract
 
 repo=os.getenv('DM_REPO')
 
+print("repo={}".format(repo))
+
 tract=4849
 patch=["1,1"]
 

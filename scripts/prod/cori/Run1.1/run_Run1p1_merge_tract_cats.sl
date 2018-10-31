@@ -7,8 +7,7 @@
 #SBATCH -t 05:00:00
 #SBATCH -q debug
 #SBATCH -C haswell
-#SBATCH --license=projecta
-#SBATCH -A m1727
+#SBATCH -L SCRATCH
 
 export PATH=${PATH}:/usr/common/tig/taskfarmer/1.5/bin:$(pwd)
 export THREADS=32
