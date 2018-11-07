@@ -22,8 +22,8 @@ fi
 #DM output directory
 if [ -z "${DM_REPO}" ] ; then
 #export DM_REPO="/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/w_2018_30/rerun/coadd-all2"
-export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p/rerun/coadd-all2
-
+#export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p/rerun/coadd-all2
+export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p_globus/w_2018_30/rerun/coadd-all2
 fi
 
 #output DIR
