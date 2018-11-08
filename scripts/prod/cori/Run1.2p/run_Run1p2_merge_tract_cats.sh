@@ -6,13 +6,16 @@ setup lsst_distrib
 setup -r /opt/lsst/software/stack/obs_lsstCam -j
 echo "stack $STACK_VERSION init done"
 #
+
 cd ${OUTPUT_DIR}
 
 TRACT=$1
 echo "running on tract=$TRACT"
 
-#python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
+python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
 
-#for the moment (just for functinal tests)
-time python $HERE/singlePatch.py
+echo "TRACT=$TRACT done" 
+
+#for the moment (just for functional tests)
+#time python $HERE/singlePatch.py
 #python $HERE/checkButler.py
