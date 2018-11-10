@@ -1,3 +1,4 @@
+import sys,os,glob
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,31 +8,31 @@ from pandas.api.types import is_numeric_dtype
 #is_numeric_dtype(df['B'])
 #mask1=~np.isnan(df[var1])
 
-store = pd.HDFStore("test.hdf5",'r')
+zename=sys.argv[1]
+
+store = pd.HDFStore(zename,'r')
 keys = store.keys()
 
-#first key
-df=store.get(keys[0])
 #df=pd.read_hdf("test.hdf5")
 
-cols=df.columns
-
 var1='r_mag'
-var2='r_modelfit_mag'
+#var2='r_modelfit_mag'
 
-if not var1 in cols:
-    print("no {} column!".format(var1))
-if not var2 in cols:
-    print("no {} column!".format(var2))
+print("{}, #patches={}".format(zename,len(keys)))
 
+print("key\t\tvar\tN\tvalid")
+len1=[]
+frac1=[]
+for k in keys:
+    df=store.get(k)
+    cols=df.columns
+    if not var1 in cols:
+        print("no {} column!".format(var1))
+        continue
+    mask1=~np.isnan(df[var1])
+    len1.append(len(mask1))
+    frac1.append(sum(mask1)/len1[-1])
+    print("{}\t{}\t{}\t{:3.1f}".format(k,var1,len1[-1],frac1[-1]*100))
 
-
-mask1=~np.isnan(df[var1])
-mask2=~np.isnan(df[var2])
-mask=mask1&mask2
-
-print("{} valid fraction={}".format(var1,sum(mask1)/len(mask1)))
-print("{} valid fraction={}".format(var2,sum(mask2)/len(mask2)))
-plt.plot(df[var1][mask])
-plt.plot(df[var2][mask])
-plt.show()
+    #mask2=~np.isnan(df[var2])
+    #mask=mask1&mask2

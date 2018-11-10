@@ -12,7 +12,7 @@ cd ${OUTPUT_DIR}
 TRACT=$1
 echo "running on tract=$TRACT"
 
-python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
+time python "${SCRIPT_DIR}"/merge_tract_cat.py "${DM_REPO}" "${TRACT}"
 
 echo "TRACT=$TRACT done" 
 
