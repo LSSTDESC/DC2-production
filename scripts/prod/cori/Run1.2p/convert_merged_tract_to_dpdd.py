@@ -194,9 +194,9 @@ def write_dataframe_to_files(
 # e.g., format='hive', format='drill'
 #                  partition_on=('tract', 'patch'))
 
-    if verbose:
-        print("Writing {} {} to FITS DPDD file.".format(tract, patch))
-    Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
+#    if verbose:
+#        print("Writing {} {} to FITS DPDD file.".format(tract, patch))
+#    Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
 
 
 if __name__ == "__main__":
@@ -257,7 +257,7 @@ the data partitioned into row groups.""")
     parser.add_argument('--parquet_compression', default='gzip',
                         choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
                         help="""Parquet compression algorithm to use. (default: %(default)s)""")
-    parser.add_argument('--verbose', default=False, action='store_true')
+    parser.add_argument('--verbose', default=True, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
 
