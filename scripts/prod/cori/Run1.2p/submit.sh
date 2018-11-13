@@ -24,6 +24,6 @@ $HERE/run_tract.sh $tract
 
 EOF
 
-#sbatch batch_$tract.sl 
+sbatch batch_$tract.sl 
 
 done
