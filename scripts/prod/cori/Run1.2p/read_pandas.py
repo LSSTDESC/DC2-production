@@ -27,7 +27,7 @@ for k in keys:
     df=store.get(k)
     cols=df.columns
     if not var1 in cols:
-        print("no {} column!".format(var1))
+        print("{} : no {} column!".format(k,var1))
         continue
     mask1=~np.isnan(df[var1])
     len1.append(len(mask1))
