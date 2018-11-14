@@ -28,7 +28,7 @@ fi
 #output DIR
 if [ -z "${OUTPUT_DIR}" ] ; then
 #export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
-export OUTPUT_DIR=/global/cscratch1/sd/plaszczy/Run1.2p/summary
+export OUTPUT_DIR=/global/cscratch1/sd/plaszczy/Run1.2p/run
 #export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
 
 fi
