@@ -28,7 +28,10 @@ store.close()
 
 for fin in ff :
     print("comparing with {}".format(fin))
+    store = pd.HDFStore(fin,'r')
+    keys = store.keys()
     for k in keys:
         print(k)
         df=store.get(k)
         sameTypes(tref,df.dtypes)
+    store.close()
