@@ -7,7 +7,7 @@ cat > batch_$tract.sl <<EOF
 #!/bin/bash -l
 
 #SBATCH -N 1
-#SBATCH -t 16:00:00
+#SBATCH -t 15:00:00
 #SBATCH -q regular
 #SBATCH -C haswell
 #SBATCH --image=lsstdesc/stack-jupyter:w_2018_30-run1.2-v2

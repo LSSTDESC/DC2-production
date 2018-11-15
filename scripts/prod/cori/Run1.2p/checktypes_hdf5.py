@@ -18,19 +18,21 @@ def sameTypes(t1,t2):
 
 ff=glob.glob("dpdd_object_tract_*.hdf5")
 
-print("ref will be {}".format(ff[0]))
-
-store = pd.HDFStore(ff[0],'r')
-keys = store.keys()
-df_ref=store.get(keys[0])
-tref=df_ref.dtypes
-store.close()
+#print("ref will be {}".format(ff[0]))
+#ref
+#store = pd.HDFStore(ff[0],'r')
+#keys = store.keys()
+#df_ref=store.get(keys[0])
+#tref=df_ref.dtypes
+#store.close()
 
 for fin in ff :
-    print("comparing with {}".format(fin))
     store = pd.HDFStore(fin,'r')
     keys = store.keys()
-    for k in keys:
+    df_ref=store.get(keys[0])
+    tref=df_ref.dtypes
+    print("ref={}".format(keys[0]))
+    for k in keys[1:]:
         print(k)
         df=store.get(k)
         assert(sameTypes(tref,df.dtypes))

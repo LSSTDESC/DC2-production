@@ -33,6 +33,6 @@ del dfs
 
 print("N tot={} vs {} ".format(dftot.index.size,totsize))
 #
-print("writing {}".format(fout))
-Table.from_pandas(dftot).write(fout)
-del dftot
+#print("writing {}".format(fout))
+#Table.from_pandas(dftot).write(fout)
+#del dftot
