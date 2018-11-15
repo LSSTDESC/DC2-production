@@ -2,17 +2,36 @@ import glob
 import pandas as pd
 from astropy.table import Table
 
+
+def correctNans(n,df1,df2):
+    s1=str(df1.dtypes[n])
+    s2=str(df2.dtypes[n])
+    if s1=='bool' and s2=='float64':
+        mask=np.isnan(df2[n])
+        if sum(mask)==len(df2[n]):
+            df2[n]=~df2[n].astype(bool) 
+            print("OK: corrected Nan only column {} to False".format(n))
+            return True
+    if s2=='bool' and s1=='float64':
+        mask=np.isnan(df1[n])
+        if sum(mask)==len(df1[n]):
+            df1[n]=~df1[n].astype(bool) 
+            print("OK: corrected Nan only column {} to False".format(n))
+            return True
+    return False
+
+
 #check datatypes are all consistent
-def sameTypes(t1,t2):
-    if not t1.index.size == t2.index.size :
+def sameTypes(df1,df2):
+    if not df1.dtypes.index.size == df2.dtypes.index.size :
         print("not same size")
         return False
-    for n in t1.index:
-        s1=str(t1[n])
-        s2=str(t2[n])
+    for n in df1.dtypes.index:
+        s1=str(df1.dtypes[n])
+        s2=str(df2.dtypes[n])
         if not s1==s2:
             print("different types for {}: {} vs {}".format(n,s1,s2))
-            return False
+            assert(correctNans(n,df1,df2))
     #print("all types checked: OK")
     return True
 
@@ -28,13 +47,12 @@ for fin in ff :
     print("{}, #patches={}".format(fin,len(keys)))
     #first key is the reference
     df_ref=store.get(keys[0])
-    tref=df_ref.dtypes
     dfs=list(df_ref)
     
     for k in keys[1:]:
 #        print(k)
         df=store.get(k)
-        if not sameTypes(tref,df.dtypes)):
+        if not sameTypes(df_ref,df):
             print("WARNING!!!!! inconsistent types in {} {}".format(fin,k))
         dfs.append(df)
 
