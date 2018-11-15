@@ -12,7 +12,7 @@ def sameTypes(t1,t2):
         if not s1==s2:
             print("different types for {}: {} vs {}".format(n,s1,s2))
             return False
-    print("all types checked: OK")
+#    print("all types checked: OK")
     return True
 
 
@@ -27,15 +27,19 @@ ff=glob.glob("dpdd_object_tract_*.hdf5")
 #store.close()
 
 for fin in ff :
+    print("file={}".format(fin))
     store = pd.HDFStore(fin,'r')
     keys = store.keys()
     df_ref=store.get(keys[0])
     tref=df_ref.dtypes
-    print("ref={}".format(keys[0]))
+    #print("ref={}".format(keys[0]))
     for k in keys[1:]:
-        print(k)
+        #print(k)
         df=store.get(k)
-        assert(sameTypes(tref,df.dtypes))
+        #        assert(sameTypes(tref,df.dtypes))
+        if not sameTypes(tref,df.dtypes):
+            print("WARNING!!!!! unconsistent types in {} {}".format(fin,k))
+
     store.close()
 
 
