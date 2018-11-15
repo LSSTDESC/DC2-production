@@ -29,6 +29,7 @@ import pandas as pd
 
 import GCRCatalogs
 
+
 def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     """Produce DPDD output files for all available tracts in GCR 'reader'.
 
@@ -112,6 +113,9 @@ def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
         hdf_key_prefix='object',
+        write_fits=False,
+        write_hdf=True,
+        write_parquet=True,
         parquet_scheme='hive',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
@@ -130,6 +134,9 @@ def write_dataframe_to_files(
         Prefix to be added to the output filename. Default is 'dpdd_object'.
     hdf_key_prefix : str, optional
         Group name within the output HDF5 file. Default is 'object'.
+    write_fits : boolean, optional
+    write_hdf : boolean, optional
+    write_parquet : boolean, optional
     parquet_scheme : str, optional   ['simple' or 'hive']
             'simple' stores everything in one file per tract
             'hive' stores one directory with a _metadata file and then
@@ -167,31 +174,34 @@ def write_dataframe_to_files(
     outfile_base_tract = outfile_base_tract_format.format(**info)
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
-    if verbose:
-        print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
-    key = key_format.format(**info)
-    hdf_file = outfile_base_tract+'.hdf5'
-    # Append iff the file already exists
-    hdf_append = append and os.path.exists(hdf_file)
-    df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
+    if write_hdf:
+        if verbose:
+            print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
+        key = key_format.format(**info)
+        hdf_file = outfile_base_tract+'.hdf5'
+        # Append iff the file already exists
+        hdf_append = append and os.path.exists(hdf_file)
+        df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
-    if verbose:
-        print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    parquet_file = outfile_base_tract+'.parquet'
-    # Append iff the file already exists
-    parquet_append = append and os.path.exists(parquet_file)
-    df.to_parquet(parquet_file,
-                  append=parquet_append,
-                  file_scheme=parquet_scheme,
-                  engine=parquet_engine,
-                  compression=parquet_compression)
-# Consider uses a file format other than 'simple' to enable partition.
-# e.g., format='hive', format='drill'
-#                  partition_on=('tract', 'patch'))
+    if write_parquet:
+        if verbose:
+            print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
+        parquet_file = outfile_base_tract+'.parquet'
+        # Append iff the file already exists
+        parquet_append = append and os.path.exists(parquet_file)
+        df.to_parquet(parquet_file,
+                      append=parquet_append,
+                      file_scheme=parquet_scheme,
+                      engine=parquet_engine,
+                      compression=parquet_compression)
+    # Consider uses a file format other than 'simple' to enable partition.
+    # e.g., format='hive', format='drill'
+    #                  partition_on=('tract', 'patch'))
 
-    if verbose:
-        print("Writing {} {} to FITS DPDD file.".format(tract, patch))
-    Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
+    if write_parquet:
+        if verbose:
+            print("Writing {} {} to FITS DPDD file.".format(tract, patch))
+        Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
 
 
 if __name__ == "__main__":
@@ -240,6 +250,12 @@ Availability depends on the installation of the engine used.
                         help='Skymap tract[s] to process.')
     parser.add_argument('--reader', default='dc2_coadd_run1.1p',
                         help='GCR reader to use. (default: %(default)s)')
+    parser.add_argument('--write_fits', default=False,
+                        help="""Write FITS files. (default: %(default)s)""")
+    parser.add_argument('--write_hdf', default=True,
+                        help="""Write HDF files. (default: %(default)s)""")
+    parser.add_argument('--write_parquet', default=True,
+                        help="""Write Parquet files. (default: %(default)s)""")
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
                         help="""Parquet storage scheme. (default: %(default)s)
@@ -266,5 +282,8 @@ the data partitioned into row groups.""")
         convert_tract_to_dpdd(
             tract,
             reader=args.reader,
+            write_fits=args.write_fits,
+            write_hdf=args.write_hdf,
+            write_parquet=args.write_parquet,
             parquet_engine=args.parquet_engine,
             parquet_compression=args.parquet_compression)
