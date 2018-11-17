@@ -1,4 +1,5 @@
-import glob
+import os,glob
+import numpy as np
 import pandas as pd
 from astropy.table import Table
 
@@ -23,9 +24,8 @@ def correctNans(n,df1,df2):
 
 #check datatypes are all consistent
 def sameTypes(df1,df2):
-    if not df1.dtypes.index.size == df2.dtypes.index.size :
-        print("not same size")
-        return False
+    assert(df1.dtypes.index.size == df2.dtypes.index.size)
+
     for n in df1.dtypes.index:
         s1=str(df1.dtypes[n])
         s2=str(df2.dtypes[n])
@@ -38,26 +38,38 @@ def sameTypes(df1,df2):
 
 ff=glob.glob("dpdd_object_tract_*.hdf5")
 print("about to run on {} files".format(len(ff)))
-print(ff)
+print(ff, "OK?")
 input()
 
+
+#ref will always be 
+store = pd.HDFStore(ff[0],'r')
+keys = store.keys()
+df_ref=store.get(keys[0])
+store.close()
+
 for fin in ff :
+    fout=fin.replace(".hdf5",".fits")
+    #skip if file exists
+    if os.path.exists(fout):
+        print("{} exists-> skipping".format(fout))
+        continue
+    dfs=[]
     store = pd.HDFStore(fin,'r')
     keys = store.keys()
     print("{}, #patches={}".format(fin,len(keys)))
-    #first key is the reference
-    df_ref=store.get(keys[0])
-    dfs=list(df_ref)
-    
-    for k in keys[1:]:
+    for k in keys:
 #        print(k)
         df=store.get(k)
         if not sameTypes(df_ref,df):
             print("WARNING!!!!! inconsistent types in {} {}".format(fin,k))
+        # sort col names for fits writing always the same way
+        df=df[df_ref.dtypes.index]
+        #print(df.dtypes.index)
         dfs.append(df)
 
     dftot= pd.concat(dfs, ignore_index=True)
     print("writing {}".format(fout))
-    fout=fin.replace(".hdf5",".fits")
+    print(dftot.dtypes.index)
     Table.from_pandas(dftot).write(fout)
     store.close()
