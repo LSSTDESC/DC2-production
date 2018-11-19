@@ -54,8 +54,8 @@ for fin in ff :
     #skip if file exists
     if not overwrite:
         if os.path.exists(fout):
-        print("{} exists-> skipping".format(fout))
-        continue
+            print("{} exists-> skipping".format(fout))
+            continue
     dfs=[]
     store = pd.HDFStore(fin,'r')
     keys = store.keys()
