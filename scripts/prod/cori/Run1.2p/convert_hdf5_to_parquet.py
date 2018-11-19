@@ -50,7 +50,7 @@ store.close()
 
 overwrite=False
 for fin in ff :
-    fout=fin.replace(".hdf5",".fits")
+    fout=fin.replace(".hdf5",".parquet")
     #skip if file exists
     if not overwrite:
         if os.path.exists(fout):
@@ -70,7 +70,7 @@ for fin in ff :
         dfs.append(df)
 
     dftot= pd.concat(dfs, ignore_index=True)
-    print("writing {}".format("test.parquet"))
+    print("writing {}".format(fout))
     print(dftot.dtypes.index)
-    dftot.to_parquet("test.parquet")
+    dftot.to_parquet(fout)
     store.close()
