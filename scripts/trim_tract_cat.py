@@ -9,6 +9,7 @@ columns exposed in the GCRCatalog DC2 reader
 import os
 import sys
 import re
+import warnings
 
 import pandas as pd
 
@@ -46,6 +47,8 @@ def load_trim_save_patch(infile, outfile, patch, key_prefix='coadd',
         return
 
     columns_to_keep = DummyDC2ObjectCatalog(schema_version).required_native_quantities
+    if not columns_to_keep.issubset(df.columns):
+        warnings.warn('Not all columns to keep are present in the data file.')
     columns_to_keep_present = list(columns_to_keep.intersection(df.columns))
     trim_df = df[columns_to_keep_present]
     trim_df.to_hdf(outfile, key=key)
