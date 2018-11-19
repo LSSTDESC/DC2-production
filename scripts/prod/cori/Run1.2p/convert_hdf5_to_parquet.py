@@ -75,7 +75,8 @@ for fin in ff :
     if single:
         fout="full_catalog.parquet"
         print("appending to {}".format(fout))
-        dftot.to_parquet(fout,append=True,file_scheme='hive',engine='fastparquet',compression='gzip')
+        append=os.path.exists(fout)
+        dftot.to_parquet(fout,append=append,file_scheme='hive',engine='fastparquet',compression='gzip')
     else:
         print("writing {}".format(fout))
         dftot.to_parquet(fout)
