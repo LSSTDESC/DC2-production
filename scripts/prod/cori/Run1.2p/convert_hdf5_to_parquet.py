@@ -54,7 +54,7 @@ single=True
 for fin in ff :
     fout=fin.replace(".hdf5",".parquet")
     #skip if file exists
-    if not overwrite:
+    if not single and not overwrite:
         if os.path.exists(fout):
             print("{} exists-> skipping".format(fout))
             continue
