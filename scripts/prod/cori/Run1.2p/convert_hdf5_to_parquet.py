@@ -38,9 +38,6 @@ def sameTypes(df1,df2):
 
 ff=glob.glob("dpdd_object_tract_*.hdf5")
 print("about to run on {} files".format(len(ff)))
-print(ff, "OK?")
-input()
-
 
 #define ref
 _ref=('dpdd_object_tract_4850.hdf5','/object_4850_44')
@@ -50,7 +47,7 @@ print("ref schema from {}{}".format(_ref[0],_ref[1]))
 for n in df_ref.dtypes.index:
     if is_numeric_dtype(df_ref[n]):
         nans=np.isnan(df_ref[n])
-        assert(sum(nans)==len(df_ref[n]))
+        assert(sum(nans)<len(df_ref[n]))
 
 #
 overwrite=False
@@ -78,10 +75,10 @@ for fin in ff :
 
     dftot= pd.concat(dfs, ignore_index=True)
     if singleOutput:
-        fout="full_catalog_simple.parquet"
+        fout="full_catalog_simple_uncompressed.parquet"
         print("appending to {}".format(fout))
         append=os.path.exists(fout)
-        dftot.to_parquet(fout,append=append,file_scheme='simple',engine='fastparquet',compression='gzip')
+        dftot.to_parquet(fout,append=append,file_scheme='simple',engine='fastparquet',compression=None)
     else:
         print("writing {}".format(fout))
         dftot.to_parquet(fout)
