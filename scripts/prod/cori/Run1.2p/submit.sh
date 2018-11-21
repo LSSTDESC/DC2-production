@@ -1,5 +1,17 @@
 #!/bin/bash
 
+if [ -z "$RUNDIR" ] ; then
+echo "RUNDIR undef . probably missing setup"
+return
+fi
+njobs=$(wc -l $1)
+echo "about to run $njobs jobs in $RUNDIR: OK(y/n)?"
+read ans
+if [ $ans != "y" ]; then
+return
+fi
+
+
 for tract in `cat $1` ; do
 echo $tract
 

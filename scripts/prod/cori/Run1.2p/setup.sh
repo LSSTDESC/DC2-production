@@ -4,7 +4,7 @@
 # do it once (also in batch). you can redefine your own variable with the follwing envs:
 # export STACK_VERSION=
 # export DM_REPO=
-# export OUTPUT_DIR=
+# export RUNDIR=
 #
 #
 #  author S. Plaszczynski 9/oct 18 (plaszczy@lal.in2p3.fr)
@@ -26,23 +26,23 @@ export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p_globus_v2/w_2018_30/re
 fi
 
 #output DIR
-if [ -z "${OUTPUT_DIR}" ] ; then
-#export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
-export OUTPUT_DIR=/global/cscratch1/sd/plaszczy/Run1.2p/run
-#export OUTPUT_DIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
+if [ -z "${RUNDIR}" ] ; then
+#export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
+export RUNDIR=/global/cscratch1/sd/plaszczy/Run1.2p/run
+#export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
 
 fi
-mkdir -p ${OUTPUT_DIR}
+mkdir -p ${RUNDIR}
 
 echo "STACK_VERSION=${STACK_VERSION}"
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 echo "DM_REPO=${DM_REPO}"
-echo "OUTPUT_DIR=${OUTPUT_DIR}"
+echo "RUNDIR=${RUNDIR}"
 
 
 #checks
-if ! [ -d ${OUTPUT_DIR} ]; then
-echo "OUTPUT_DIR does not exist"
+if ! [ -d ${RUNDIR} ]; then
+echo "RUNDIR does not exist"
 return
 fi
 if ! [ -d $REPO ]; then

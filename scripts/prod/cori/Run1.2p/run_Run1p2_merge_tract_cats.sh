@@ -7,7 +7,7 @@ setup -r /opt/lsst/software/stack/obs_lsstCam -j
 echo "stack $STACK_VERSION init done"
 #
 
-cd ${OUTPUT_DIR}
+cd ${RUNDIR}
 
 TRACT=$1
 echo "running on tract=$TRACT"
