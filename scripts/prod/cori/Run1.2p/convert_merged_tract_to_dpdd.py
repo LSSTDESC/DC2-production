@@ -33,7 +33,7 @@ sys.path.insert(0,'/global/homes/p/plaszczy/DC2/gcr-catalogs')
 
 import GCRCatalogs
 
-def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
+def convert_all_to_dpdd(reader='dc2_object_run1.2p_dpdd_only', **kwargs):
     """Produce DPDD output files for all available tracts in GCR 'reader'.
 
     The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'.
@@ -42,7 +42,7 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     ----------
     reader : str, optional
         GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
+        Default is dc2_object_run1.2p_dpdd_only
 
     Other Parameters
     ----------------
@@ -60,7 +60,7 @@ def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
     convert_cat_to_dpdd(cat, **kwargs)
 
 
-def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
+def convert_tract_to_dpdd(tract, reader='dc2_object_run1.2p_dpdd_only', **kwargs):
     """Produce DPDD output files for specified 'tract' and GCR 'reader'.
 
     The input filename is expected to match 'trim_merged_tract_{:04d}\.hdf5$'.
@@ -243,7 +243,7 @@ Availability depends on the installation of the engine used.
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
                         help='Skymap tract[s] to process.')
-    parser.add_argument('--reader', default='dc2_coadd_run1.1p',
+    parser.add_argument('--reader', default='dc2_object_run1.2p_dpdd_only',
                         help='GCR reader to use. (default: %(default)s)')
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],

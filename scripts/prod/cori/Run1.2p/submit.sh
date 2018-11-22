@@ -1,11 +1,14 @@
 #!/bin/bash
 
-if [ -z "$RUNDIR" ] ; then
-echo "RUNDIR undef . probably missing setup"
+if ! [ -d "$RUNDIR" ] ; then
+echo "RUNDIR $RUNDIR missing "
 return
 fi
+
 njobs=$(wc -l $1)
-echo "about to run $njobs jobs in $RUNDIR: OK(y/n)?"
+jobdir=$(readlink -e $RUNDIR)
+
+echo "about to run $njobs jobs in $jobdir: OK(y/n)?"
 read ans
 if [ $ans != "y" ]; then
 return
