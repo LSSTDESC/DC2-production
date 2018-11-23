@@ -75,7 +75,7 @@ for fin in ff :
 
     dftot= pd.concat(dfs, ignore_index=True)
     if singleOutput:
-        fout="full_catalog_simple_uncompressed.parquet"
+        fout="full_catalog.parquet"
         print("appending to {}".format(fout))
         append=os.path.exists(fout)
         dftot.to_parquet(fout,append=append,file_scheme='simple',engine='fastparquet',compression=None)
