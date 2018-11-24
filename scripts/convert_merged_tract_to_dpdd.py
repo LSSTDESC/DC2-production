@@ -15,83 +15,33 @@ Requires
 
 pandas  # version >= 0.21
 generic-catalog-reader
-LSSTDESC/gcr-catalog
+LSSTDESC/gcr-catalogs
 
 and either
 pyarrow or fastparquet.
 """
 
 import os
-import sys
 
 from astropy.table import Table
 import pandas as pd
 
 import GCRCatalogs
-
-def convert_all_to_dpdd(reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for all available tracts in GCR 'reader'.
-
-    The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'.
-
-    Parameters
-    ----------
-    reader : str, optional
-        GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
-
-    Other Parameters
-    ----------------
-    **kwargs
-        *kwargs* are optional properties writing the dataframe to files.
-        See `write_dataframe_to_files` for more information.
-
-    """
-    trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
-    cat = GCRCatalogs.load_catalog(reader, trim_config)
-    # We don't want to use the cache because we know we are just going through the data once.
-    cat.use_cache = False
-
-    convert_cat_to_dpdd(cat, **kwargs)
+from GCRCatalogs.dc2_object import FILE_PATTERN
 
 
-def convert_tract_to_dpdd(tract, reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce DPDD output files for specified 'tract' and GCR 'reader'.
-
-    The input filename is expected to match 'trim_merged_tract_{:04d}\.hdf5$'.
-
-    Parameters
-    ----------
-    tract : int
-        Skymap tract to process.
-    reader : str, optional
-        GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
-
-    Other Parameters
-    ----------------
-    **kwargs
-        *kwargs* are optional properties writing the dataframe to files.
-        See `write_dataframe_to_files` for more information.
-
-    """
-    trim_thistract_config = {
-        'filename_pattern': 'trim_merged_tract_{:04d}\.hdf5$'.format(tract)}
-    cat = GCRCatalogs.load_catalog(reader, trim_thistract_config)
-    # We don't want to use the cache because we know we are just going through the data once.
-    cat.use_cache = False
-
-    convert_cat_to_dpdd(cat, **kwargs)
-
-
-def convert_cat_to_dpdd(cat, **kwargs):
+def convert_cat_to_dpdd(reader='dc2_object_run1.1p',
+                        reader_config_overwrite=None, **kwargs):
     """Save DPDD-named columns files for all tracts,
     patches from input GCR catalog.
 
     Parameters
     ----------
-    cat : DC2ObjectCatalog instance
-        Catalog instance returned by `GCRCatalogs.load_catalog`.
+    reader : str, optional
+        GCR reader to use. Must match an existing yaml file.
+        Default is dc2_object_run1.1p
+    reader_config_overwrite : dict, optional
+        config_overwrite to be supplied to GCRCatalogs.load_catalog
 
     Other Parameters
     ----------------
@@ -99,8 +49,9 @@ def convert_cat_to_dpdd(cat, **kwargs):
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
     """
-    columns = cat.list_all_quantities()
-    columns.extend(['tract', 'patch'])
+    cat = GCRCatalogs.load_catalog(reader, reader_config_overwrite)
+    columns = list(cat.list_all_quantities())
+    columns.extend((col for col in ('tract', 'patch') if col not in columns))
 
     quantities = cat.get_quantities(columns, return_iterator=True)
     for quantities_this_patch in quantities:
@@ -238,7 +189,7 @@ Availability depends on the installation of the engine used.
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
                         help='Skymap tract[s] to process.')
-    parser.add_argument('--reader', default='dc2_coadd_run1.1p',
+    parser.add_argument('--reader', default='dc2_object_run1.1p',
                         help='GCR reader to use. (default: %(default)s)')
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
@@ -254,17 +205,22 @@ the data partitioned into row groups.""")
                         help="""Parquet compression algorithm to use. (default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
 
-    if len(args.tract) == 0:
-        convert_all_to_dpdd(
-            reader=args.reader,
-            parquet_engine=args.parquet_engine,
-            parquet_compression=args.parquet_compression)
+    cat_config = GCRCatalogs.get_catalog_config(args.reader)
+    filename_pattern = cat_config.get('filename_pattern', FILE_PATTERN)
+    # Here we assume tract_\d+ always appear in the filename pattern
+    filename_pattern.replace(r'tract_\d+', 'tract_{tract}')
+    if args.reader == 'dc2_object_run1.1p':
+        filename_pattern = 'trim_' + filename_pattern
 
-    for tract in args.tract:
-        convert_tract_to_dpdd(
-            tract,
+    for tract in (args.tract or [r'\d+']):
+        convert_cat_to_dpdd(
             reader=args.reader,
+            reader_config_overwrite=dict(
+                filename_pattern=filename_pattern.format(tract=tract),
+                use_cache=False,
+            ),
             parquet_engine=args.parquet_engine,
-            parquet_compression=args.parquet_compression)
+            parquet_compression=args.parquet_compression,
+        )
