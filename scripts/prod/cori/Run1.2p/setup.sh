@@ -12,27 +12,26 @@
 export HERE=$PWD
 echo "HERE=$HERE"
 #stack version
-if [ -z "${STACK_VERSION}" ] ; then
 export STACK_VERSION=lsstdesc/stack-jupyter:w_2018_30-run1.2-v2
-fi
 
-if [ -z "${SCRIPT_DIR}" ] ; then
 export SCRIPT_DIR=$(readlink -f $PWD/../../..)
-fi
+
+
 #DM output directory
-if [ -z "${DM_REPO}" ] ; then
 #export DM_REPO="/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/w_2018_30/rerun/coadd-all2"
 export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p/w_2018_30/rerun/coadd-all2
-fi
+
 
 #output DIR
-if [ -z "${RUNDIR}" ] ; then
-#export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2-testSP/summary
 export RUNDIR=/global/cscratch1/sd/plaszczy/Run1.2p/run
 #export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
 
+if ! [ -d "$RUNDIR" ] ; then
+echo "missing RUNDIR=$RUNDIR"
+return 
 fi
-mkdir -p ${RUNDIR}
+
+
 
 echo "STACK_VERSION=${STACK_VERSION}"
 echo "SCRIPT_DIR=${SCRIPT_DIR}"

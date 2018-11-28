@@ -29,11 +29,10 @@ import pandas as pd
 
 
 sys.path.insert(0,'/global/homes/p/plaszczy/DC2/gcr-catalogs')
-#sys.path.insert(0,'/global/homes/p/plaszczy/DC2/generic-catalog-reader')
 
 import GCRCatalogs
 
-def convert_all_to_dpdd(reader='dc2_object_run1.1p', **kwargs):
+def convert_all_to_dpdd(reader='dc2_object_run1.2p', **kwargs):
     """Produce DPDD output files for all available tracts in GCR 'reader'.
 
     The input filename is expected to match 'trim_merged_tract_.*\.hdf5$'.
@@ -52,14 +51,15 @@ def convert_all_to_dpdd(reader='dc2_object_run1.1p', **kwargs):
     """
 #    trim_config = {'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
     trim_config = {'base_dir': os.getcwd(), 'filename_pattern': 'trim_merged_tract_.*\.hdf5$'}
-    cat = GCRCatalogs.load_catalog(reader, trim_config)
+    #cat = GCRCatalogs.load_catalog(reader, trim_config)
+    cat = GCRCatalogs.load_catalog(reader)
     # We don't want to use the cache because we know we are just going through the data once.
     cat.use_cache = False
 
     convert_cat_to_dpdd(cat, **kwargs)
 
 
-def convert_tract_to_dpdd(tract, reader='dc2_object_run1.1p', **kwargs):
+def convert_tract_to_dpdd(tract, reader='dc2_object_run1.2p', **kwargs):
     """Produce DPDD output files for specified 'tract' and GCR 'reader'.
 
     The input filename is expected to match 'trim_merged_tract_{:04d}\.hdf5$'.
@@ -178,16 +178,16 @@ def write_dataframe_to_files(
     hdf_append = append and os.path.exists(hdf_file)
     df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
-#    if verbose:
-#        print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
+    if verbose:
+        print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
     parquet_file = outfile_base_tract+'.parquet'
     # Append iff the file already exists
-#    parquet_append = append and os.path.exists(parquet_file)
-#    df.to_parquet(parquet_file,
-#                  append=parquet_append,
-#                  file_scheme=parquet_scheme,
-#                  engine=parquet_engine,
-#                  compression=parquet_compression)
+    parquet_append = append and os.path.exists(parquet_file)
+    df.to_parquet(parquet_file,
+                  append=parquet_append,
+                  file_scheme=parquet_scheme,
+                  engine=parquet_engine,
+                  compression=parquet_compression)
 # Consider uses a file format other than 'simple' to enable partition.
 # e.g., format='hive', format='drill'
 #                  partition_on=('tract', 'patch'))
@@ -241,7 +241,7 @@ Availability depends on the installation of the engine used.
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--tract', type=int, nargs='+', default=[],
                         help='Skymap tract[s] to process.')
-    parser.add_argument('--reader', default='dc2_object_run1.1p',
+    parser.add_argument('--reader', default='dc2_object_run1.2p',
                         help='GCR reader to use. (default: %(default)s)')
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
