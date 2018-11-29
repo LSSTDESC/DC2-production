@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from astropy.table import Table
 from pandas.api.types import is_numeric_dtype
+from astropy.table import Table
+
 
 def correctNans(n,df1,df2):
     s1=str(df1.dtypes[n])
@@ -39,6 +41,9 @@ def sameTypes(df1,df2):
 ff=glob.glob("dpdd_object_tract_*.hdf5")
 print("about to run on {} files".format(len(ff)))
 
+parquet_name="full_catalog"
+
+
 #define ref
 _ref=('dpdd_object_tract_4850.hdf5','/object_4850_44')
 df_ref=pd.read_hdf(_ref[0],_ref[1])
@@ -48,18 +53,8 @@ for n in df_ref.dtypes.index:
     if is_numeric_dtype(df_ref[n]):
         nans=np.isnan(df_ref[n])
         assert(sum(nans)<len(df_ref[n]))
-
 #
-overwrite=False
-singleOutput=True
-
 for fin in ff :
-    fout=fin.replace(".hdf5",".parquet")
-    #skip if file exists
-    if not singleOutput and not overwrite:
-        if os.path.exists(fout):
-            print("{} exists-> skipping".format(fout))
-            continue
     dfs=[]
     store = pd.HDFStore(fin,'r')
     keys = store.keys()
@@ -73,13 +68,17 @@ for fin in ff :
         df=df[df_ref.dtypes.index]
         dfs.append(df)
 
+#concat patches
     dftot= pd.concat(dfs, ignore_index=True)
-    if singleOutput:
-        fout="full_catalog.parquet"
-        print("appending to {}".format(fout))
-        append=os.path.exists(fout)
-        dftot.to_parquet(fout,append=append,file_scheme='simple',engine='fastparquet',compression=None)
-    else:
-        print("writing {}".format(fout))
-        dftot.to_parquet(fout)
+
+#parquet writing
+    print("appending to {}".format(parquet_name))
+    append=os.path.exists(fout)
+    dftot.to_parquet(parquet_name,append=append,file_scheme='simple',engine='fastparquet',compression=None)
+
+#fits writing
+    fout=fin.replace(".hdf5",".fits")
+    print("writing   to {}".format(fout))
+    Table.from_pandas(dftot).write(fout)
+
     store.close()
