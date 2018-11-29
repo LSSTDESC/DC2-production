@@ -7,4 +7,4 @@ echo "stack init done"
 echo "$1"
 
 #time python singlePatch.py
-export PYTHONPATH=$HOME/DC2/desc_dc2_dm_data:$PYTHONPATH
+export PYTHONPATH=$HOME/DC2/gcr-catalogs:$PYTHONPATH
