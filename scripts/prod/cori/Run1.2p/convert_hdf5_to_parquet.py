@@ -39,9 +39,10 @@ def sameTypes(df1,df2):
 
 
 ff=glob.glob("dpdd_object_tract_*.hdf5")
+print(ff)
 print("about to run on {} files".format(len(ff)))
 
-parquet_name="full_catalog"
+parquet_name="full_catalog.parquet"
 
 
 #define ref
@@ -60,7 +61,7 @@ for fin in ff :
     keys = store.keys()
     print("{}, #patches={}".format(fin,len(keys)))
     for k in keys:
-        print(k)
+        #print(k)
         df=store.get(k)
         if not sameTypes(df_ref,df):
             print("WARNING!!!!! inconsistent types in {} {}".format(fin,k))
@@ -73,7 +74,7 @@ for fin in ff :
 
 #parquet writing
     print("appending to {}".format(parquet_name))
-    append=os.path.exists(fout)
+    append=os.path.exists(parquet_name)
     dftot.to_parquet(parquet_name,append=append,file_scheme='simple',engine='fastparquet',compression=None)
 
 #fits writing
