@@ -62,8 +62,11 @@ def convert_cat_to_dpdd(reader='dc2_object_run1.1p',
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
+        generate_hdf=True,
+        generate_fits=True,
+        generate_parquet=True,
         hdf_key_prefix='object',
-        parquet_scheme='hive',
+        parquet_scheme='simple',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
         append=True,
@@ -79,6 +82,12 @@ def write_dataframe_to_files(
         Pandas DataFrame with the input catalog data to write out.
     filename_prefix : str, optional
         Prefix to be added to the output filename. Default is 'dpdd_object'.
+    generate_hdf : bool, optional (Default: True)
+        Whether or not to generate HDF output
+    generate_fits : bool, optional (Default: True)
+        Whether or not to generate FITS output
+    generate_parquet : bool, optional (Default: True)
+        Whether or not to generate Parquet output
     hdf_key_prefix : str, optional
         Group name within the output HDF5 file. Default is 'object'.
     parquet_scheme : str, optional   ['simple' or 'hive']
@@ -102,7 +111,7 @@ def write_dataframe_to_files(
     tract, patch = df['tract'][0], df['patch'][0]
     patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
-    # Normalise output filename
+    # Normalize output filename
     outfile_base_tract_format = '{base}_tract_{tract:04d}'
     outfile_base_tract_patch_format = \
         '{base}_tract_{tract:04d}_patch_{patch:s}'
@@ -114,35 +123,38 @@ def write_dataframe_to_files(
         'base': filename_prefix,
         'tract': tract,
         'patch': patch,
-        'key_prefix': hdf_key_prefix}
+        'key_prefix': hdf_key_prefix,
+    }
     outfile_base_tract = outfile_base_tract_format.format(**info)
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
-    if verbose:
-        print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
-    key = key_format.format(**info)
-    hdf_file = outfile_base_tract+'.hdf5'
-    # Append iff the file already exists
-    hdf_append = append and os.path.exists(hdf_file)
-    df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
+    if generate_hdf:
+        if verbose:
+            print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
+        key = key_format.format(**info)
+        hdf_file = outfile_base_tract+'.hdf5'
+        # Append iff the file already exists
+        hdf_append = append and os.path.exists(hdf_file)
+        df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
-    if verbose:
-        print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
-    parquet_file = outfile_base_tract+'.parquet'
-    # Append iff the file already exists
-    parquet_append = append and os.path.exists(parquet_file)
-    df.to_parquet(parquet_file,
-                  append=parquet_append,
-                  file_scheme=parquet_scheme,
-                  engine=parquet_engine,
-                  compression=parquet_compression)
-# Consider uses a file format other than 'simple' to enable partition.
-# e.g., format='hive', format='drill'
-#                  partition_on=('tract', 'patch'))
+    if generate_fits:
+        if verbose:
+            print("Writing {} {} to FITS DPDD file.".format(tract, patch))
+        Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
 
-    if verbose:
-        print("Writing {} {} to FITS DPDD file.".format(tract, patch))
-    Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
+    if generate_parquet:
+        if verbose:
+            print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
+        parquet_file = outfile_base_tract+'.parquet'
+        # Append iff the file already exists
+        parquet_append = append and os.path.exists(parquet_file)
+        df.to_parquet(
+            parquet_file,
+            append=parquet_append,
+            file_scheme=parquet_scheme,
+            engine=parquet_engine,
+            compression=parquet_compression,
+        )
 
 
 if __name__ == "__main__":
@@ -181,9 +193,6 @@ pip install pyarrow --user
 
 Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
 Availability depends on the installation of the engine used.
-
-[2018-10-02: The 'dc2_object_run1.2p reader doesn't exist yet.]
-
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
@@ -191,7 +200,13 @@ Availability depends on the installation of the engine used.
                         help='Skymap tract[s] to process.')
     parser.add_argument('--reader', default='dc2_object_run1.1p',
                         help='GCR reader to use. (default: %(default)s)')
-    parser.add_argument('--parquet_scheme', default='hive',
+    parser.add_argument('--no-hdf', action='store_false', dest='generate_hdf',
+                        help='disable HDF output')
+    parser.add_argument('--no-fits', action='store_false', dest='generate_fits',
+                        help='disable FITS output')
+    parser.add_argument('--no-parquet', action='store_false', dest='generate_parquet',
+                        help='disable Parquet output')
+    parser.add_argument('--parquet_scheme', default='simple',
                         choices=['hive', 'simple'],
                         help="""Parquet storage scheme. (default: %(default)s)
 'simple': one file.
@@ -207,6 +222,9 @@ the data partitioned into row groups.""")
 
     args = parser.parse_args()
 
+    if not (args.generate_hdf or args.generate_fits or args.generate_parquet):
+        raise RuntimeError('Nothing to generate!')
+
     cat_config = GCRCatalogs.get_catalog_config(args.reader)
     filename_pattern = cat_config.get('filename_pattern', FILE_PATTERN)
     # Here we assume tract_\d+ always appear in the filename pattern
@@ -214,13 +232,10 @@ the data partitioned into row groups.""")
     if args.reader == 'dc2_object_run1.1p':
         filename_pattern = 'trim_' + filename_pattern
 
+    kwargs = vars(args)
+    kwargs['reader_config_overwrite'] = dict(use_cache=False)
+
     for tract in (args.tract or [r'\d+']):
-        convert_cat_to_dpdd(
-            reader=args.reader,
-            reader_config_overwrite=dict(
-                filename_pattern=filename_pattern.format(tract=tract),
-                use_cache=False,
-            ),
-            parquet_engine=args.parquet_engine,
-            parquet_compression=args.parquet_compression,
-        )
+        kwargs['reader_config_overwrite']['filename_pattern'] = \
+                filename_pattern.format(tract=tract)
+        convert_cat_to_dpdd(**kwargs)
