@@ -62,15 +62,13 @@ def convert_cat_to_dpdd(reader='dc2_object_run1.1p',
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
-        generate_hdf=True,
-        generate_fits=True,
-        generate_parquet=True,
         hdf_key_prefix='object',
         parquet_scheme='simple',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
         append=True,
         verbose=True,
+        write=('parquet',),
         **kwargs):
     """Write out dataframe to HDF, FITS, and Parquet files.
 
@@ -82,12 +80,6 @@ def write_dataframe_to_files(
         Pandas DataFrame with the input catalog data to write out.
     filename_prefix : str, optional
         Prefix to be added to the output filename. Default is 'dpdd_object'.
-    generate_hdf : bool, optional (Default: True)
-        Whether or not to generate HDF output
-    generate_fits : bool, optional (Default: True)
-        Whether or not to generate FITS output
-    generate_parquet : bool, optional (Default: True)
-        Whether or not to generate Parquet output
     hdf_key_prefix : str, optional
         Group name within the output HDF5 file. Default is 'object'.
     parquet_scheme : str, optional   ['simple' or 'hive']
@@ -102,8 +94,12 @@ def write_dataframe_to_files(
         Compression algorithm to use when writing Parquet files.
         Potential: gzip, snappy, lzo, uncompressed. Default is gzip.
         Availability depends on the engine used.
+    append : bool, optional
+        If True, append to exsiting parquet files. Default is True.
     verbose : boolean, optional
         If True, print out debug messages. Default is True.
+    write : list or tuple, optional
+        Format(s) to write out.  Default is ('parquet',),
     """
     # We know that our GCR reader will chunk by tract+patch
     # So we take the tract and patch in the first entry
@@ -128,7 +124,7 @@ def write_dataframe_to_files(
     outfile_base_tract = outfile_base_tract_format.format(**info)
     outfile_base_tract_patch = outfile_base_tract_patch_format.format(**info)
 
-    if generate_hdf:
+    if 'hdf' in write or 'all' in write:
         if verbose:
             print("Writing {} {} to HDF5 DPDD file.".format(tract, patch))
         key = key_format.format(**info)
@@ -137,12 +133,12 @@ def write_dataframe_to_files(
         hdf_append = append and os.path.exists(hdf_file)
         df.to_hdf(hdf_file, key=key, append=hdf_append, format='table')
 
-    if generate_fits:
+    if 'fits' in write or 'all' in write:
         if verbose:
             print("Writing {} {} to FITS DPDD file.".format(tract, patch))
         Table.from_pandas(df).write(outfile_base_tract_patch + '.fits')
 
-    if generate_parquet:
+    if 'parquet' in write or 'all' in write:
         if verbose:
             print("Writing {} {} to Parquet DPDD file.".format(tract, patch))
         parquet_file = outfile_base_tract+'.parquet'
@@ -166,11 +162,11 @@ The output files will have columns those specified in the LSST DPDD
 
 Example:
 
-To produce files from tract 4850:
+To produce Parquet files from tract 4850:
 
 python %(prog)s --tract 4850
 
-To produce files for all available tracts call with no arguments:
+To produce Parquet files for all available tracts call with no arguments:
 
 python %(prog)s
 
@@ -186,6 +182,11 @@ python %(prog)s
     --parquet_engine fastparquet
     --parquet_compression gzip
 
+To write out other formats (HDF, FITS), you can specify them using `--write`:
+python %(prog)s --write hdf
+python %(prog)s --write parquet fits
+python %(prog)s --write all
+
 The selected engine needs to be installed on your machine to use.  E.g.,
 
 pip install fastparquet --user
@@ -200,12 +201,9 @@ Availability depends on the installation of the engine used.
                         help='Skymap tract[s] to process.')
     parser.add_argument('--reader', default='dc2_object_run1.1p',
                         help='GCR reader to use. (default: %(default)s)')
-    parser.add_argument('--no-hdf', action='store_false', dest='generate_hdf',
-                        help='disable HDF output')
-    parser.add_argument('--no-fits', action='store_false', dest='generate_fits',
-                        help='disable FITS output')
-    parser.add_argument('--no-parquet', action='store_false', dest='generate_parquet',
-                        help='disable Parquet output')
+    parser.add_argument('--write', nargs='+', default=['parquet'],
+                        choices=['all', 'hdf', 'fits', 'parquet'],
+                        help='Formats to write out. (default: %(default)s)')
     parser.add_argument('--parquet_scheme', default='simple',
                         choices=['hive', 'simple'],
                         help="""Parquet storage scheme. (default: %(default)s)
@@ -221,9 +219,6 @@ the data partitioned into row groups.""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args()
-
-    if not (args.generate_hdf or args.generate_fits or args.generate_parquet):
-        raise RuntimeError('Nothing to generate!')
 
     cat_config = GCRCatalogs.get_catalog_config(args.reader)
     filename_pattern = cat_config.get('filename_pattern', FILE_PATTERN)
