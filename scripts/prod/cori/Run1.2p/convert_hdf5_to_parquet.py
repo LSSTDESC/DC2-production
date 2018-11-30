@@ -78,8 +78,8 @@ for fin in ff :
     dftot.to_parquet(parquet_name,append=append,file_scheme='simple',engine='fastparquet',compression=None)
 
 #fits writing
-    fout=fin.replace(".hdf5",".fits")
-    print("writing   to {}".format(fout))
-    Table.from_pandas(dftot).write(fout)
+#    fout=fin.replace(".hdf5",".fits")
+#    print("writing   to {}".format(fout))
+#    Table.from_pandas(dftot).write(fout)
 
     store.close()
