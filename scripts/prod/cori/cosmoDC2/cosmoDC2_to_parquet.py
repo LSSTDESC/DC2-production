@@ -4,38 +4,54 @@ import sys
 import numpy as np
 import pandas as pd
 import healpy as hp
-
+from time import time
 
 sys.path.insert(0,'/global/homes/p/plaszczy/DC2/gcr-catalogs')
 import GCRCatalogs
 
-
+#version GCR
+print('GCRCatalogs =', GCRCatalogs.__version__, '|' ,'GCR =', GCRCatalogs.GCR.__version__)
+#liste des catalogues
+print('\n'.join(sorted(GCRCatalogs.get_available_catalogs())))
 gc = GCRCatalogs.load_catalog('cosmoDC2_v1.0')
+print(gc.get_catalog_info('description'))
+
 
 #data=gc.get_quantities([q for q in gc.list_all_quantities()],native_filters=['healpix_pixel == 9813'])
 
-cols=['halo_id','is_central','position_x','position_y','position_z','position_angle_true','ra','ra_true','dec','dec_true','redshift','redshift_true','size_true']
-filters=['u','g','r','i','z','Y']
-for f in filters:
-    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst,mag_true_{0}_lsst_no_host_extinction,mag_{0}_lsst".format(f)
-    cols+=s.split(',')
+##cols=['halo_id','is_central','position_x','position_y','position_z','position_angle_true','ra','ra_true','dec','dec_true','redshift','redshift_true','size_true']
+##filters=['u','g','r','i','z','Y']
+##for f in filters:
+##    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst,mag_true_{0}_lsst_no_host_extinction,mag_{0}_lsst".format(f)
+##    cols+=s.split(',')
+
+
+cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','size_true']
+
 print(cols)
 
 #loop on pixels
 nside=32
 
-parquet_file="v1.parquet"
+parquet_file="v1_0.parquet"
 
-nfiles=0
-for ipix in range(hp.nside2npix()):
-    data=gc.get_quantities(cols,native_filters=["healpix_pixel == {}".format(ipix)])
-    if len(data)==0 :
+pix=np.loadtxt("healpix_pixels",unpack=True).astype('int')
+nskip=0
+for ipix in pix:
+    parquet_file="xyz_{}.parquet".format(ipix)
+    if os.path.exists(parquet_file):
+        nskip+=1
+        print("skipping {}: {}".format(parquet_file,nskip))
         continue
+    print(ipix)
+    t0=time()
+    data=gc.get_quantities(cols,native_filters=["healpix_pixel == {}".format(ipix)])
     df=pd.DataFrame(data)
-    print("Reading {} data from pixfile={}".format(df.index.size,ipix))
-    parquet_append = append and os.path.exists(parquet_file)
-    print("Writing to {}=".format(parquet_file))
-    df.to_parquet(parquet_file,append=parquet_append,file_scheme='simple',engine='fastparquet',compression='gzip')
-    nfiles+=1
-    print(nfiles)
-    
+    t1=time()
+    print("Read {}M data: {:2.1f}s".format(df.index.size/1e6,t1-t0))
+    #parquet_append = os.path.exists(parquet_file)
+
+    df.to_parquet(parquet_file,file_scheme='simple',engine='fastparquet',compression=None)
+    t2=time()
+    print("Wrote to ".format(parquet_file))
+    print("Tot time to process {:2.1f}s".format(t2-t0))
