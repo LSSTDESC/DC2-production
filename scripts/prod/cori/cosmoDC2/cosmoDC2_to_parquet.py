@@ -24,11 +24,10 @@ print(cols)
 #loop on pixels
 nside=32
 
-parquet_file="..."
+parquet_file="v1.parquet"
 
 nfiles=0
 for ipix in range(hp.nside2npix()):
-    print(ipix)
     data=gc.get_quantities(cols,native_filters=["healpix_pixel == {}".format(ipix)])
     if len(data)==0 :
         continue
@@ -38,4 +37,5 @@ for ipix in range(hp.nside2npix()):
     print("Writing to {}=".format(parquet_file))
     df.to_parquet(parquet_file,append=parquet_append,file_scheme='simple',engine='fastparquet',compression='gzip')
     nfiles+=1
+    print(nfiles)
     
