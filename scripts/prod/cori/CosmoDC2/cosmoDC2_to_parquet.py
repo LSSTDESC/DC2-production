@@ -26,32 +26,36 @@ print(gc.get_catalog_info('description'))
 ##    cols+=s.split(',')
 
 
-cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','size_true']
+cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift']
 
 print(cols)
 
 #loop on pixels
 nside=32
 
-parquet_file="v1_0.parquet"
+parquet_file="v1.0_xyz"
 
 pix=np.loadtxt("healpix_pixels",unpack=True).astype('int')
 nskip=0
 for ipix in pix:
-    parquet_file="xyz_{}.parquet".format(ipix)
-    if os.path.exists(parquet_file):
-        nskip+=1
-        print("skipping {}: {}".format(parquet_file,nskip))
-        continue
+    ## parquet_file="xyz_{}.parquet".format(ipix)
+    ## if os.path.exists(parquet_file):
+    ##     nskip+=1
+    ##     print("skipping {}: {}".format(parquet_file,nskip))
+    ##     continue
     print(ipix)
     t0=time()
     data=gc.get_quantities(cols,native_filters=["healpix_pixel == {}".format(ipix)])
     df=pd.DataFrame(data)
     t1=time()
     print("Read {}M data: {:2.1f}s".format(df.index.size/1e6,t1-t0))
-    #parquet_append = os.path.exists(parquet_file)
-
-    df.to_parquet(parquet_file,file_scheme='simple',engine='fastparquet',compression=None)
+    #convert float64 columns to float32
+    for n in cols:
+        if str(df.dtypes[n])=='float64':
+            df[n]=df[n].astype('float32') 
+    #writing
+    df.to_parquet(parquet_file,append=os.path.exists(parquet_file)
+                      file_scheme='simple',engine='fastparquet',compression=None)
     t2=time()
     print("Wrote to ".format(parquet_file))
     print("Tot time to process {:2.1f}s".format(t2-t0))
