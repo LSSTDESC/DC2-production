@@ -26,16 +26,16 @@ print(gc.get_catalog_info('description'))
 ##    cols+=s.split(',')
 
 
-cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift']
+cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','redshift_true']
 
 print(cols)
 
 #loop on pixels
 nside=32
 
-parquet_file="v1.0_xyz"
+parquet_file="xyz_v1.0"
 
-pix=np.loadtxt("healpix_pixels",unpack=True).astype('int')
+pix=np.loadtxt("healpix_pixels_unique",unpack=True).astype('int')
 nskip=0
 for ipix in pix:
     ## parquet_file="xyz_{}.parquet".format(ipix)
@@ -54,8 +54,8 @@ for ipix in pix:
         if str(df.dtypes[n])=='float64':
             df[n]=df[n].astype('float32') 
     #writing
-    df.to_parquet(parquet_file,append=os.path.exists(parquet_file)
+    df.to_parquet(parquet_file,append=os.path.exists(parquet_file),
                       file_scheme='simple',engine='fastparquet',compression=None)
     t2=time()
-    print("Wrote to ".format(parquet_file))
+    print("Wrote to {}".format(parquet_file))
     print("Tot time to process {:2.1f}s".format(t2-t0))
