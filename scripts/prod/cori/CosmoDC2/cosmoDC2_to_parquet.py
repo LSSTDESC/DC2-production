@@ -13,7 +13,7 @@ import GCRCatalogs
 print('GCRCatalogs =', GCRCatalogs.__version__, '|' ,'GCR =', GCRCatalogs.GCR.__version__)
 #liste des catalogues
 print('\n'.join(sorted(GCRCatalogs.get_available_catalogs())))
-gc = GCRCatalogs.load_catalog('cosmoDC2_v1.0')
+gc = GCRCatalogs.load_catalog('cosmoDC2_v1.1.4_small')
 print(gc.get_catalog_info('description'))
 
 
@@ -26,16 +26,14 @@ print(gc.get_catalog_info('description'))
 ##    cols+=s.split(',')
 
 
-cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','redshift_true']
+cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','redshift_true','size_true']
 
 print(cols)
 
-#loop on pixels
-nside=32
+#output
+parquet_file="xyz_v1.1.4"
 
-parquet_file="xyz_v1.0"
-
-pix=np.loadtxt("healpix_pixels_unique",unpack=True).astype('int')
+pix=np.loadtxt("healpix_1.4.4",unpack=True).astype('int')
 nskip=0
 for ipix in pix:
     ## parquet_file="xyz_{}.parquet".format(ipix)
