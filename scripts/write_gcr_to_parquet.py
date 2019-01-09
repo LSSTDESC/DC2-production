@@ -54,6 +54,8 @@ def convert_cat_to_parquet(cat, include_native=True, **kwargs):
 
     Other Parameters
     ----------------
+    include_native : Include the native quantities from the GCR reader class
+                     in addition to the standardized non-native quantities.
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
@@ -147,6 +149,10 @@ Availability depends on the installation of the engine used.
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('--reader', help='GCR reader to use.')
+    parser.add_argument('--include_native', action='store_true', default=True,
+                        help='Include the native along with the non-native GCR catalog quantities',
+    parser.add_argument('--exclude_native', dest='include_native', action='store_false',
+                        help='Only include non-native GCR catalog quantities.  Exclude purely native quantities.',
     parser.add_argument('--parquet_scheme', default='hive',
                         choices=['hive', 'simple'],
                         help="""'simple': one file.
