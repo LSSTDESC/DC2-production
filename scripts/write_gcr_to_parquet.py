@@ -71,7 +71,7 @@ def convert_cat_to_parquet(cat, include_native=True, **kwargs):
 def write_dataframe_to_files(
         df,
         filename_prefix='cat',
-        parquet_scheme='hive',
+        parquet_scheme='simple',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
         append=True,
@@ -153,7 +153,7 @@ Availability depends on the installation of the engine used.
                         help='Include the native along with the non-native GCR catalog quantities',
     parser.add_argument('--exclude_native', dest='include_native', action='store_false',
                         help='Only include non-native GCR catalog quantities.  Exclude purely native quantities.',
-    parser.add_argument('--parquet_scheme', default='hive',
+    parser.add_argument('--parquet_scheme', default='simple',
                         choices=['hive', 'simple'],
                         help="""'simple': one file.
 'hive': one directory with a metadata file and
