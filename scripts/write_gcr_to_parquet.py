@@ -168,10 +168,7 @@ the data partitioned into row groups.
                         help="""(default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
+    kwargs = vars(args)
 
-    convert_all_to_parquet(
-        args.reader,
-        parquet_scheme=args.parquet_scheme,
-        parquet_engine=args.parquet_engine,
-        parquet_compression=args.parquet_compression)
+    convert_all_to_parquet(**kwargs)
