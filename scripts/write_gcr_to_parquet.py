@@ -21,7 +21,7 @@ import GCRCatalogs
 
 
 def convert_cat_to_parquet(reader='dc2_coadd_run1.1p',
-                           filename_prefix=None,
+                           output_filename=None,
                            include_native=True,
                            **kwargs):
     """Save columns from input GCR catalog.
@@ -34,14 +34,16 @@ def convert_cat_to_parquet(reader='dc2_coadd_run1.1p',
 
     Other Parameters
     ----------------
+    output_filename : str, optional
+        If None, then will be constructed as '<reader>.parquet'
     include_native : Include the native quantities from the GCR reader class
                      in addition to the standardized non-native quantities.
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
     """
-    if filename_prefix is None:
-        filename_prefix = reader
+    if output_filename is None:
+        output_filename = '{}.{}'.format(reader, 'parquet')
 
     cat = GCRCatalogs.load_catalog(reader)
     # We don't want to use the cache we don't want to use the extra memory
@@ -54,13 +56,13 @@ def convert_cat_to_parquet(reader='dc2_coadd_run1.1p',
     for quantities_this_chunk in quantities:
         quantities_this_chunk = pd.DataFrame.from_dict(quantities_this_chunk)
         write_dataframe_to_files(quantities_this_chunk,
-                                 filename_prefix=filename_prefix,
+                                 output_filename=output_filename,
                                  **kwargs)
 
 
 def write_dataframe_to_files(
         df,
-        filename_prefix='cat',
+        output_filename='cat.parquet',
         parquet_scheme='simple',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
@@ -73,7 +75,7 @@ def write_dataframe_to_files(
     ----------
     df : Pandas DataFrame
         Pandas DataFrame with the input catalog data to write out.
-    filename_prefix : str, optional
+    output_filename : str, optional
         Prefix to be added to the output filename. Default is 'cat'.
     parquet_scheme : str, optional   ['simple' or 'hive']
             'simple' stores everything in one file per tract
@@ -90,14 +92,11 @@ def write_dataframe_to_files(
     verbose : boolean, optional
         If True, print out debug messages. Default is True.
     """
-    # Normalise output filename
-    parquet_file = '{}.{}'.format(filename_prefix, 'parquet')
-
     if verbose:
         print("Writing chunk {} to Parquet file.".format(df))
     # Append iff the file already exists
-    parquet_append = append and os.path.exists(parquet_file)
-    df.to_parquet(parquet_file,
+    parquet_append = append and os.path.exists(output_filename)
+    df.to_parquet(output_filename,
                   append=parquet_append,
                   file_scheme=parquet_scheme,
                   engine=parquet_engine,
@@ -139,6 +138,8 @@ Availability depends on the installation of the engine used.
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('reader', help='GCR reader to use.')
+    parser.add_argument('--output_filename', default=None,
+                        help='Output filename')
     parser.add_argument('--include_native', action='store_true', default=False,
                         help='Include the native along with the non-native GCR catalog quantities')
     parser.add_argument('--exclude_native', dest='include_native', action='store_false',
