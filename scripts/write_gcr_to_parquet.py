@@ -20,7 +20,10 @@ import pandas as pd
 import GCRCatalogs
 
 
-def convert_cat_to_parquet(reader='dc2_coadd_run1.1p', include_native=True, **kwargs):
+def convert_cat_to_parquet(reader='dc2_coadd_run1.1p',
+                           filename_prefix=None,
+                           include_native=True,
+                           **kwargs):
     """Save columns from input GCR catalog.
 
     Parameters
@@ -37,6 +40,9 @@ def convert_cat_to_parquet(reader='dc2_coadd_run1.1p', include_native=True, **kw
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
     """
+    if filename_prefix is None:
+        filename_prefix = reader
+
     cat = GCRCatalogs.load_catalog(reader)
     # We don't want to use the cache we don't want to use the extra memory
     # when we know we are just going through the data once.
@@ -47,7 +53,9 @@ def convert_cat_to_parquet(reader='dc2_coadd_run1.1p', include_native=True, **kw
     quantities = cat.get_quantities(columns, return_iterator=True)
     for quantities_this_chunk in quantities:
         quantities_this_chunk = pd.DataFrame.from_dict(quantities_this_chunk)
-        write_dataframe_to_files(quantities_this_chunk, **kwargs)
+        write_dataframe_to_files(quantities_this_chunk,
+                                 filename_prefix=filename_prefix,
+                                 **kwargs)
 
 
 def write_dataframe_to_files(
