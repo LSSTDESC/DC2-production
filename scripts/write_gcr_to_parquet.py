@@ -106,21 +106,19 @@ def write_dataframe_to_files(
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
-Produce Parquet output files from GCR catalogs.
+Produce Parquet output file from a GCR catalog.
 
 Example:
 
-To produce files for all data call with:
+To produce an output Parquet file from the 'dc2_object_run1.2p' GCR catalog:
 
-python %(prog)s
+python %(prog)s dc2_object_run1.2p
 
-To specify a different reader
+By default the output name will be 'dc2_object_run1.2p.parquet'.  You could specify a different one on the command line:
 
-python %(prog)s --reader dc2_object_run1.2p
-python %(prog)s --reader dc2_truth_run1.2_static
+python %(prog)s dc2_object_run1.2p --output_filename dc2_object.parquet
 
-You can also specify the engine to use to write parquet files, and the
-compression algorithm to use:
+You can also specify the Parquet scheme, engine, and compression to use.
 
 python %(prog)s
     --parquet_scheme hive
@@ -137,7 +135,7 @@ Availability depends on the installation of the engine used.
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
-    parser.add_argument('reader', help='GCR reader to use.')
+    parser.add_argument('reader', help='GCR catalog to read.')
     parser.add_argument('--output_filename', default=None,
                         help='Output filename')
     parser.add_argument('--include_native', action='store_true', default=False,
