@@ -20,8 +20,8 @@ import pandas as pd
 import GCRCatalogs
 
 
-def convert_all_to_parquet(reader='dc2_coadd_run1.1p', **kwargs):
-    """Produce output files for all available GCR 'reader'.
+def convert_cat_to_parquet(reader='dc2_coadd_run1.1p', include_native=True, **kwargs):
+    """Save columns from input GCR catalog.
 
     Parameters
     ----------
@@ -31,35 +31,17 @@ def convert_all_to_parquet(reader='dc2_coadd_run1.1p', **kwargs):
 
     Other Parameters
     ----------------
-    **kwargs
-        *kwargs* are optional properties writing the dataframe to files.
-        See `write_dataframe_to_files` for more information.
-
-    """
-    cat = GCRCatalogs.load_catalog(reader)
-    # We don't want to use the cache we don't want to use the extra memory
-    # when we know we are just going through the data once.
-    cat.use_cache = False
-
-    convert_cat_to_parquet(cat, **kwargs)
-
-
-def convert_cat_to_parquet(cat, include_native=True, **kwargs):
-    """Save columns from input GCR catalog.
-
-    Parameters
-    ----------
-    cat : GCRCatalog instance
-        Catalog instance returned by `GCRCatalogs.load_catalog`.
-
-    Other Parameters
-    ----------------
     include_native : Include the native quantities from the GCR reader class
                      in addition to the standardized non-native quantities.
     **kwargs
         *kwargs* are optional properties writing the dataframe to files.
         See `write_dataframe_to_files` for more information.
     """
+    cat = GCRCatalogs.load_catalog(reader)
+    # We don't want to use the cache we don't want to use the extra memory
+    # when we know we are just going through the data once.
+    cat.use_cache = False
+
     columns = cat.list_all_quantities(include_native=include_native)
 
     quantities = cat.get_quantities(columns, return_iterator=True)
@@ -171,4 +153,4 @@ the data partitioned into row groups.
     args = parser.parse_args()
     kwargs = vars(args)
 
-    convert_all_to_parquet(**kwargs)
+    convert_cat_to_parquet(**kwargs)
