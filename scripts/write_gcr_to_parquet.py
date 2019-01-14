@@ -20,17 +20,16 @@ import pandas as pd
 import GCRCatalogs
 
 
-def convert_cat_to_parquet(reader='dc2_coadd_run1.1p',
+def convert_cat_to_parquet(reader,
                            output_filename=None,
-                           include_native=True,
+                           include_native=False,
                            **kwargs):
     """Save columns from input GCR catalog.
 
     Parameters
     ----------
-    reader : str, optional
+    reader : str
         GCR reader to use. Must match an existing yaml file.
-        Default is dc2_coadd_run1.1p
 
     Other Parameters
     ----------------
@@ -140,8 +139,6 @@ Availability depends on the installation of the engine used.
                         help='Output filename')
     parser.add_argument('--include_native', action='store_true', default=False,
                         help='Include the native along with the non-native GCR catalog quantities')
-    parser.add_argument('--exclude_native', dest='include_native', action='store_false',
-                        help='Only include non-native GCR catalog quantities.  Exclude purely native quantities.')
     parser.add_argument('--parquet_scheme', default='simple',
                         choices=['hive', 'simple'],
                         help="""'simple': one file.
