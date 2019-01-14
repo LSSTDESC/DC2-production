@@ -51,6 +51,7 @@ if [ -n "$DESCPYTHONPATH" ]; then
 fi
 ```
 
+Then run
 ```
 REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2i_globus_in2p3_20181217/w_2018_39/rerun/multiband
 TRACTS="5066 5065 5064 5063 5062 4852 4851 4850 4849 4848 4640 4639 4638 4637 4636 4433 4432 4431 4430 4429"
@@ -63,7 +64,24 @@ SCRIPT_DIR=/global/homes/w/wmwv/local/lsst/DC2-production/scripts
 nohup python "${SCRIPT_DIR}"/merge_tract_cat.py "${REPO}" "${TRACTS}" > merge_tract_cat.log 2>&1 < /dev/null
 ```
 
-2. Generate "Trimmed" Object Tables
+2. Write a `gcr-catalogs` reader for the new catalog.  Generally this will be as easy as creating a new configuration file with a new base_dir and description.  E.g., the catalog config file for Run 1.2i (https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/catalog_configs/dc2_object_run1.2i.yaml) is:
+
+```
+subclass_name: dc2_object.DC2ObjectCatalog
+base_dir: /global/projecta/projectdirs/lsst/global/in2p3/Run1.2i/object_catalog_new
+schema_filename: trim_schema.yaml
+filename_pattern: 'trim_object_tract_\d+\.hdf5$'
+description: DC2 Run 1.2i Object Catalog
+creators: ['Michael Wood-Vasey']
+included_by_default: true
+pixel_scale: 0.2
+```
+
+Note:
+`pixel_scale` above refers to choice of pixel scale for the coadd, not necessarily the native instrument itself.
+Make sure to check the pixel scale used by the sky map to generate the coadds.  
+
+3. Generate "Trimmed" Object Tables
 These files have only the columns necessary to reconstruct the DPDD.
 They maintain their original column names.  
 
@@ -87,7 +105,7 @@ python trim_tract_cat.py WORKING_DIR=/global/projecta/projectdirs/lsst/global/in
 
 This trim step uses the Generic Catalog Reader to determine the columns required in the trim catalog.
 
-3. Generate DPDD-column only Object Tables in Parquet
+4. Generate DPDD-column only Object Tables in Parquet
 Produce stand-alone files with columns named as in the DPDD.
 In addition to renaming columns, this also translates to derived columns that are based on several input columns.
 For speed, this is done by default on the already trimmed object tables (from the step just above).  But it would be possible to do it directly from the full Object merged_tract_cat files instead.
