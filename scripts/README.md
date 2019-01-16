@@ -115,3 +115,31 @@ python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.1p
 python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.2p
 python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.2i
 ```
+
+This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, run the following snippet of code in the relevant `object_catalog` directory:
+
+```
+import pandas as pd
+
+file_prefix = 'dpdd_object_tract_'
+file_suffix = 'parquet'
+
+out_file = 'dpdd_object.parquet'
+
+tracts = [4429, 4430, 4431, 4432, 4433, 4636, 4637, 4638, 4639, 4640, 4848, 4849, 4850, 4851, 4852, 5062, 5063, 5064, 5065, 5066]
+
+# Write with append for Parquet is not supported as of Pandas 0.23
+# So we build up a dataframe from all tracts and then write once
+df = None
+for tract in tracts:
+    data_file = '{}{:d}.{}'.format(file_prefix, tract, file_suffix)
+    print("Reading {}".format(data_file))
+    this_df = pd.read_parquet(data_file)
+    if df is None:
+        df = this_df
+    else:
+        df = df.append(this_df)
+
+df.to_parquet(out_file)
+```
+
