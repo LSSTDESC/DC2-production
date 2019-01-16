@@ -111,9 +111,9 @@ In addition to renaming columns, this also translates to derived columns that ar
 For speed, this is done by default on the already trimmed object tables (from the step just above).  But it would be possible to do it directly from the full Object merged_tract_cat files instead.
 
 ```
-python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.1p
-python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.2p
-python convert_merged_tract_to_dpdd.py --reader dc2_coadd_run1.2i
+python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.1p
+python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2p
+python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2i
 ```
 
 This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, run the following snippet of code in the relevant `object_catalog` directory:
