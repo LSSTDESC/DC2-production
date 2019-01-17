@@ -2,19 +2,27 @@ General scripts need for tasks related to the DC2 production and
 validation can be put in this directory.
 
 ### How To Generate Object Tables from DM processing outputs
+The commands run here are from the `DC2-Production/scripts` directory.  The notes in this file using a `SCRIPT_DIR` environment variable to point to this location.  I ran these as I was developing the scripts, so my `SCRIPT_DIR` points to my local checkout:
+
+```
+SCRIPT_DIR=/global/homes/w/wmwv/local/lsst/DC2-production/scripts
+```
+
 1. The Run 1.1p Object table summary files were generated with
 
 ```
 REPO=/global/projecta/projectdirs/lsst/global/in2p3/Run1.1/output
-python merged_tract_cat.py ${REPO} 5066 5065 5064 5063 5062 4852 4851 4850 4849 4848 4640 4639 4638 4637 4636 4433 4432 4431 4430 4429
+python ${SCRIPT_DIR}/merged_tract_cat.py ${REPO} 5066 5065 5064 5063 5062 4852 4851 4850 4849 4848 4640 4639 4638 4637 4636 4433 4432 4431 4430 4429
+
+
 ```
 
 It took many hours.
 This can be trivially parallelized with one invocation per tract.  E.g.,
 
 ```
-python merged_tract_cat.py ${REPO} 5066
-python merged_tract_cat.py ${REPO} 5065
+python ${SCRIPT_DIR}/merged_tract_cat.py ${REPO} 5066
+python ${SCRIPT_DIR}/merged_tract_cat.py ${REPO} 5065
 ...
 python merged_tract_cat.py ${REPO} 4429
 ```
@@ -94,7 +102,7 @@ python trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.1/o
 
 Run 1.2p
 ```
-python trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog/merged_tract_cat_*.hdf5
+python ${SCRIPT_DIR}/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog/merged_tract_cat_*.hdf5
 ```
 
 Run 1.2i
@@ -111,35 +119,13 @@ In addition to renaming columns, this also translates to derived columns that ar
 For speed, this is done by default on the already trimmed object tables (from the step just above).  But it would be possible to do it directly from the full Object merged_tract_cat files instead.
 
 ```
-python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.1p
-python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2p
-python convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2i
+python ${SCRIPT_DIR}/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.1p
+python ${SCRIPT_DIR}/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2p
+python ${SCRIPT_DIR}/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2i
 ```
 
-This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, run the following snippet of code in the relevant `object_catalog` directory:
+This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, run the following in the relevant `object_catalog` directory:
 
 ```
-import pandas as pd
-
-file_prefix = 'dpdd_object_tract_'
-file_suffix = 'parquet'
-
-out_file = 'dpdd_object.parquet'
-
-tracts = [4429, 4430, 4431, 4432, 4433, 4636, 4637, 4638, 4639, 4640, 4848, 4849, 4850, 4851, 4852, 5062, 5063, 5064, 5065, 5066]
-
-# Write with append for Parquet is not supported as of Pandas 0.23
-# So we build up a dataframe from all tracts and then write once
-df = None
-for tract in tracts:
-    data_file = '{}{:d}.{}'.format(file_prefix, tract, file_suffix)
-    print("Reading {}".format(data_file))
-    this_df = pd.read_parquet(data_file)
-    if df is None:
-        df = this_df
-    else:
-        df = df.append(this_df)
-
-df.to_parquet(out_file)
+python ${SCRIPT_DIR}/merge_parquet_files.py dpdd_object_tract_????.parquet
 ```
-
