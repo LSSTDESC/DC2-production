@@ -2,7 +2,7 @@ General scripts need for tasks related to the DC2 production and
 validation can be put in this directory.
 
 ## How To Generate Object Tables from DM processing outputs
-*by Michael Wood-Vasey <wmwv>*
+*by Michael Wood-Vasey [@wmwv]*
 
 ### Environment configuration
 #### Shifter image of DM+DESC environment
