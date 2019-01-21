@@ -24,7 +24,9 @@ export DM_REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p/w_2018_30/rerun/coadd-
 
 #output DIR
 export RUNDIR=/global/cscratch1/sd/plaszczy/Run1.2p/run
-#export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
+#MWW
+#export RUNDIR=/global/cscratch1/sd/wmwv/tmp/Run1.2p/
+export RUNDIR=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog
 
 if ! [ -d "$RUNDIR" ] ; then
 echo "missing RUNDIR=$RUNDIR"
@@ -48,6 +50,3 @@ if ! [ -d $REPO ]; then
 echo "REPO does not exist"
 return
 fi
-
-#for running multiple seq jobs on single node
-module load taskfarmer
