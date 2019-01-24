@@ -34,6 +34,16 @@ if [ -n "$DESCPYTHONPATH" ]; then
 fi
 ```
 
+##### Command-line invocation of Jupyter Kernel desc-stack environment
+The same behavior was obtained for Run 1.2p using the
+github.com/LSSTDESC/nersc package (checked out into ~wmwv/local/lsst/nersc)
+scripts/start-kernel-cli.py
+
+```
+python ~/local/lsst/nersc/scripts/start-kernel-cli.py desc-stack
+```
+
+
 
 #### Script directory
 The commands run here are from the `DC2-Production/scripts` directory.  The notes in this file using a `SCRIPT_DIR` environment variable to point to this location.  I ran these as I was developing the scripts, so my `SCRIPT_DIR` points to my local checkout:
