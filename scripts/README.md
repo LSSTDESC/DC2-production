@@ -34,10 +34,15 @@ if [ -n "$DESCPYTHONPATH" ]; then
 fi
 ```
 
-Although it's not what I used to re-generate Run 1.2i, another way of accomplishing this same setup would be to use the `start-kernel-cli.py` program in `https://github.com/LSSTDESC/nersc`.
+##### Command-line invocation of Jupyter Kernel desc-stack environment
+The same behavior was obtained for re-running Run 1.2p using
+scripts/start-kernel-cli.py
+from the 
+https://github.com/LSSTDESC/nersc
+package (checked out into `~wmwv/local/lsst/nersc`)
 
 ```
-python start-kernel-cli.py desc-stack
+python ~/local/lsst/nersc/scripts/start-kernel-cli.py desc-stack
 ```
 
 #### Script directory
