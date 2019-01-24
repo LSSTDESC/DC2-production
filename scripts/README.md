@@ -70,6 +70,7 @@ REPO=/global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/w_2018_30/rerun/coad
 python "${SCRIPT_DIR}"/merged_tract_cat.py ${REPO} [...]
 ```
 
+#### Run 1.2i
 Then run
 ```bash
 REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2i_globus_in2p3_20181217/w_2018_39/rerun/multiband
