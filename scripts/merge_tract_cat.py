@@ -263,29 +263,6 @@ def trim_long_colnames(cat):
                 cat.rename_column(col_name, new_col_name)
 
 
-def prefix_columns_astropy(cat, filt, fields_to_skip=()):
-    """Prefix the columns of an AstroPy Table with the filter name.
-
-    >>> from astropy.table import Table
-    >>> tab = Table([['a', 'b'], [1, 2]], names=('letter', 'number'))
-    >>> prefix_columns(tab, 'filter')
-    >>> print(tab)
-    filter_letter filter_number
-    ------------- -------------
-                a             1
-                b             2
-
-    """
-    old_colnames = cat.colnames
-    for field in fields_to_skip:
-        field_idx = old_colnames.index(field)
-        old_colnames.pop(field_idx)
-
-    new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
-    for oc, nc in zip(old_colnames, new_colnames):
-        cat.rename_column(oc, nc)
-
-
 def prefix_columns(cat, filt, fields_to_skip=()):
     """Prefix the columns of an Pandas DataFrame with the filter name.
 
