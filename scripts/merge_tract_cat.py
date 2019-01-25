@@ -171,7 +171,8 @@ def load_patch(butler_or_repo, tract, patch,
     tract_patch_data_id = {'tract': tract, 'patch': patch}
     try:
         ref_table = butler.get(datasetType='deepCoadd_ref',
-                               dataId=tract_patch_data_id).asAstropy()
+                               dataId=tract_patch_data_id)
+        ref_table = ref_table.asAstropy().to_pandas()
     except NoResults as e:
         if verbose:
             print(" ", e)
@@ -213,7 +214,12 @@ def load_patch(butler_or_repo, tract, patch,
         # Convert the AFW table to an AstroPy table
         # because it's much easier to add column to an AstroPy table
         # than it is to set up a new schema for an AFW table.
-        cat = cat.asAstropy()
+        # cat = cat.asAstropy()
+
+        # Try instead out converting the AFW->AstroPy->Pandas per cat
+        # hoping to avoid memory copy
+        # Then join in memory space.
+        cat = cat.asAstropy().to_pandas()
 
         calib = butler.get('deepCoadd_calexp_calib', this_data)
         calib.setThrowOnNegativeFlux(False)
@@ -248,8 +254,9 @@ def load_patch(butler_or_repo, tract, patch,
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         # Merge metadata with concatenation
-#        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
-#            merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
+        merged_patch_cat = pd.merge(merged_patch_cat, cat,
+                                    on=fields_to_join,
+                                    sort=False)
 
     if trim_colnames_for_fits:
         # FITS column names can't be longer that 68 characters
@@ -284,7 +291,7 @@ def trim_long_colnames(cat):
                 cat.rename_column(col_name, new_col_name)
 
 
-def prefix_columns(cat, filt, fields_to_skip=()):
+def prefix_columns_astropy(cat, filt, fields_to_skip=()):
     """Prefix the columns of an AstroPy Table with the filter name.
 
     >>> from astropy.table import Table
@@ -305,6 +312,29 @@ def prefix_columns(cat, filt, fields_to_skip=()):
     new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
     for oc, nc in zip(old_colnames, new_colnames):
         cat.rename_column(oc, nc)
+
+
+def prefix_columns(cat, filt, fields_to_skip=()):
+    """Prefix the columns of an Pandas DataFrame with the filter name.
+
+    >>> import pandas as pd
+    >>> tab = pd.DataFrame({'letter': ['a', 'b'], 'number': [1, 2]})
+    >>> prefix_columns(tab, 'filter')
+    >>> print(tab)
+    filter_letter filter_number
+    ------------- -------------
+                a             1
+                b             2
+
+    """
+    old_colnames = cat.columns
+    for field in fields_to_skip:
+        field_idx = old_colnames.index(field)
+        old_colnames.pop(field_idx)
+
+    new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
+    for oc, nc in zip(old_colnames, new_colnames):
+        cat.rename(oc, nc)
 
 
 if __name__ == '__main__':
