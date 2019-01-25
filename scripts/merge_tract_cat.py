@@ -1,37 +1,11 @@
 import re
 import sys
 
-from astropy.table import join, vstack, Table
-from astropy.utils.metadata import MergeStrategy, enable_merge_strategies
 import numpy as np
 import pandas as pd
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
-
-
-# Copied from
-# http://docs.astropy.org/en/stable/api/astropy.utils.metadata.enable_merge_strategies.html
-class MergeNumbersAsList(MergeStrategy):
-    """Merge scalar numbers as list.
-
-    Intended for use to merge metadata numbers in catalog metadata."""
-    types = ((int, float), (int, float))
-
-    @classmethod
-    def merge(cls, left, right):
-        return [left, right]
-
-
-class MergeListNumbersAsList(MergeStrategy):
-    """Merge list and scalar numbers as list.
-
-    Intended for use to merge metadata numbers in catalog metadata."""
-    types = ((list), (int, float))
-
-    @classmethod
-    def merge(cls, left, right):
-        return left.append(right)
 
 
 def valid_identifier_name(name):
@@ -117,7 +91,7 @@ def load_tract(repo, tract, patches=None, **kwargs):
 
     Returns
     --
-    AstroPy Table of merged catalog
+    Pandas DataFrame of merged catalog
     """
     butler = Butler(repo)
 
@@ -126,14 +100,11 @@ def load_tract(repo, tract, patches=None, **kwargs):
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
-    merged_patch_cats = []
+    merged_tract_cat = pd.DataFrame()
     for patch in patches:
         this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        # Event if this_patch_merged_cat is an empty Table, it's still fine to append to the list here.
-        # They will get vstacked away below.
-        merged_patch_cats.append(this_patch_merged_cat)
+        merged_tract_cat.append(this_patch_merged_cat)
 
-    merged_tract_cat = vstack(merged_patch_cats)
     return merged_tract_cat
 
 
@@ -161,7 +132,7 @@ def load_patch(butler_or_repo, tract, patch,
 
     Returns
     --
-    AstroPy Table of patch catalog merged across filters.
+    Pandas DataFrame of patch catalog merged across filters.
     """
     if isinstance(butler_or_repo, str):
         butler = Butler(butler_or_repo)
@@ -177,7 +148,7 @@ def load_patch(butler_or_repo, tract, patch,
     except NoResults as e:
         if verbose:
             print(" ", e)
-        return Table()
+        return pd.DataFrame()
 
 
     isPrimary = ref_table['detect_isPrimary']
