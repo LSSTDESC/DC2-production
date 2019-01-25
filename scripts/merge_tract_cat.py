@@ -177,7 +177,6 @@ def load_patch(butler_or_repo, tract, patch,
             print(" ", e)
         return Table()
 
-
     isPrimary = ref_table['detect_isPrimary']
     ref_table = ref_table[isPrimary]
     if len(ref_table) == 0:
@@ -186,12 +185,18 @@ def load_patch(butler_or_repo, tract, patch,
         return ref_table
 
     flux_field_names_per_schema_version = {
-        1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma',
-              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxSigma'},
-        2: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxErr',
-              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxErr'},
-        3: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr',
-              'modelfit_flux': 'modelfit_CModel_instFlux', 'modelfit_flux_err': 'modelfit_CModel_instFluxErr'},
+        1: {'psf_flux': 'base_PsfFlux_flux',
+            'psf_flux_err': 'base_PsfFlux_fluxSigma',
+            'modelfit_flux': 'modelfit_CModel_flux',
+            'modelfit_flux_err': 'modelfit_CModel_fluxSigma'},
+        2: {'psf_flux': 'base_PsfFlux_flux',
+            'psf_flux_err': 'base_PsfFlux_fluxErr',
+            'modelfit_flux': 'modelfit_CModel_flux',
+            'modelfit_flux_err': 'modelfit_CModel_fluxErr'},
+        3: {'psf_flux': 'base_PsfFlux_instFlux',
+            'psf_flux_err': 'base_PsfFlux_instFluxErr',
+            'modelfit_flux': 'modelfit_CModel_instFlux',
+            'modelfit_flux_err': 'modelfit_CModel_instFluxErr'},
     }
 
     merge_filter_cats = {}
