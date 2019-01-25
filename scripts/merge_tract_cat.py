@@ -100,7 +100,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
         key = valid_identifier_name(key)
-#        patch_merged_cat.to_pandas().to_hdf(filename, key, format='fixed')
+        patch_merged_cat.to_hdf(filename, key, format='fixed')
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
