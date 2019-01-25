@@ -4,6 +4,7 @@ import sys
 from astropy.table import join, vstack, Table
 from astropy.utils.metadata import MergeStrategy, enable_merge_strategies
 import numpy as np
+import pandas as pd
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
@@ -224,15 +225,15 @@ def load_patch(butler_or_repo, tract, patch,
         calib = butler.get('deepCoadd_calexp_calib', this_data)
         calib.setThrowOnNegativeFlux(False)
 
-        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']], cat[flux_names['psf_flux_err']])
+        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values, cat[flux_names['psf_flux_err']].values)
 
         cat['mag'] = mag
         cat['mag_err'] = mag_err
         cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
                             cat[flux_names['psf_flux_err']])
 
-        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']],
-                                                            cat[flux_names['modelfit_flux_err']])
+        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']].values,
+                                                            cat[flux_names['modelfit_flux_err']].values)
 
         cat['modelfit_mag'] = modelfit_mag
         cat['modelfit_mag_err'] = modelfit_mag_err
@@ -327,14 +328,13 @@ def prefix_columns(cat, filt, fields_to_skip=()):
                 b             2
 
     """
-    old_colnames = cat.columns
+    old_colnames = list(cat.columns)
     for field in fields_to_skip:
         field_idx = old_colnames.index(field)
         old_colnames.pop(field_idx)
 
-    new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
-    for oc, nc in zip(old_colnames, new_colnames):
-        cat.rename(oc, nc)
+    transformation = {col: '%s_%s' % (filt, col) for col in old_colnames}
+    cat.rename(index=str, columns=transformation, inplace=True)
 
 
 if __name__ == '__main__':
