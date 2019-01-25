@@ -325,6 +325,11 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
+    parser.add_argument('--patches', nargs='+',
+                        help='''
+Skymap patch[es] within each tract to process.
+A common use-case for this option is quick testing.
+''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.hdf5')
     parser.add_argument('--verbose', dest='verbose', default=True,
@@ -344,5 +349,6 @@ if __name__ == '__main__':
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.name, tract)
         filename = filebase + '.hdf5'
-        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
+        load_and_save_tract(args.repo, tract, filename,
+                            patches=args.patches, verbose=args.verbose,
                             filters=filters)
