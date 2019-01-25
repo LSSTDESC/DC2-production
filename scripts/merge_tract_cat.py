@@ -99,7 +99,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
         key = valid_identifier_name(key)
-        patch_merged_cat.to_pandas().to_hdf(filename, key, format='fixed')
+#        patch_merged_cat.to_pandas().to_hdf(filename, key, format='fixed')
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
@@ -177,6 +177,7 @@ def load_patch(butler_or_repo, tract, patch,
             print(" ", e)
         return Table()
 
+
     isPrimary = ref_table['detect_isPrimary']
     ref_table = ref_table[isPrimary]
     if len(ref_table) == 0:
@@ -185,18 +186,12 @@ def load_patch(butler_or_repo, tract, patch,
         return ref_table
 
     flux_field_names_per_schema_version = {
-        1: {'psf_flux': 'base_PsfFlux_flux',
-            'psf_flux_err': 'base_PsfFlux_fluxSigma',
-            'modelfit_flux': 'modelfit_CModel_flux',
-            'modelfit_flux_err': 'modelfit_CModel_fluxSigma'},
-        2: {'psf_flux': 'base_PsfFlux_flux',
-            'psf_flux_err': 'base_PsfFlux_fluxErr',
-            'modelfit_flux': 'modelfit_CModel_flux',
-            'modelfit_flux_err': 'modelfit_CModel_fluxErr'},
-        3: {'psf_flux': 'base_PsfFlux_instFlux',
-            'psf_flux_err': 'base_PsfFlux_instFluxErr',
-            'modelfit_flux': 'modelfit_CModel_instFlux',
-            'modelfit_flux_err': 'modelfit_CModel_instFluxErr'},
+        1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma',
+              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxSigma'},
+        2: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxErr',
+              'modelfit_flux': 'modelfit_CModel_flux', 'modelfit_flux_err': 'modelfit_CModel_fluxErr'},
+        3: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr',
+              'modelfit_flux': 'modelfit_CModel_instFlux', 'modelfit_flux_err': 'modelfit_CModel_instFluxErr'},
     }
 
     merge_filter_cats = {}
@@ -253,8 +248,8 @@ def load_patch(butler_or_repo, tract, patch,
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         # Merge metadata with concatenation
-        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
-            merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
+#        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
+#            merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
 
     if trim_colnames_for_fits:
         # FITS column names can't be longer that 68 characters
