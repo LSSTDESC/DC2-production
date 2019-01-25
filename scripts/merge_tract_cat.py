@@ -22,8 +22,30 @@ class MergeNumbersAsList(MergeStrategy):
         return [left, right]
 
 
-class MergeListNumbersAsList(MergeStrategy):
-    """Merge list and scalar numbers as list.
+class MergeStringsAsList(MergeStrategy):
+    """Merge strings as list.
+
+    Intended for use to merge metadata numbers in catalog metadata."""
+    types = ((str), (str))
+
+    @classmethod
+    def merge(cls, left, right):
+        return [left, right]
+
+
+class MergeStringListAsList(MergeStrategy):
+    """Merge string, list as list.
+
+    Intended for use to merge metadata numbers in catalog metadata."""
+    types = ((str), (list))
+
+    @classmethod
+    def merge(cls, left, right):
+        return list(left).append(right)
+
+
+class MergeListNumberAsList(MergeStrategy):
+    """Merge list and scalar number as list.
 
     Intended for use to merge metadata numbers in catalog metadata."""
     types = ((list), (int, float))
@@ -31,6 +53,18 @@ class MergeListNumbersAsList(MergeStrategy):
     @classmethod
     def merge(cls, left, right):
         return left.append(right)
+
+
+class MergeListNumberAsList(MergeStrategy):
+    """Merge scalar number and list as list.
+
+    Intended for use to merge metadata numbers in catalog metadata."""
+    types = ((int, float), (list)
+
+    @classmethod
+    def merge(cls, left, right):
+        return list(left).append(right)
+
 
 
 def valid_identifier_name(name):
@@ -248,7 +282,9 @@ def load_patch(butler_or_repo, tract, patch,
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         # Merge metadata with concatenation
-        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
+        with enable_merge_strategies(MergeNumbersAsList, MergeListNumberAsList,
+                                     MergeNumberListAsList, MergeStringsAsList,
+                                     MergeStringListAsList):
             merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
 
     if trim_colnames_for_fits:
