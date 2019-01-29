@@ -1,36 +1,11 @@
 import re
 import sys
 
-from astropy.table import join, vstack, Table
-from astropy.utils.metadata import MergeStrategy, enable_merge_strategies
 import numpy as np
+import pandas as pd
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
-
-
-# Copied from
-# http://docs.astropy.org/en/stable/api/astropy.utils.metadata.enable_merge_strategies.html
-class MergeNumbersAsList(MergeStrategy):
-    """Merge scalar numbers as list.
-
-    Intended for use to merge metadata numbers in catalog metadata."""
-    types = ((int, float), (int, float))
-
-    @classmethod
-    def merge(cls, left, right):
-        return [left, right]
-
-
-class MergeListNumbersAsList(MergeStrategy):
-    """Merge list and scalar numbers as list.
-
-    Intended for use to merge metadata numbers in catalog metadata."""
-    types = ((list), (int, float))
-
-    @classmethod
-    def merge(cls, left, right):
-        return left.append(right)
 
 
 def valid_identifier_name(name):
@@ -99,7 +74,7 @@ def load_and_save_tract(repo, tract, filename, key_prefix='coadd', patches=None,
 
         key = '%s_%d_%s' % (key_prefix, tract, patch)
         key = valid_identifier_name(key)
-        patch_merged_cat.to_pandas().to_hdf(filename, key, format='fixed')
+        patch_merged_cat.to_hdf(filename, key, format='fixed')
 
 
 def load_tract(repo, tract, patches=None, **kwargs):
@@ -116,7 +91,7 @@ def load_tract(repo, tract, patches=None, **kwargs):
 
     Returns
     --
-    AstroPy Table of merged catalog
+    Pandas DataFrame of merged catalog
     """
     butler = Butler(repo)
 
@@ -125,14 +100,11 @@ def load_tract(repo, tract, patches=None, **kwargs):
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
-    merged_patch_cats = []
+    merged_tract_cat = pd.DataFrame()
     for patch in patches:
         this_patch_merged_cat = load_patch(butler, tract, patch, **kwargs)
-        # Event if this_patch_merged_cat is an empty Table, it's still fine to append to the list here.
-        # They will get vstacked away below.
-        merged_patch_cats.append(this_patch_merged_cat)
+        merged_tract_cat.append(this_patch_merged_cat)
 
-    merged_tract_cat = vstack(merged_patch_cats)
     return merged_tract_cat
 
 
@@ -160,7 +132,7 @@ def load_patch(butler_or_repo, tract, patch,
 
     Returns
     --
-    AstroPy Table of patch catalog merged across filters.
+    Pandas DataFrame of patch catalog merged across filters.
     """
     if isinstance(butler_or_repo, str):
         butler = Butler(butler_or_repo)
@@ -171,11 +143,12 @@ def load_patch(butler_or_repo, tract, patch,
     tract_patch_data_id = {'tract': tract, 'patch': patch}
     try:
         ref_table = butler.get(datasetType='deepCoadd_ref',
-                               dataId=tract_patch_data_id).asAstropy()
+                               dataId=tract_patch_data_id)
+        ref_table = ref_table.asAstropy().to_pandas()
     except NoResults as e:
         if verbose:
             print(" ", e)
-        return Table()
+        return pd.DataFrame()
 
 
     isPrimary = ref_table['detect_isPrimary']
@@ -213,20 +186,25 @@ def load_patch(butler_or_repo, tract, patch,
         # Convert the AFW table to an AstroPy table
         # because it's much easier to add column to an AstroPy table
         # than it is to set up a new schema for an AFW table.
-        cat = cat.asAstropy()
+        # cat = cat.asAstropy()
+
+        # Try instead out converting the AFW->AstroPy->Pandas per cat
+        # hoping to avoid memory copy
+        # Then join in memory space.
+        cat = cat.asAstropy().to_pandas()
 
         calib = butler.get('deepCoadd_calexp_calib', this_data)
         calib.setThrowOnNegativeFlux(False)
 
-        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']], cat[flux_names['psf_flux_err']])
+        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values, cat[flux_names['psf_flux_err']].values)
 
         cat['mag'] = mag
         cat['mag_err'] = mag_err
         cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
                             cat[flux_names['psf_flux_err']])
 
-        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']],
-                                                            cat[flux_names['modelfit_flux_err']])
+        modelfit_mag, modelfit_mag_err = calib.getMagnitude(cat[flux_names['modelfit_flux']].values,
+                                                            cat[flux_names['modelfit_flux_err']].values)
 
         cat['modelfit_mag'] = modelfit_mag
         cat['modelfit_mag_err'] = modelfit_mag_err
@@ -248,8 +226,9 @@ def load_patch(butler_or_repo, tract, patch,
         # Rename duplicate columns with prefix of filter
         prefix_columns(cat, filt, fields_to_skip=fields_to_join)
         # Merge metadata with concatenation
-        with enable_merge_strategies(MergeNumbersAsList, MergeListNumbersAsList):
-            merged_patch_cat = join(merged_patch_cat, cat, keys=fields_to_join)
+        merged_patch_cat = pd.merge(merged_patch_cat, cat,
+                                    on=fields_to_join,
+                                    sort=False)
 
     if trim_colnames_for_fits:
         # FITS column names can't be longer that 68 characters
@@ -285,10 +264,10 @@ def trim_long_colnames(cat):
 
 
 def prefix_columns(cat, filt, fields_to_skip=()):
-    """Prefix the columns of an AstroPy Table with the filter name.
+    """Prefix the columns of an Pandas DataFrame with the filter name.
 
-    >>> from astropy.table import Table
-    >>> tab = Table([['a', 'b'], [1, 2]], names=('letter', 'number'))
+    >>> import pandas as pd
+    >>> tab = pd.DataFrame({'letter': ['a', 'b'], 'number': [1, 2]})
     >>> prefix_columns(tab, 'filter')
     >>> print(tab)
     filter_letter filter_number
@@ -297,14 +276,13 @@ def prefix_columns(cat, filt, fields_to_skip=()):
                 b             2
 
     """
-    old_colnames = cat.colnames
+    old_colnames = list(cat.columns)
     for field in fields_to_skip:
         field_idx = old_colnames.index(field)
         old_colnames.pop(field_idx)
 
-    new_colnames = ['%s_%s' % (filt, col) for col in old_colnames]
-    for oc, nc in zip(old_colnames, new_colnames):
-        cat.rename_column(oc, nc)
+    transformation = {col: '%s_%s' % (filt, col) for col in old_colnames}
+    cat.rename(index=str, columns=transformation, inplace=True)
 
 
 if __name__ == '__main__':
@@ -325,6 +303,11 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
+    parser.add_argument('--patches', nargs='+',
+                        help='''
+Skymap patch[es] within each tract to process.
+A common use-case for this option is quick testing.
+''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.hdf5')
     parser.add_argument('--verbose', dest='verbose', default=True,
@@ -344,5 +327,6 @@ if __name__ == '__main__':
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.name, tract)
         filename = filebase + '.hdf5'
-        load_and_save_tract(args.repo, tract, filename, verbose=args.verbose,
+        load_and_save_tract(args.repo, tract, filename,
+                            patches=args.patches, verbose=args.verbose,
                             filters=filters)
