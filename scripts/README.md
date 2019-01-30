@@ -80,7 +80,7 @@ mkdir -p "${WORKING_DIR}"
 cd ${WORKING_DIR}
 
 SCRIPT_DIR=/global/homes/w/wmwv/local/lsst/DC2-production/scripts
-nohup python "${SCRIPT_DIR}"/merge_tract_cat.py "${REPO}" "${TRACTS}" > merge_tract_cat.log 2>&1 < /dev/null
+nohup python "${SCRIPT_DIR}"/merge_tract_cat.py "${REPO}" ${TRACTS} > merge_tract_cat.log 2>&1 < /dev/null
 ```
 
 ### Trimmed Files
