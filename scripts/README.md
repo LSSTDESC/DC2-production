@@ -129,6 +129,24 @@ Note:
 `pixel_scale` above refers to choice of pixel scale for the coadd, not necessarily the native instrument itself.
 Make sure to check the pixel scale used by the sky map to generate the coadds.
 
+#### Generate Schema files
+
+To save load time, we generate a schema file that tells the GCRCatalog exactly what's in the file.
+We can generate this the first time with:
+
+```python
+import GCRCatalogs
+
+for cat in ('dc2_object_run1.2i', 'dc2_object_run1.2i_all_columns'):
+    GCRCatalogs.load_catalog(cat).generate_schema_yaml()
+```
+
+When given no schema the reader goes through and figures out all of the available columns.
+The schema file is then saved to the same base directory as the catalog files.
+If the schema file already exists it won't be overwritten.
+
+After the schema file is created will be picked up by the reader and loading should be much faster.
+
 #### DPDD Parquet files
 
 Produce stand-alone files with columns named as in the DPDD.
