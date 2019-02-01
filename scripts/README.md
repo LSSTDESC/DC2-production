@@ -34,6 +34,11 @@ if [ -n "$DESCPYTHONPATH" ]; then
 fi
 ```
 
+Although it's not what I used to re-generate Run 1.2i, another way of accomplishing this same setup would be to use the `start-kernel-cli.py` program in `https://github.com/LSSTDESC/nersc`.
+
+```
+python start-kernel-cli.py desc-stack
+```
 
 #### Script directory
 The commands run here are from the `DC2-Production/scripts` directory.  The notes in this file using a `SCRIPT_DIR` environment variable to point to this location.  I ran these as I was developing the scripts, so my `SCRIPT_DIR` points to my local checkout:
