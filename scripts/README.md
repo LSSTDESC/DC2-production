@@ -122,7 +122,7 @@ Run 1.1p
 python  "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.1/object_catalog/merged_tract_cat_*.hdf5
 ```
 
-Run 1.2p
+Run 1.2p (v3)
 ```bash
 python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog/merged_tract_cat_*.hdf5
 ```
@@ -134,6 +134,11 @@ python "${SCRIPT_DIR}"/trim_tract_cat.py WORKING_DIR=/global/projecta/projectdir
 (Note that the output HDF5 files are named `object_tract_*` instead of `merged_tract_*` as they were for Run 1.1p and 1.2p)
 
 This trim step uses the Generic Catalog Reader to determine the columns required in the trim catalog.  We can do this before generating the actual catalog reader configuration file because the basic quantities we need are constant across the DC2 Runs.
+
+Run 1.2p v4
+```bash
+python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog_v4/object_tract_cat_*.hdf5
+```
 
 
 ### Update gcr-catalog
@@ -154,11 +159,13 @@ pixel_scale: 0.2
 Note:
 `pixel_scale` above refers to choice of pixel scale for the coadd, not necessarily the native instrument itself.
 Make sure to check the pixel scale used by the sky map to generate the coadds.
+A quick way to do this is to look at the CD1_1, CD2_2 values in a sample coadded image.
+These values are in degrees/pixel, so a value of 5.5555555555e-05 means 0.2"/pixel.
 
 #### Generate Schema files
 
 To save load time, we generate a schema file that tells the GCRCatalog exactly what's in the file.
-We can generate this the first time with:
+We can generate this the first time with (for example for Run 1.2i):
 
 ```python
 import GCRCatalogs
