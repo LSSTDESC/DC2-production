@@ -23,7 +23,7 @@ class DummyDC2ObjectCatalog(BaseGenericCatalog):
     required for the DPDD columns in DC2 Object Catalog
     """
     def __init__(self, schema_version=None):
-        self._quantity_modifiers = DC2ObjectCatalog._generate_modifiers(version=schema_version)
+        self._quantity_modifiers = DC2ObjectCatalog._generate_modifiers(dm_schema_version=schema_version)
 
     @property
     def required_native_quantities(self):
@@ -72,5 +72,6 @@ def make_trim_file(infile, outfile=None, clobber=True, schema_version=None,
 
 
 if __name__ == "__main__":
+    dm_schema_version = 3
     for infile in sys.argv[1:]:
-        make_trim_file(infile)
+        make_trim_file(infile, schema_version=dm_schema_version)

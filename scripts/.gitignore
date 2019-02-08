@@ -118,3 +118,7 @@ Session.vim
 *.hdf5
 *.fits
 *.parquet
+
+# Log files
+*.out
+*.log
