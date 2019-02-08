@@ -13,7 +13,7 @@ We start with a data set that has been processed by the LSST DM Science Pipeline
 
 1. Create Summary files of the set of Objects, their original detection measurements, and their forced-photometry measurements on the coadded stacks in each filter and save in HDF5 files on a per-tract basis.
 2. Create a smaller, Trimmed, version of these files that only contains the columns necessary for the DPDD.
-3. Provide access to these data through the `GCRCatalogs` framework (https://github.com/yyamo/GCRCAtalogs) using `gcr-catalogs`, which is the DESC-customized set of catalog formats (https://github.com/LSSTDESC/gcr-catalogs).
+3. Provide access to these data through the `GCRCatalogs` framework (https://github.com/yymao/generic-catalog-reader) using `gcr-catalogs`, which is the DESC-customized set of catalog formats (https://github.com/LSSTDESC/gcr-catalogs).
 4. Create a Parquet file modeled after the DPDD Object Table.  This Parquet file is meant to be portable and usable without the requirement of any external additional LSST DM or DESC-specific infrastructure.
 
 ### Environment configuration
@@ -24,7 +24,7 @@ We start with a data set that has been processed by the LSST DM Science Pipeline
 2. `pandas`, `astropy`, and `tables`.
     - The first two will already be present with the LSST Science Pipelines install.  The slightly generically named `tables` Python package is necessary to fully use the HDF5 functionality of `pandas` and `h5py`.
 3. `GCRCatalogs` and `gcr-catalogs`
-    - [GCRCatalogs](https://github.com/yyamo/GCRCatalogs) presents a general abstract API that can be used to access disparate datasets.
+    - [GCRCatalogs](https://github.com/yymao/generic-catalog-reader) presents a general abstract API that can be used to access disparate datasets.
     - [gcr-catalogs](https://github.com/LSSTDESC/gcr-catalogs) presents the specific definitions of the catalogs used in the DESC DC2 effort and installed at NESRC.
 4. Data
     - You'll need to run these at a place that has all of the data.  Right now that's either DOE's NERSC or the IN2P3 Computing Center.  Perhaps this seems too obvious to need mentioning, but I do to clarify the instructions in this document have been written from the perspective of being at NERSC.
