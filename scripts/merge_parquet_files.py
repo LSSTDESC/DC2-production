@@ -48,5 +48,5 @@ if __name__ == "__main__":
     parser.add_argument('--output_file', default='dpdd_object.parquet',
                         help='Output filepath. (default: %(default)s)')
 
-    args = parser(sys.argv[1:])
+    args = parser.parse_args(sys.argv[1:])
     run(input_files=args.input_files)

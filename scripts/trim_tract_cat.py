@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-"""
-Create a restricted sample of an HDF5 merged object catalog
-that contains only the columns necessary to support the DPDD
-columns exposed in the GCRCatalog DC2 reader
-"""
-
 import os
 import sys
 import re
@@ -42,17 +36,19 @@ def load_trim_save_patch(outfile, infile_handle, key, columns_to_keep):
     trim_df.to_hdf(outfile, key=key)
 
 
-def make_trim_file(infile, outfile=None, clobber=True, schema_version=None,
+def make_trim_file(infile, output_file=None, output_dir=None,
+                   clobber=True, schema_version=None,
                    check_all_patches_exist=False):
 
-    if outfile is None:
-        dirname = os.path.dirname(infile)
+    if output_file is None:
+        if output_dir is None:
+            output_dir = os.path.dirname(infile)
         basename = os.path.basename(infile)
-        outfile = os.path.join(dirname, "trim_"+basename)
+        output_file = os.path.join(output_dir, "trim_"+basename)
 
     # Remove existing outputfile
-    if clobber and os.path.exists(outfile):
-        os.remove(outfile)
+    if clobber and os.path.exists(output_file):
+        os.remove(output_file)
 
     columns_to_keep = DummyDC2ObjectCatalog(schema_version).required_native_quantities
 
@@ -61,7 +57,7 @@ def make_trim_file(infile, outfile=None, clobber=True, schema_version=None,
         for key in fh:
             if not re.match(GROUP_PATTERN, key.lstrip('/')):
                 continue
-            load_trim_save_patch(outfile, fh, key, columns_to_keep)
+            load_trim_save_patch(output_file, fh, key, columns_to_keep)
             patches.append(key.rpartition('_')[-1])
 
     if check_all_patches_exist:
@@ -72,6 +68,35 @@ def make_trim_file(infile, outfile=None, clobber=True, schema_version=None,
 
 
 if __name__ == "__main__":
-    dm_schema_version = 3
-    for infile in sys.argv[1:]:
-        make_trim_file(infile, schema_version=dm_schema_version)
+    from argparse import ArgumentParser, RawTextHelpFormatter
+    usage = """
+    Create a restricted sample of an HDF5 merged object catalog
+    that contains only the columns necessary to support the DPDD
+    columns exposed in the GCRCatalog DC2 reader
+
+    Examples
+    --
+    python %(prog)s foo/object_catalog_48??.hdf5 --output_dir bar/
+
+    will create `trim_object_catalog_48??.hdf5` files in directory `bar`.
+    """
+
+    parser = ArgumentParser(description=usage,
+                            formatter_class=RawTextHelpFormatter)
+    parser.add_argument('input_files', type=str, nargs='+', default=[],
+                        help='Input HDF5 files to be trimmed.')
+    parser.add_argument('--schema_version', default=3,
+                        help="""
+The schema version of the DM tables.
+v1: '_flux', '_fluxSigma'
+v2: '_flux', '_fluxError'
+v3: '_instFlux', '_instFluxError'
+""")
+    parser.add_argument('--output_dir', default='./',
+                        help='Output directory.  (default: %(default)s))')
+
+    args = parser.parse_args(sys.argv[1:])
+    for infile in args.input_files:
+        make_trim_file(infile,
+                       schema_version=args.schema_version,
+                       output_dir=args.output_dir)
