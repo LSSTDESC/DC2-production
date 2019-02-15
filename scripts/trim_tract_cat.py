@@ -29,8 +29,10 @@ class DummyDC2ObjectCatalog(BaseGenericCatalog):
 
 def load_trim_save_patch(outfile, infile_handle, key, columns_to_keep):
     df = infile_handle.get_storer(key).read()
-    if not columns_to_keep.issubset(df.columns):
+    missing_columns = columns_to_keep.difference(df.columns)
+    if missing_columns:
         warnings.warn('Not all columns to keep are present in the data file.')
+        print('Missing columns are: %s' % missing_columns)
     columns_to_keep_present = list(columns_to_keep.intersection(df.columns))
     trim_df = df[columns_to_keep_present]
     trim_df.to_hdf(outfile, key=key)
