@@ -49,4 +49,4 @@ if __name__ == "__main__":
                         help='Output filepath. (default: %(default)s)')
 
     args = parser.parse_args(sys.argv[1:])
-    run(input_files=args.input_files)
+    run(input_files=args.input_files, output_file=args.output_file)
