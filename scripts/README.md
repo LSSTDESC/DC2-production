@@ -220,5 +220,5 @@ python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.
 This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, use the very simple `merge_parquet_files.py` utility.  E.g.,
 
 ```bash
-python "${SCRIPT_DIR}"/merge_parquet_files.py dpdd_object_tract_????.parquet --output_file dpdd_object_run1.2i.parquet
+python "${SCRIPT_DIR}"/merge_parquet_files.py dpdd_object_tract_????.parquet --output_file dpdd_dc2_object_run1.2i.parquet
 ```
