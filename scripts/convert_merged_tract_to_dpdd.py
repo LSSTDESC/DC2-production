@@ -62,6 +62,7 @@ def convert_cat_to_dpdd(reader='dc2_object_run1.1p',
 def write_dataframe_to_files(
         df,
         filename_prefix='dpdd_object',
+        output_dir='./',
         hdf_key_prefix='object',
         parquet_scheme='simple',
         parquet_engine='fastparquet',
@@ -108,9 +109,9 @@ def write_dataframe_to_files(
     patch = patch.replace(',', '')  # Convert '0,1'->'01'
 
     # Normalize output filename
-    outfile_base_tract_format = '{base}_tract_{tract:04d}'
+    outfile_base_tract_format = os.path.join(output_dir, '{base}_tract_{tract:04d}')
     outfile_base_tract_patch_format = \
-        '{base}_tract_{tract:04d}_patch_{patch:s}'
+        os.path.join(output_dir, '{base}_tract_{tract:04d}_patch_{patch:s}')
 
     # tract is an int
     # but patch is a string (e.g., '01' for '0,1')
@@ -197,10 +198,12 @@ Availability depends on the installation of the engine used.
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
+    parser.add_argument('reader', default='dc2_object_run1.1p',
+                        help='GCR reader to use. (default: %(default)s)')
     parser.add_argument('--tract', type=int, nargs='+', default=[],
                         help='Skymap tract[s] to process.')
-    parser.add_argument('--reader', default='dc2_object_run1.1p',
-                        help='GCR reader to use. (default: %(default)s)')
+    parser.add_argument('--output_dir', default='./',
+                        help='Output directory. (default: %(default)s)')
     parser.add_argument('--write', nargs='+', default=['parquet'],
                         choices=['all', 'hdf', 'fits', 'parquet'],
                         help='Formats to write out. (default: %(default)s)')

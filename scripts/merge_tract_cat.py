@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 
@@ -310,6 +311,8 @@ A common use-case for this option is quick testing.
 ''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.hdf5')
+    parser.add_argument('--output_dir', default='./',
+                        help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', dest='verbose', default=True,
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
@@ -326,7 +329,7 @@ A common use-case for this option is quick testing.
 
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.name, tract)
-        filename = filebase + '.hdf5'
+        filename = os.path.join(args.output_dir, filebase + '.hdf5')
         load_and_save_tract(args.repo, tract, filename,
                             patches=args.patches, verbose=args.verbose,
                             filters=filters)
