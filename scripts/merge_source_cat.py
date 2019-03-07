@@ -58,7 +58,7 @@ def extract_and_save_visit(repo, visit, filename, object_table,
 
     collected_cats = pd.DataFrame()
     for dr in data_refs:
-        if not dr.datasetExists:
+        if not dr.datasetExists():
             if verbose:
                 print("Skipping non-existent dataset: ", dr.dataId)
             continue
@@ -77,6 +77,11 @@ def extract_and_save_visit(repo, visit, filename, object_table,
     if overwrite:
         if os.path.exists(filename):
             os.remove(filename)
+
+    if len(collected_cats) == 0:
+        if verbose:
+            print("No sources collected from ", data_refs.dataId)
+            return
 
     collected_cats.to_parquet(filename)
 
@@ -249,6 +254,13 @@ if __name__ == '__main__':
                         help='Name of Object Table reader')
     parser.add_argument('--visits', type=int, nargs='+',
                         help='Visit IDs to process.')
+    parser.add_argument('--visit_file', type=str, default=None,
+                        help=
+"""
+A file of visit IDs to process.  One visit ID per line.
+If both --visits and --visit_file are specified, then the entries in
+visit_file are appended to the list specified in visits.
+""")
     parser.add_argument('--name', default='src',
                         help='Base name of files: <name>_visit_0235062.hdf5')
     parser.add_argument('--output_dir', default='./',
@@ -277,6 +289,19 @@ v3: '_instFlux', '_instFluxError'
 
     cat = GCRCatalogs.load_catalog(args.reader)
     object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
+    del cat
+
+    if args.visit_file:
+        if not args.visits:
+            args.visits = []
+
+        visits_from_file = np.loadtxt(args.visit_file, dtype=int)
+        # Numpy 'int' defaults to 'numpy.int64' but then we have to
+        # Explicitly force a conversion from 'numpy.int64' to 'int'
+        # For reasons I don't fully understand,
+        # the former doesn't work with the butler.subset call
+        args.visits.extend([int(v) for v in visits_from_file])
+
     for visit in args.visits:
         filebase = '{:s}_visit_{:d}'.format(args.name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')

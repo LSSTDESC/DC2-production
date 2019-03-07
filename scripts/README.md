@@ -5,8 +5,8 @@ validation can be put in this directory.
 *by Michael Wood-Vasey [@wmwv]*
 
 ### Outline
-Our goal is to provide an interface to the DESC DC2 static-sky data that resembles the LSST Data Products Definition Document  
-https://ls.st/dpdd  
+Our goal is to provide an interface to the DESC DC2 static-sky data that resembles the LSST Data Products Definition Document
+https://ls.st/dpdd
 In addition, we aim to provide access to intermediate quantities that may not appear in the final DPDD.
 
 We start with a data set that has been processed by the LSST DM Science Pipelines through to coadd + forced-photometry.
@@ -61,7 +61,7 @@ fi
 ##### Command-line invocation of Jupyter Kernel desc-stack environment
 The same behavior was obtained for re-running Run 1.2p using
 scripts/start-kernel-cli.py
-from the 
+from the
 https://github.com/LSSTDESC/nersc
 package (checked out into `~wmwv/local/lsst/nersc`)
 
@@ -137,7 +137,7 @@ nohup python "${SCRIPT_DIR}"/merge_tract_cat.py "${REPO}" ${TRACTS} > merge_trac
 
 Generate "Trimmed" Object Tables
 These files have only the columns necessary to reconstruct the DPDD.
-They maintain their original column names.  
+They maintain their original column names.
 
 The respective Object trimmed object tables were generated with
 
@@ -222,3 +222,78 @@ This will create individual per-tract Parquet files.  To create a merged Parquet
 ```bash
 python "${SCRIPT_DIR}"/merge_parquet_files.py dpdd_object_tract_????.parquet --output_file dpdd_dc2_object_run1.2i.parquet
 ```
+
+## How To Generate Source Tables from DM processing outputs
+*by Michael Wood-Vasey [@wmwv]*
+
+### Outline
+Provide the DESC DC2 individual-image catalog data in the form defined by the LSST Data Products Definition Document
+https://ls.st/dpdd
+
+We start with a data set that has been processed by the LSST DM Science Pipelines through to coadd + forced-photometry.
+
+1. Create a summary file of the source catalog for each visit where Sources have been matched to the nearest Object in the Object Table.
+2. Provide access to these data through the `GCRCatalogs` framework (https://github.com/yymao/generic-catalog-reader) using `gcr-catalogs`, which is the DESC-customized set of catalog formats (https://github.com/LSSTDESC/gcr-catalogs).
+3. Create a Parquet file modeled after the DPDD Object Table.  This Parquet file is meant to be portable and usable without the requirement of any external additional LSST DM or even DESC-specific infrastructure.
+
+### Environment configuration
+Same requirements, Shifter, and data requirements as for the Object Tables.
+
+### Make Source Files
+
+#### Run 1.2i
+
+There are 1995 visits in Run 1.2.  The script to extract a source catalog from a visit, match to nearest object (within a matching radius of 1 arcsec), extract the calibration, and write out to a Parquet file is `merge_source_cat.py`.  The shell script `extract_source_table.sh` provides some light wrapping around `merge_source_cat.py` to setup some environment variables.
+
+Each source catalog takes 2-3 minutes, but as there are almost 2000 it takes a long time in aggregate.  The SLURM job script to run all of them uses the `taskfarmer` module that takes a list of tasks and goes through them.
+
+```bash
+module load taskfarmer
+sbatch extract_source_table_taskfarmer.sl
+```
+
+This will create a set of ~2,000 files in `${SCRATCH}/DC2/Run1.2i`.
+
+### Update gcr-catalog
+
+Write a `gcr-catalogs` reader for the new catalog.  Generally this will be as easy as creating a new configuration file with a new base_dir and description.  E.g., the source catalog config file for Run 1.2i (https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/catalog_configs/dc2_source_run1.2i.yaml) is:
+
+```yaml
+subclass_name: dc2_source.DC2SourceCatalog
+base_dir: /global/projecta/projectdirs/lsst/global/in2p3/Run1.2i/source_catalog
+schema_filename: src_schema.yaml
+filename_pattern: 'src_visit_\d+\.parquet$'
+description: DC2 Run 1.2i Source Catalog
+creators: ['Michael Wood-Vasey']
+included_by_default: true
+```
+
+#### Generate Schema files
+
+To save load time, we generate a schema file that tells the GCRCatalog exactly what's in the files.
+We can generate this the first time with (for example for Run 1.2i):
+
+```python
+import GCRCatalogs
+import os
+
+base_dir = os.path.join(os.env('SCRATCH'), 'DC2', 'Run1.2i')
+for reader in ('dc2_source_run1.2i'):
+    cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
+    cat.generate_schema_yaml()
+```
+
+The schema file gets created in the `base_dir`.  Since we're creating
+
+#### Copy to central location
+
+The files provided to the collaboration are in a shared space owned by the `desc` user.  Make sure the files you just created are readable by the `lsst` group and then copy in
+
+```bash
+chgrp -R lsst ${SCRATCH}/DC2/Run1.2i
+collabsu desc
+
+cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit /global/projecta/projectdirs/lsst/global/in2p3/Run1.2i/source_catalog
+```
+
+Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit` is my `${SCRATCH}/DC2/Run1.2i`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
