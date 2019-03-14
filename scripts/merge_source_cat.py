@@ -1,9 +1,11 @@
 import os
-import re
 import sys
 
 import numpy as np
 import pandas as pd
+
+from lsst.geom import radians
+from lsst.afw.geom.spherePoint import SpherePoint
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
@@ -31,7 +33,7 @@ class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
         return set(self._translate_quantities(self.list_all_quantities()))
 
 
-def extract_and_save_visit(repo, visit, filename, object_table,
+def extract_and_save_visit(repo, visit, filename, object_table=None,
                            dm_schema_version=3,
                            overwrite=True, verbose=False, **kwargs):
     """Save catalogs to Parquet from visit-level source catalogs.
@@ -65,7 +67,7 @@ def extract_and_save_visit(repo, visit, filename, object_table,
 
         if verbose:
             print("Processing ", dr.dataId)
-        src_cat = load_detector(dr, object_table,
+        src_cat = load_detector(dr, object_table=object_table,
                                 columns_to_keep=columns_to_keep,
                                 verbose=verbose, **kwargs)
         if len(src_cat) == 0:
@@ -86,7 +88,7 @@ def extract_and_save_visit(repo, visit, filename, object_table,
     collected_cats.to_parquet(filename)
 
 
-def load_detector(data_ref, object_table, matching_radius=1,
+def load_detector(data_ref, object_table=None, matching_radius=1,
                   columns_to_keep=None, debug=False, **kwargs):
     """Load detector source catalog and associate sources with Object Table.
 
@@ -148,7 +150,11 @@ def load_detector(data_ref, object_table, matching_radius=1,
     cat['fluxmag0'] = flux_mag0
 
     # Associate with closest
-    object_id = associate_object_ids(cat, object_table, matching_radius=matching_radius)
+    object_id = associate_object_ids(cat,
+                                     data_ref=data_ref,
+                                     object_table=object_table,
+                                     matching_radius=matching_radius,
+                                     **kwargs)
     cat['objectId'] = object_id
 
     # Restrict to columns that we need
@@ -157,7 +163,86 @@ def load_detector(data_ref, object_table, matching_radius=1,
     return cat
 
 
-def associate_object_ids(cat, object_table, matching_radius=1, verbose=True):
+def associate_object_ids(cat, data_ref=None, object_table=None, **kwargs):
+    """Wrapper for development to easily switch
+    Object-Table based
+    coadd file based
+
+    associate_object_ids
+    """
+    if object_table is None:
+        associated_ids = associate_object_ids_to_coadd(cat, data_ref=data_ref, **kwargs)
+    else:
+        associated_ids = associate_object_ids_to_table(cat, object_table=object_table, **kwargs)
+
+    return associated_ids
+
+
+def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
+    """Load and match to deepcoadd references."""
+
+    # Can I get this directly from the data_ref, or do I need data_ref.butler?
+    skymap = data_ref.get(datasetType='deepCoadd_skyMap')
+
+    # radians
+    min_ra, max_ra = np.min(cat['coord_ra']), np.max(cat['coord_ra'])
+    min_dec, max_dec = np.min(cat['coord_dec']), np.max(cat['coord_dec'])
+
+    coord_list = [
+        SpherePoint(min_ra * radians, min_dec * radians),
+        SpherePoint(max_ra * radians, min_dec * radians),
+        SpherePoint(max_ra * radians, max_dec * radians),
+        SpherePoint(min_ra * radians, max_dec * radians),
+    ]
+
+    # This will be a list of tracts that overlap
+    # Each tract entry will have its own list of patches that overlap
+    tract_patches = skymap.findTractPatchList(coord_list)
+
+    associated_id_table = []
+    for tract, patches in tract_patches:
+        for patch in patches:
+            tract_patch_data_id = {}
+            tract_patch_data_id['tract'] = tract.getId()
+            # Yes, really, the following is the supported way to get the
+            # patch ID in a way that can be queried.
+            patch_str = '%d,%d' % patch.getIndex()
+            tract_patch_data_id['patch'] = patch_str
+            if verbose:
+                print("Searching ", tract_patch_data_id)
+            try:
+                ref_table = data_ref.getButler().get(datasetType='deepCoadd_ref',
+                                                     dataId=tract_patch_data_id)
+            except NoResults:
+                if verbose:
+                    print("No results found for ", tract_patch_data_id)
+                continue
+
+            ref_table = ref_table.asAstropy().to_pandas()
+            # Rename RA, Dec columns to match associate_object_ids_to_table
+            # expectations
+            ref_table['ra'] = np.rad2deg(ref_table['coord_ra'])
+            ref_table['dec'] = np.rad2deg(ref_table['coord_dec'])
+            # Restrict ref_table to isPrimary?
+
+            # We get back and array of matching object IDs
+            # Cat rows with no matches get a -1 entry.
+            these_associated_ids = associate_object_ids_to_table(cat, object_table=ref_table,
+                                                                 verbose=verbose, **kwargs)
+            associated_id_table.append(these_associated_ids)
+
+    # Now merge the lists together, taking the last non-negative entry
+    # TODO Could consider checking for an inconsistent entry.
+    associated_ids = np.zeros(len(cat), dtype=int) - 1
+    for matches in associated_id_table:
+        w, = np.where(matches >= 0)
+        associated_ids[w] = matches[w]
+
+    return associated_ids
+
+
+def associate_object_ids_to_table(cat, object_table=None, matching_radius=1,
+                                  verbose=True):
     """Return object ID associated with each entry in cat.
 
     Takes closest match within matching radius.
@@ -168,18 +253,14 @@ def associate_object_ids(cat, object_table, matching_radius=1, verbose=True):
 
     Parameters
     --
-    cat:  AFW table SourceCatalog
-    object_table:
-        AFW tabe SimpleCatalog
+    cat: pandas DataFrame
+    object_table:  pandas DataFrame
     matching_radius: float [arcsec]
 
     Notes
     --
-    cat is assumed to have RA, Dec units of rad
+    cat and object_table are assumed to have RA, Dec units of rad
 
-    TODO
-    --
-    Testing rewriting this to use deepCoadd_ref AFW tables instead of Object Table.
     """
     # Let's first try the stupid way:
     # Explicitly iterate through cat
@@ -203,7 +284,13 @@ def associate_object_ids(cat, object_table, matching_radius=1, verbose=True):
     if verbose:
         print("Found %d objects in Object Table in region" % len(this_object_table))
 
-    this_object_table_skyCoor = SkyCoord(this_object_table['ra'], this_object_table['dec'], unit=(u.deg, u.deg))
+    if len(this_object_table) < 1:
+        # Return an array of -1
+        return np.zeros(len(cat)) - 1
+
+    this_object_table_skyCoor = SkyCoord(this_object_table['ra'],
+                                         this_object_table['dec'],
+                                         unit=(u.deg, u.deg))
     cat_skyCoor = SkyCoord(cat['coord_ra'], cat['coord_dec'], unit=(u.rad, u.rad))
 
     idx, sep2d, _ = matching.match_coordinates_sky(cat_skyCoor, this_object_table_skyCoor)
@@ -243,20 +330,45 @@ def prefix_columns(cat, filt, fields_to_skip=()):
 if __name__ == '__main__':
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
-    Generate merged source table photometry
-    (based on individual visit photometry matched to deepCoadd object ID)
+    Extract individual visit source table photometry
+
+    The individual visit photometry is matched to deepCoadd object ID.
+
+    The matching can be done either against an Object Table from a GCR reader
+    or individually to each merged detection reference file from the coadd.
+    The numbers will come out the same.
+
+    * If an Object Table reader is provided through '--reader', then the catalog
+    read by that Generic Catalog Reader will be used to match Object IDs.
+
+    * If this reader is not provided, then source catalogs will be matched against
+    the the merged detection reference coadds
+    (which are what are processed to generate the Object Table).
+
+    Comparison of approaches
+    --
+    The Object Table reader approach requires DPDD Object Table to be locally available
+    It requires 2.5 GB per process to load the table into memory for Run 1.2.
+    For larger catalogs, this memory usage will increase.
+    It also requires the Object Table to have been generated.
+
+    Running without the Object Table loaded into memory is more naturally parallel
+    It can be run prior to the generation of an Object Table.
+    However, matching directly to the merged coadd catalogs is ~5 times slower
+    because of the slow performance in reading AFW tables from FITS files.
+    Compounding this, each merged reference detection catalog is loaded multiple times
+    as many visits different will cover a given tract+path on the sky.
     """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('repo', type=str,
                         help='Filepath to LSST DM Stack Butler repository.')
-    parser.add_argument('reader', type=str,
-                        help='Name of Object Table reader')
+    parser.add_argument('--reader', default='',
+                        help='Name of Object Table reader.')
     parser.add_argument('--visits', type=int, nargs='+',
                         help='Visit IDs to process.')
     parser.add_argument('--visit_file', type=str, default=None,
-                        help=
-"""
+                        help="""
 A file of visit IDs to process.  One visit ID per line.
 If both --visits and --visit_file are specified, then the entries in
 visit_file are appended to the list specified in visits.
@@ -287,9 +399,11 @@ v3: '_instFlux', '_instFluxError'
     else:
         filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
 
-    cat = GCRCatalogs.load_catalog(args.reader)
-    object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
-    del cat
+    object_table = None
+    if args.reader:
+        cat = GCRCatalogs.load_catalog(args.reader)
+        object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
+        del cat
 
     if args.visit_file:
         if not args.visits:
@@ -305,7 +419,8 @@ v3: '_instFlux', '_instFluxError'
     for visit in args.visits:
         filebase = '{:s}_visit_{:d}'.format(args.name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
-        extract_and_save_visit(args.repo, visit, filename, object_table,
+        extract_and_save_visit(args.repo, visit, filename,
+                               object_table=object_table,
                                dm_schema_version=args.dm_schema_version,
                                verbose=args.verbose,
                                filters=filters)
