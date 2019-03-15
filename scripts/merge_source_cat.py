@@ -381,8 +381,6 @@ visit_file are appended to the list specified in visits.
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
-    parser.add_argument('--hsc', dest='hsc', action='store_true',
-                        help='Uses HSC filters')
     parser.add_argument('--dm_schema_version', default=3,
                         help="""
 The schema version of the DM tables.
@@ -392,12 +390,6 @@ v3: '_instFlux', '_instFluxError'
 """)
 
     args = parser.parse_args(sys.argv[1:])
-
-    if args.hsc:
-        filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
-                   'z': 'HSC-Z', 'y': 'HSC-Y'}
-    else:
-        filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
 
     object_table = None
     if args.reader:
@@ -422,5 +414,4 @@ v3: '_instFlux', '_instFluxError'
         extract_and_save_visit(args.repo, visit, filename,
                                object_table=object_table,
                                dm_schema_version=args.dm_schema_version,
-                               verbose=args.verbose,
-                               filters=filters)
+                               verbose=args.verbose)
