@@ -401,7 +401,7 @@ v3: '_instFlux', '_instFluxError'
         if not args.visits:
             args.visits = []
 
-        visits_from_file = np.loadtxt(args.visit_file, dtype=int)
+        visits_from_file = np.loadtxt(args.visit_file, dtype=int, ndmin=1)
         # Numpy 'int' defaults to 'numpy.int64' but then we have to
         # Explicitly force a conversion from 'numpy.int64' to 'int'
         # For reasons I don't fully understand,
