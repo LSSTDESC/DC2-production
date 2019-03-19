@@ -39,7 +39,7 @@ def extract_and_save_visit(repo, visit, filename, object_table=None,
     """Save catalogs to Parquet from visit-level source catalogs.
 
     Associates an ObjectID.
-    Iterates through detectors, saving each in append mode to the save Parquet file.
+    Iterates through detectors, then saves all to a Parquet file.
 
     Parameters
     --
