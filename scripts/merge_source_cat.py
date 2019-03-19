@@ -33,7 +33,7 @@ class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
         return set(self._translate_quantities(self.list_all_quantities()))
 
 
-def extract_and_save_visit(repo, visit, filename, object_table=None,
+def extract_and_save_visit(butler, visit, filename, object_table=None,
                            dm_schema_version=3,
                            overwrite=True, verbose=False, **kwargs):
     """Save catalogs to Parquet from visit-level source catalogs.
@@ -43,8 +43,7 @@ def extract_and_save_visit(repo, visit, filename, object_table=None,
 
     Parameters
     --
-    repo: str
-        File location of Butler repository+rerun to load.
+    butler:  Butler object to use to load
     visit: int
         Visit to process
     filename: str
@@ -52,8 +51,6 @@ def extract_and_save_visit(repo, visit, filename, object_table=None,
     overwrite: bool
         Overwrite an existing parquet file.
     """
-    butler = Butler(repo)
-
     data_refs = butler.subset('src', dataId={'visit': visit})
 
     columns_to_keep = list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
@@ -408,10 +405,11 @@ v3: '_instFlux', '_instFluxError'
         # the former doesn't work with the butler.subset call
         args.visits.extend([int(v) for v in visits_from_file])
 
+    butler = Butler(args.repo)
     for visit in args.visits:
         filebase = '{:s}_visit_{:d}'.format(args.name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
-        extract_and_save_visit(args.repo, visit, filename,
+        extract_and_save_visit(butler, visit, filename,
                                object_table=object_table,
                                dm_schema_version=args.dm_schema_version,
                                verbose=args.verbose)
