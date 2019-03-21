@@ -160,7 +160,7 @@ A file of visit IDs to process.  One visit ID per line.
 If both --visits and --visit_file are specified, then the entries in
 visit_file are appended to the list specified in visits.
 """)
-    parser.add_argument('--name', default='src',
+    parser.add_argument('--name', default='forced_src',
                         help='Base name of files: <name>_visit_0235062.parquet')
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s)')
