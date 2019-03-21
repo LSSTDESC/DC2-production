@@ -5,7 +5,7 @@ echo "Processing: " $VISIT_FILE
 
 REPO=/global/cscratch1/sd/desc/DC2/data/Run1.2p/w_2018_39/rerun/coadd-v4
 SCRIPT_DIR=${HOME}/local/lsst/DC2-production/scripts/
-OUTPUT_DIR=${SCRATCH}/DC2/Run1.2p/src_visit
+OUTPUT_DIR=${SCRATCH}/DC2/Run1.2p/forced_src_visit
 OBJECT_TABLE=dc2_object_run1.2p
 
 mkdir -p ${OUTPUT_DIR}
