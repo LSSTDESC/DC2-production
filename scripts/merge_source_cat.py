@@ -178,7 +178,6 @@ def associate_object_ids(cat, data_ref=None, object_table=None, **kwargs):
 def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
     """Load and match to deepcoadd references."""
 
-    # Can I get this directly from the data_ref, or do I need data_ref.butler?
     skymap = data_ref.get(datasetType='deepCoadd_skyMap')
 
     # radians
@@ -348,6 +347,10 @@ A file of visit IDs to process.  One visit ID per line.
 If both --visits and --visit_file are specified, then the entries in
 visit_file are appended to the list specified in visits.
 """)
+    parser.add_argument('--radius', default=1,
+                        help="""
+Matching radius for object association [arcsec].  (default: %(default)s'
+""")
     parser.add_argument('--name', default='src',
                         help='Base name of files: <name>_visit_0235062.hdf5')
     parser.add_argument('--output_dir', default='./',
@@ -389,5 +392,6 @@ v3: '_instFlux', '_instFluxError'
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
                                object_table=object_table,
+                               matching_radius=args.radius,
                                dm_schema_version=args.dm_schema_version,
                                verbose=args.verbose)
