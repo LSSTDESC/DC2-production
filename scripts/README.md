@@ -297,3 +297,62 @@ cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit /global/projecta/projectd
 ```
 
 Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit` is my `${SCRATCH}/DC2/Run1.2i`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
+
+### Make Forced Source Files
+
+#### Run 1.2p
+
+There are 1995 visits in Run 1.2.  The script to extract a forced source catalog from a visit and write out to a Parquet file is `merge_forced_source_cat.py`.  The shell script `extract_source_table_run1.2p.sh` provides some light wrapping around `merge_forced_source_cat.py` to set up some environment variables.
+
+It takes 18 minutes on 8 nodes running 16 processes per node.  The SLURM job script to run all of them uses the `taskfarmer` module that takes a list of tasks and goes through them.
+
+```bash
+module load taskfarmer
+sbatch extract_forced_source_table_taskfarmer_run1.2p.sl
+```
+
+This will create a set of ~1,200 files in `${SCRATCH}/DC2/Run1.2p/forced_src_visit`.
+
+### Update gcr-catalog
+
+Write a `gcr-catalogs` reader for the new catalog.  Generally this will be as easy as creating a new configuration file with a new base_dir and description.  E.g., the forced source catalog config file for Run 1.2p (https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/catalog_configs/dc2_forced_source_run1.2p.yaml) is:
+
+```yaml
+subclass_name: dc2_source.DC2ForcedSourceCatalog
+base_dir: /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/source_catalog
+schema_filename: forced_src_schema.yaml
+filename_pattern: 'forced_src_visit_\d+\.parquet$'
+description: DC2 Run 1.2p Forced Source Catalog
+creators: ['Michael Wood-Vasey']
+included_by_default: true
+```
+
+#### Generate Schema files
+
+To save load time, we generate a schema file that tells the GCRCatalog exactly what's in the files.
+We can generate this the first time with (for example for Run 1.2p):
+
+```python
+import GCRCatalogs
+import os
+
+base_dir = os.path.join(os.env('SCRATCH'), 'DC2', 'Run1.2i')
+for reader in ('dc2_forced_source_run1.2p'):
+    cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
+    cat.generate_schema_yaml()
+```
+
+The schema file gets created in the `base_dir`.  Since we're creating this, we need permission to write to it so we need to do it know while it's still in our user-controlled directory and before we copy it to a central location.
+
+#### Copy to central location
+
+The files provided to the collaboration are in a shared space owned by the `desc` user.  Make sure the files you just created are readable by the `lsst` group and then copy in
+
+```bash
+chgrp -R lsst ${SCRATCH}/DC2/Run1.2p/forced_src_visit
+collabsu desc
+
+cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/forced_source_catalog
+```
+
+Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit` is my `${SCRATCH}/DC2/Run1.2p/forced_src_visit`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
