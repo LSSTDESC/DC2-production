@@ -302,28 +302,6 @@ def associate_object_ids_to_table(cat, object_table=None, matching_radius=1,
     return associated_ids
 
 
-def prefix_columns(cat, filt, fields_to_skip=()):
-    """Prefix the columns of an Pandas DataFrame with the filter name.
-
-    >>> import pandas as pd
-    >>> tab = pd.DataFrame({'letter': ['a', 'b'], 'number': [1, 2]})
-    >>> prefix_columns(tab, 'filter')
-    >>> print(tab)
-    filter_letter filter_number
-    ------------- -------------
-                a             1
-                b             2
-
-    """
-    old_colnames = list(cat.columns)
-    for field in fields_to_skip:
-        field_idx = old_colnames.index(field)
-        old_colnames.pop(field_idx)
-
-    transformation = {col: '%s_%s' % (filt, col) for col in old_colnames}
-    cat.rename(index=str, columns=transformation, inplace=True)
-
-
 if __name__ == '__main__':
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
