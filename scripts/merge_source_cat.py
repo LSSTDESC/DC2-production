@@ -301,6 +301,49 @@ def associate_object_ids_to_table(cat, object_table=None, matching_radius=1,
     return associated_ids
 
 
+def unique_in_order(possible_duplicates):
+    """Remove duplicates from a list or array while maintaining order
+
+    1. Get index of unique elements.  This will be sorted in element order
+    2. Sort this index list.  That will return the list in index order.
+    3. Define the new array based on this sorted index.
+
+    If passed a list, then return a list, otherwise a numpy array.
+
+    >>> foo = [0, 1, 2]
+    >>> print(unique_in_order(foo))
+    [0, 1, 2]
+
+    >>> foo = [2, 0, 1, 1, 2, 1, 0]
+    >>> print(repr(unique_in_order(foo)))
+    [2, 0, 1]
+
+    >>> foo = [2, 2, 0, 0, 1, 2]
+    >>> print(repr(unique_in_order(foo)))
+    [2, 0, 1]
+
+    >>> foo = ['b', 'a', 'a', 'c', 'd', 'e', 'a']
+    >>> print(repr(unique_in_order(foo)))
+    ['b', 'a', 'c', 'd', 'e']
+
+    >>> foo = np.array(['b', 'a', 'a', 'c', 'd', 'e', 'a'], dtype='<U1')
+    >>> print(repr(unique_in_order(foo)))
+    array(['b', 'a', 'c', 'd', 'e'], dtype='<U1')
+    """
+    if isinstance(possible_duplicates, list):
+        return_type = 'list'
+    else:
+        return_type = 'array'
+
+    possible_duplicates = np.asarray(possible_duplicates)
+    _, idx = np.unique(possible_duplicates, return_index=True)
+    no_duplicates = possible_duplicates[np.sort(idx)]
+    if return_type == 'list':
+        return list(no_duplicates)
+    else:
+        return no_duplicates
+
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, RawTextHelpFormatter
     usage = """
@@ -385,6 +428,8 @@ v3: '_instFlux', '_instFluxError'
         # For reasons I don't fully understand,
         # the former doesn't work with the butler.subset call
         args.visits.extend([int(v) for v in visits_from_file])
+
+    args.visits = unique_in_order(args.visits)
 
     butler = Butler(args.repo)
     for visit in args.visits:
