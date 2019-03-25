@@ -241,18 +241,25 @@ Same requirements, Shifter, and data requirements as for the Object Tables.
 
 ### Make Source Files
 
-#### Run 1.2i
+#### Run 1.2i and Run 1.2p
 
 There are 1995 visits in Run 1.2.  The script to extract a source catalog from a visit, match to nearest object (within a matching radius of 1 arcsec), extract the calibration, and write out to a Parquet file is `merge_source_cat.py`.  The shell script `extract_source_table.sh` provides some light wrapping around `merge_source_cat.py` to setup some environment variables.
 
 Each source catalog takes 2-3 minutes, but as there are almost 2000 it takes a long time in aggregate.  The SLURM job script to run all of them uses the `taskfarmer` module that takes a list of tasks and goes through them.
 
+##### Run 1.2i:
 ```bash
 module load taskfarmer
-sbatch extract_source_table_taskfarmer.sl
+sbatch extract_source_table_taskfarmer_run1.2i.sl
 ```
+This will create a set of ~2,000 files in `${SCRATCH}/DC2/Run1.2i/src_visit`.
 
-This will create a set of ~2,000 files in `${SCRATCH}/DC2/Run1.2i`.
+##### Run 1.2p:
+```bash
+module load taskfarmer
+sbatch extract_source_table_taskfarmer_run1.2p.sl
+```
+This will create a set of ~2,000 files in `${SCRATCH}/DC2/Run1.2p/src_visit`.
 
 ### Update gcr-catalog
 
@@ -278,7 +285,7 @@ import GCRCatalogs
 import os
 
 base_dir = os.path.join(os.env('SCRATCH'), 'DC2', 'Run1.2i')
-for reader in ('dc2_source_run1.2i'):
+for reader in ('dc2_source_run1.2i', 'dc2_source_run1.2p'):
     cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
     cat.generate_schema_yaml()
 ```
@@ -297,3 +304,10 @@ cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit /global/projecta/projectd
 ```
 
 Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2i/src_visit` is my `${SCRATCH}/DC2/Run1.2i`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
+
+```bash
+chgrp -R lsst ${SCRATCH}/DC2/Run1.2p
+collabsu desc
+
+cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/src_visit /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/source_catalog
+```
