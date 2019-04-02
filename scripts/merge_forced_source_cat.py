@@ -96,7 +96,7 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     Pandas DataFrame of all sources for a visit in one catalog
     with photometric calibration and associated Object
     """
-    cat = data_ref.get(datasetType='src')
+    cat = data_ref.get(datasetType='forced_src')
 
     flux_field_names_per_schema_version = {
         1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma'},
