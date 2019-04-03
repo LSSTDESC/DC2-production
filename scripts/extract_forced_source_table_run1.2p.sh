@@ -17,4 +17,5 @@ export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs
 
 python ${SCRIPT_DIR}/merge_forced_source_cat.py ${REPO} \
    --output_dir ${OUTPUT_DIR} \
-   --visit_file ${VISIT_FILE}
+   --visit_file ${VISIT_FILE} \
+   --verbose
