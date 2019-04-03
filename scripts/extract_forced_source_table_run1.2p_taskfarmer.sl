@@ -2,7 +2,7 @@
 #SBATCH --image=lsstdesc/stack-jupyter:prod
 #SBATCH -N 8 -c 64
 #SBATCH --qos regular
-#SBATCH --time 00:60:00
+#SBATCH --time 08:00:00
 #SBATCH --constraint haswell
 #SBATCH --licenses SCRATCH
 
