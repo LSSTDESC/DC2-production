@@ -22,7 +22,7 @@ print(gc.get_catalog_info('description'))
 cols=['halo_id','is_central','position_x','position_y','position_z','position_angle_true','ra','dec','redshift','size_true']
 filters=['u','g','r','i','z','Y']
 for f in filters:
-    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst,mag_true_{0}_lsst_no_host_extinction,mag_{0}_lsst".format(f)
+    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst".format(f)
     cols+=s.split(',')
 
 print(cols)
@@ -50,7 +50,7 @@ for ipix in pix:
             df[n]=df[n].astype('float32') 
     #writing
     df.to_parquet(parquet_file,append=os.path.exists(parquet_file),
-                      file_scheme='hive',engine='fastparquet',compression='gzip')
+                      file_scheme='hive',engine='fastparquet',compression=None)
     t2=time()
     print("Wrote to {}".format(parquet_file))
     print("Tot time to process {:2.1f}s".format(t2-t0))
