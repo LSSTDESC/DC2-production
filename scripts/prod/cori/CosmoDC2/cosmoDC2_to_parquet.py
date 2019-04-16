@@ -19,19 +19,16 @@ print(gc.get_catalog_info('description'))
 
 #data=gc.get_quantities([q for q in gc.list_all_quantities()],native_filters=['healpix_pixel == 9813'])
 
-##cols=['halo_id','is_central','position_x','position_y','position_z','position_angle_true','ra','ra_true','dec','dec_true','redshift','redshift_true','size_true']
-##filters=['u','g','r','i','z','Y']
-##for f in filters:
-##    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst,mag_true_{0}_lsst_no_host_extinction,mag_{0}_lsst".format(f)
-##    cols+=s.split(',')
-
-
-cols=['halo_id','is_central','position_x','position_y','position_z','ra','dec','redshift','redshift_true','size_true']
+cols=['halo_id','is_central','position_x','position_y','position_z','position_angle_true','ra','dec','redshift','size_true']
+filters=['u','g','r','i','z','Y']
+for f in filters:
+    s="Mag_true_{0}_lsst_z0,mag_true_{0}_lsst,mag_true_{0}_lsst_no_host_extinction,mag_{0}_lsst".format(f)
+    cols+=s.split(',')
 
 print(cols)
 
 #output
-parquet_file="xyz_v1.1.4"
+parquet_file="xyz_v1.1.4_hive"
 
 pix=np.loadtxt("healpix_1.4.4",unpack=True).astype('int')
 nskip=0
@@ -53,7 +50,7 @@ for ipix in pix:
             df[n]=df[n].astype('float32') 
     #writing
     df.to_parquet(parquet_file,append=os.path.exists(parquet_file),
-                      file_scheme='simple',engine='fastparquet',compression=None)
+                      file_scheme='hive',engine='fastparquet',compression='gzip')
     t2=time()
     print("Wrote to {}".format(parquet_file))
     print("Tot time to process {:2.1f}s".format(t2-t0))
