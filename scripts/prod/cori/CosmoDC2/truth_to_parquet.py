@@ -24,7 +24,7 @@ gc = GCRCatalogs.load_catalog(cat)
 
 #copy all quantities (no filter)
 #cols=gc.list_all_quantities(include_native=True)
-cols=['object_id', 'ra', 'dec', 'redshift', 'healpix_2048','agn', 'star', 'sprinkled', 'u', 'g', 'r', 'i', 'z', 'y']
+cols=['object_id', 'ra', 'dec', 'redshift','agn', 'star', 'sprinkled', 'mag_true_u', 'mag_true_g', 'mag_true_r', 'mag_true_i', 'mag_true_z', 'mag_true_y']
 print(cols)
 
 #output
@@ -32,14 +32,15 @@ parquet_file=cat+"_hive.parquet"
 
 
 #pixels list
-nside=2048
-pix=range(12*nside**2)
+pix=np.array(gc._conn.execute('SELECT DISTINCT healpix_2048 from {}'.format(gc._table_name)).fetchall(), np.int64).ravel()
+print("pixel list len={}".format(len(pix)))
 
 for ipix in pix:
     print(ipix)
     t0=time()
     data=gc.get_quantities(cols,native_filters=["healpix_2048 == {}".format(ipix)])
     if len(data['ra']==0):
+	print("empty pixel={}".format(ipix))
         continue
     df=pd.DataFrame(data)
     t1=time()
