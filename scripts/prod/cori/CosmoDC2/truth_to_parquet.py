@@ -39,7 +39,7 @@ for ipix in pix:
     print(ipix)
     t0=time()
     data=gc.get_quantities(cols,native_filters=["healpix_2048 == {}".format(ipix)])
-    if len(data['ra']==0):
+    if len(data['ra'])==0:
         print("empty pixel={}".format(ipix))
         continue
     df=pd.DataFrame(data)
