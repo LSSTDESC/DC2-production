@@ -36,7 +36,7 @@ TASK_LIST_FULLPATH=${TASK_LIST_DIR}/${TASK_LIST_FILE}
 # stripe_visits.py produces 0-indexed files, and seq is inclusive in its range
 # so we want 0 to NUM_TASKS-1
 for i in `seq 0 $((NUM_TASKS - 1))`; do 
-    echo shifter /bin/bash "${PWD}/extract_source_table.sh" "${PWD}/${VISIT_LIST_BASE}_${i}.txt" >> ${TASK_LIST_FULLPATH}
+    echo shifter /bin/bash "${PWD}/extract_source_table_run1.2i.sh" "${PWD}/${VISIT_LIST_BASE}_${i}.txt" >> ${TASK_LIST_FULLPATH}
 done
 
 # Use the Task Farmer runcommands.sh to setup the server node
