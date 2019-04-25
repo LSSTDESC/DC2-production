@@ -52,6 +52,7 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
     overwrite: bool
         Overwrite an existing parquet file.
     """
+    visit = str(visit)
     data_refs = butler.subset('src', dataId={'visit': visit})
     if debug:
         print("DATA_REFS: ", data_refs)
