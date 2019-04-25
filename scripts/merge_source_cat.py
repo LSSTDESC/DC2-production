@@ -35,7 +35,8 @@ class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
 
 def extract_and_save_visit(butler, visit, filename, object_table=None,
                            dm_schema_version=3,
-                           overwrite=True, verbose=False, **kwargs):
+                           overwrite=True, verbose=False, debug=False,
+                           **kwargs):
     """Save catalogs to Parquet from visit-level source catalogs.
 
     Associates an ObjectID.
@@ -52,6 +53,8 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
         Overwrite an existing parquet file.
     """
     data_refs = butler.subset('src', dataId={'visit': visit})
+    if debug:
+        print("DATA_REFS: ", data_refs)
 
     columns_to_keep = list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
 
@@ -66,7 +69,7 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
             print("Processing ", dr.dataId)
         src_cat = load_detector(dr, object_table=object_table,
                                 columns_to_keep=columns_to_keep,
-                                verbose=verbose, **kwargs)
+                                verbose=verbose, debug=debug, **kwargs)
         if len(src_cat) == 0:
             if verbose:
                 print("  No good entries for ", dr.dataId)
@@ -119,6 +122,8 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
 
     # Get a Pandas DataFrame out that we can more easily manipulate:
     cat = cat.asAstropy().to_pandas()
+    if debug:
+        print("Looking at {} entries".format(len(cat)))
 
     # Add visit, filter information as columns.
     # There's no separate metadata field so we redundantly include here
@@ -402,6 +407,8 @@ Matching radius for object association [arcsec].  (default: %(default)s'
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
+    parser.add_argument('--debug', dest='debug', default=True,
+                        action='store_true', help='Debug mode.')
     parser.add_argument('--dm_schema_version', default=3,
                         help="""
 The schema version of the DM tables.
@@ -439,4 +446,4 @@ v3: '_instFlux', '_instFluxError'
                                object_table=object_table,
                                matching_radius=args.radius,
                                dm_schema_version=args.dm_schema_version,
-                               verbose=args.verbose)
+                               verbose=args.verbose, debug=args.debug)
