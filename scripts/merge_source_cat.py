@@ -388,6 +388,8 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('--reader', default='',
                         help='Name of Object Table reader.')
+    parser.add_argument('--base_dir', default=None,
+                        help='Override the base_dir setting of the reader.  This is motivated by the need to run on different file systems due to problems sometimes locking files for access from the compute nodes.')
     parser.add_argument('--visits', type=int, nargs='+',
                         help='Visit IDs to process.')
     parser.add_argument('--visit_file', type=str, default=None,
@@ -422,7 +424,11 @@ v3: '_instFlux', '_instFluxError'
 
     object_table = None
     if args.reader:
-        cat = GCRCatalogs.load_catalog(args.reader)
+        config_override = {}
+        if args.base_dir:
+            config_override['base_dir'] = args.base_dir
+        cat = GCRCatalogs.load_catalog(args.reader,
+                                       config_overwrite=config_override)
         object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
         del cat
 
