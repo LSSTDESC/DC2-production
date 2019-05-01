@@ -4,18 +4,15 @@ import matplotlib.pyplot as plt
 import healpy as hp
 from sklearn.neighbors import KDTree
 from scipy.stats import binned_statistic
-#import fitsio
 import astropy.wcs
 import astropy.table
 import astropy.units as u
 import re
 import sys
-#sys.path.insert(0, '/global/homes/j/jsanch87/gcr-catalogs/') # If we want to use GCRCatalogs
-#######
-#from GCRCatalogs.butler_interface import SingleVisitCatalog
 import lsst.daf.persistence
 import matplotlib
 matplotlib.rcParams.update({'font.size': 14})
+
 ### Utilities
 def spatial_closest_mag_1band(ra_data,dec_data,mag_data,
                               ra_true,dec_true,mag_true,true_id,
@@ -134,6 +131,19 @@ def plot_magnitude_difference(mag_true, mag_meas, mag_range=(10,30), bins=50, sa
     #ax[2].grid()
     plt.tight_layout()
     f.savefig(savename, bbox_to_inches='tight')
+
+def check_astrometry(ra_data, ra_true, dec_data, dec_true, savename):
+    delta_ra = ra_data - ra_true
+    delta_ra = 3600*1000*delta_ra # If RA in degrees, delta_ra in mas
+    delta_dec = 3600*1000*(dec_data - dec_true) # delta_dec in mas
+    f, ax = plt.subplots(1,1)
+    ax.hist(np.cos(dec_data)*delta_ra, range=(-200,200), bins=100, label=r'$\Delta$ RA')
+    ax.hist(delta_dec, range=(-200, 200), bins=100, label=r'$\Delta$ Dec')
+    ax.set_xlabel(r'$\Delta X$ [mas]', fontsize=16)
+    ax.set_ylabel(r'Objects/bin', fontsize=16)
+    f.savefig(savename)
+    print('Median astrometric deviation', np.median(np.sqrt(delta_ra**2+delta_dec**2))
+    print('LSST-SRD max = 50 mas')
 
 def plot_PSF_size(T, star_mask, mag_true, mag_range=(10,30), bins=50, savename='PSF_T_test.png'):
     mean_im_t, be, _ = binned_statistic(mag_true[star_mask], T[star_mask], range=mag_range, bins=bins, statistic='median')
