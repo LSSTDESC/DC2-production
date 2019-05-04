@@ -48,7 +48,7 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
     visit: int
         Visit to process
     filename: str
-        Filename for HDF file.
+        Filename for output Parquet file.
     overwrite: bool
         Overwrite an existing parquet file.
     """
@@ -403,7 +403,7 @@ visit_file are appended to the list specified in visits.
 Matching radius for object association [arcsec].  (default: %(default)s'
 """)
     parser.add_argument('--name', default='src',
-                        help='Base name of files: <name>_visit_0235062.hdf5')
+                        help='Base name of files: <name>_visit_0235062.parquet')
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', dest='verbose', default=True,
