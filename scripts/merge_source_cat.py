@@ -15,6 +15,7 @@ import astropy.units as u
 
 import GCRCatalogs
 from GCRCatalogs.dc2_source import DC2SourceCatalog
+from GCRCatalogs.dc2_dia_source import DC2DiaSourceCatalog
 
 
 class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
@@ -33,7 +34,25 @@ class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
         return set(self._translate_quantities(self.list_all_quantities()))
 
 
-def extract_and_save_visit(butler, visit, filename, object_table=None,
+class DummyDC2DiaSourceCatalog(GCRCatalogs.BaseGenericCatalog):
+    """
+    A dummy reader class that can be used to generate all native quantities
+    required for the DPDD columns in DC2 Source Catalog
+    """
+    def __init__(self, schema_version=None):
+        self._quantity_modifiers = DC2DiaSourceCatalog._generate_modifiers(dm_schema_version=schema_version)
+
+    @property
+    def required_native_quantities(self):
+        """
+        the set of native quantities that are required by the quantity modifiers
+        """
+        return set(self._translate_quantities(self.list_all_quantities()))
+
+
+def extract_and_save_visit(butler, visit, filename,
+                           dataset='src',
+                           object_table=None,
                            dm_schema_version=3,
                            overwrite=True, verbose=False, debug=False,
                            **kwargs):
@@ -53,11 +72,16 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
         Overwrite an existing parquet file.
     """
     visit = str(visit)
-    data_refs = butler.subset('src', dataId={'visit': visit})
+    data_refs = butler.subset(dataset, dataId={'visit': visit})
     if debug:
         print("DATA_REFS: ", data_refs)
 
-    columns_to_keep = list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
+    if dataset == 'deepDiff_diaSrc':
+        dummy_catalog = DummyDC2DiaSourceCatalog(dm_schema_version)
+    else:
+        dummy_catalog = DummyDC2SourceCatalog(dm_schema_version)
+
+    columns_to_keep = list(dummy_catalog.required_native_quantities)
 
     collected_cats = pd.DataFrame()
     for dr in data_refs:
@@ -69,6 +93,7 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
         if verbose:
             print("Processing ", dr.dataId)
         src_cat = load_detector(dr, object_table=object_table,
+                                dataset=dataset,
                                 columns_to_keep=columns_to_keep,
                                 verbose=verbose, debug=debug, **kwargs)
         if len(src_cat) == 0:
@@ -90,6 +115,7 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
 
 
 def load_detector(data_ref, object_table=None, matching_radius=1,
+                  dataset='src',
                   columns_to_keep=None, debug=False, **kwargs):
     """Load detector source catalog and associate sources with Object Table.
 
@@ -109,7 +135,7 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     Pandas DataFrame of all sources for a visit in one catalog
     with photometric calibration and associated Object
     """
-    cat = data_ref.get(datasetType='src')
+    cat = data_ref.get(datasetType=dataset)
 
     flux_field_names_per_schema_version = {
         1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma'},
@@ -135,7 +161,9 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     cat['filter'] = data_ref.dataId['filter']
 
     # Calibrate magnitudes and fluxes
-    calib = data_ref.get('calexp_calib')
+    # Assume that the subtracted image is calibrated to the original image.
+    calib_dataset = {'src': 'calexp_calib', 'deepDiff_diaSrc': 'calexp_calib'}
+    calib = data_ref.get(datsetType=calib_dataset[dataset])
     calib.setThrowOnNegativeFlux(False)
 
     mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
@@ -152,13 +180,14 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     flux_mag0, flux_mag0_err = calib.getFluxMag0()
     cat['fluxmag0'] = flux_mag0
 
-    # Associate with closest
-    object_id = associate_object_ids(cat,
-                                     data_ref=data_ref,
-                                     object_table=object_table,
-                                     matching_radius=matching_radius,
-                                     **kwargs)
-    cat['objectId'] = object_id
+    if object_table is not None:
+        # Associate with closest
+        object_id = associate_object_ids(cat,
+                                         data_ref=data_ref,
+                                         object_table=object_table,
+                                         matching_radius=matching_radius,
+                                         **kwargs)
+        cat['objectId'] = object_id
 
     # Restrict to columns that we need
     cat = cat[columns_to_keep]
@@ -386,6 +415,11 @@ if __name__ == '__main__':
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('repo', type=str,
                         help='Filepath to LSST DM Stack Butler repository.')
+    parser.add_argument('--dataset', type=str, default='src',
+                        help="""
+Butler catalog dataset type.
+E.g., "src", "deepCoadd_diaSrc"(default: %(default)s)
+""")
     parser.add_argument('--reader', default='',
                         help='Name of Object Table reader.')
     parser.add_argument('--base_dir', default=None,
@@ -450,6 +484,7 @@ v3: '_instFlux', '_instFluxError'
         filebase = '{:s}_visit_{:d}'.format(args.name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
+                               dataset=args.dataset,
                                object_table=object_table,
                                matching_radius=args.radius,
                                dm_schema_version=args.dm_schema_version,
