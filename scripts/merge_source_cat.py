@@ -162,8 +162,8 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
 
     # Calibrate magnitudes and fluxes
     # Assume that the subtracted image is calibrated to the original image.
-    calib_dataset = {'src': 'calexp_calib', 'deepDiff_diaSrc': 'calexp_calib'}
-    calib = data_ref.get(datsetType=calib_dataset[dataset])
+    calib_dataset_map = {'src': 'calexp_calib', 'deepDiff_diaSrc': 'calexp_calib'}
+    calib = data_ref.get(datasetType=calib_dataset_map[dataset])
     calib.setThrowOnNegativeFlux(False)
 
     mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
