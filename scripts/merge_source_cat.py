@@ -436,8 +436,8 @@ visit_file are appended to the list specified in visits.
                         help="""
 Matching radius for object association [arcsec].  (default: %(default)s'
 """)
-    parser.add_argument('--name', default='src',
-                        help='Base name of files: <name>_visit_0235062.parquet')
+    parser.add_argument('--output_name', default='src',
+                        help='Base name of files: <output_name>_visit_0235062.parquet')
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', dest='verbose', default=True,
@@ -481,7 +481,7 @@ v3: '_instFlux', '_instFluxError'
 
     butler = Butler(args.repo)
     for visit in args.visits:
-        filebase = '{:s}_visit_{:d}'.format(args.name, visit)
+        filebase = '{:s}_visit_{:d}'.format(args.output_name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
                                dataset=args.dataset,
