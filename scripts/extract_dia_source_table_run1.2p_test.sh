@@ -12,11 +12,14 @@ mkdir -p ${OUTPUT_DIR}
 
 # DESCPYTHONPATH will get prepended to the PYTHONPATH
 # by the sourcing of the setup file
-export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs
+# Need issues/290 branch of gcr-catalogs
+# Need w.2018.39-run1.2-v3_diff branch of obs_lsst
+export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs:${HOME}/local/lsst/obs_lsst
+
 . ${SCRIPT_DIR}/setup_shifter_env.sh
 
 python ${SCRIPT_DIR}/merge_source_cat.py ${REPO} \
    --dataset deepDiff_diaSrc \
+   --output_name dia_src \
    --output_dir ${OUTPUT_DIR} \
-   --visit_file ${VISIT_FILE} \
-   --debug --verbose
+   --visit_file ${VISIT_FILE}
