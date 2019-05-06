@@ -356,3 +356,61 @@ cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit /global/projecta/p
 ```
 
 Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit` is my `${SCRATCH}/DC2/Run1.2p/forced_src_visit`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
+
+
+### Make DIA Source Files
+
+#### Run 1.2p test
+
+JUST RUNNING ON A TEST SET OF DATA.
+
+Adapted `merge_source_cat.py` to accept a `--dataset` option to specify the `deepDiff_diaSrc` instead of `src.
+```
+bash ${SCRIPT_DIR}/extract_dia_source_table_run1.2p_test.sh ${SCRIPT_DIR}/run_1.2_visits.txt
+```
+
+With only one patch of data, the extraction runs in about five minutes.  This is quickly enough that we can just simply run it as a script instead of scheduling it as a set of jobs.
+
+### Update gcr-catalog
+
+Write a `gcr-catalogs` reader for the new catalog.  Generally this will be as easy as creating a new configuration file with a new base_dir and description.  E.g., the source catalog config file for Run 1.2p (https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/catalog_configs/dc2_dia_source_run1.2p_test.yaml) is:
+
+```yaml
+subclass_name: dc2_dia_source.DC2DiaSourceCatalog
+base_dir: /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/dia_source_catalog_test
+schema_filename: schema.yaml
+filename_pattern: 'dia_src_visit_\d+\.parquet$'
+description: DC2 Run 1.2p DIA Source Catalog test patch
+creators: ['Michael Wood-Vasey']
+included_by_default: true
+```
+
+#### Generate Schema files
+
+To save load time, we generate a schema file that tells the GCRCatalog exactly what's in the files.
+We can generate this the first time with (for example for Run 1.2p):
+
+```python
+import GCRCatalogs
+import os
+
+base_dir = os.path.join(os.getenv('SCRATCH'), 'DC2', 'Run1.2p', 'dia_src_visit')
+reader = 'dc2_dia_source_run1.2p_test'
+cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
+cat.generate_schema_yaml()
+```
+
+The schema file gets created in the `base_dir`.  Since we're creating those filew they're still owned by us.  Next we'll use the 'desc' user to ihnstall them in a central environment.
+
+#### Copy to central location
+
+The files provided to the collaboration are in a shared space owned by the `desc` user.  Make sure the files you just created are readable by the `lsst` group and then copy in
+
+```bash
+chgrp -R lsst ${SCRATCH}/DC2/Run1.2p/dia_src_visit
+collabsu desc
+
+cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/dia_src_visit /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/dia_source_catalog_test
+```
+
+Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2p/` is my `${SCRATCH}/DC2/Run1.2p`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
