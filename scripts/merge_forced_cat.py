@@ -8,7 +8,26 @@ import pandas as pd
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
 
-def load_and_save_tract(repo, tract, filename, patches=None,
+from GCRCatalogs import BaseGenericCatalog
+from GCRCatalogs.dc2_object import DC2ObjectCatalog, GROUP_PATTERN
+
+class DummyDC2ObjectCatalog(BaseGenericCatalog):
+    """
+    A dummy reader class that can be used to generate all native quantities
+    required for the DPDD columns in DC2 Object Catalog
+    """
+    def __init__(self, schema_version=None):
+        self._quantity_modifiers = DC2ObjectCatalog._generate_modifiers(dm_schema_version=schema_version)
+
+    @property
+    def required_native_quantities(self):
+        """
+        the set of native quantities that are required by the quantity modifiers
+        """
+        return set(self._translate_quantities(self.list_all_quantities()))
+
+
+def load_trim_and_save_tract(repo, tract, filename, patches=None, trim=True,
                         overwrite=True, verbose=False, **kwargs):
     """Save catalogs to parquet from forced-photometry coadds across available filters.
 
@@ -45,11 +64,21 @@ def load_and_save_tract(repo, tract, filename, patches=None,
         else:
             df = df.append(patch_merged_cat)
 
+    if trim:
+        columns_to_keep = DummyDC2ObjectCatalog().required_native_quantities
+        missing_columns = columns_to_keep.difference(df.columns)
+        if missing_columns:
+            warnings.warn('Not all columns to keep are present in the data file.')
+            print('Missing columns are: %s' % missing_columns)
+        columns_to_keep_present = list(columns_to_keep.intersection(df.columns))
+        df = df[columns_to_keep_present]
+
     if overwrite:
         if os.path.exists(filename):
             os.remove(filename)
 
     df.to_parquet(filename)
+
 
 def load_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
@@ -253,6 +282,9 @@ A common use-case for this option is quick testing.
 ''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.parquet')
+    parser.add_argument('--trim', dest='trim', default=False, action='store_false',
+                        help='Whether to restrict the merged catalog to'
+                             'required DPDD columns.')
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', dest='verbose', default=True,
@@ -272,6 +304,6 @@ A common use-case for this option is quick testing.
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.name, tract)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
-        load_and_save_tract(args.repo, tract, filename,
+        load_trim_and_save_tract(args.repo, tract, filename,
                             patches=args.patches, verbose=args.verbose,
-                            filters=filters)
+                            trim=args.trim, filters=filters)
