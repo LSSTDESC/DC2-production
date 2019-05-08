@@ -105,6 +105,9 @@ def load_metacal_patch(butler_or_repo, tract, patch,
     metacal = metacal.asAstropy().to_pandas()
     metacal = metacal[isPrimary]
 
+    # TODO: Remove this when we can create composite catalogs
+    metacal = pd.merge(metacal, ref_table, on=fields_to_join, sort=False)
+
     return metacal
 
 if __name__ == '__main__':
