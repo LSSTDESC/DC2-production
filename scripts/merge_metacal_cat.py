@@ -104,6 +104,8 @@ def load_metacal_patch(butler_or_repo, tract, patch,
 
     metacal = metacal.asAstropy().to_pandas()
     metacal = metacal[isPrimary]
+    # Dropping redundant columns with the main reference catalog
+    metacal = metacal.drop(["coord_ra", "coord_dec", "parent"])
 
     # TODO: Remove this when we can create composite catalogs
     metacal = pd.merge(metacal, ref_table, on=fields_to_join, sort=False)
