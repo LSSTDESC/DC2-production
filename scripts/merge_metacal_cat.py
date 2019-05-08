@@ -94,9 +94,13 @@ def load_metacal_patch(butler_or_repo, tract, patch,
             print("  No good isPrimary entries for tract %d, patch %s" % (tract, patch))
         return ref_table
 
-    # For the remaining objects after primary selection, we
-    metacal = butler.get(datasetType='deepCoadd_mcalmax_deblended',
+    try:
+        metacal = butler.get(datasetType='deepCoadd_mcalmax_deblended',
                              dataId=tract_patch_data_id)
+    except NoResults as e:
+        if verbose:
+            print(" ", e)
+        return pd.DataFrame()
 
     metacal = metacal.asAstropy().to_pandas()
     metacal = metacal[isPrimary]
