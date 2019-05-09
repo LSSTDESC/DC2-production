@@ -336,10 +336,10 @@ We can generate this the first time with (for example for Run 1.2p):
 import GCRCatalogs
 import os
 
-base_dir = os.path.join(os.env('SCRATCH'), 'DC2', 'Run1.2i')
-for reader in ('dc2_forced_source_run1.2p'):
-    cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
-    cat.generate_schema_yaml()
+base_dir = os.path.join(os.getenv('SCRATCH'), 'DC2', 'Run1.2p', 'forced_src_visit')
+reader = 'dc2_forced_source_run1.2p'
+cat = GCRCatalogs.load_catalog(reader, config_overwrite={'base_dir': base_dir})
+cat.generate_schema_yaml()
 ```
 
 The schema file gets created in the `base_dir`.  Since we're creating this, we need permission to write to it so we need to do it know while it's still in our user-controlled directory and before we copy it to a central location.
