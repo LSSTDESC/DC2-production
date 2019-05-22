@@ -142,7 +142,7 @@ def check_astrometry(ra_data, ra_true, dec_data, dec_true, savename):
     ax.set_xlabel(r'$\Delta X$ [mas]', fontsize=16)
     ax.set_ylabel(r'Objects/bin', fontsize=16)
     f.savefig(savename)
-    print('Median astrometric deviation', np.median(np.sqrt(delta_ra**2+delta_dec**2))
+    print('Median astrometric deviation', np.median(np.sqrt(delta_ra**2+delta_dec**2)))
     print('LSST-SRD max = 50 mas')
 
 def plot_PSF_size(T, star_mask, mag_true, mag_range=(10,30), bins=50, savename='PSF_T_test.png'):
@@ -167,6 +167,97 @@ def plot_PSF_size(T, star_mask, mag_true, mag_range=(10,30), bins=50, savename='
     ax[1].set_ylim(-0.01,0.01)
     plt.tight_layout()
     f.savefig(savename, bbox_to_inches='tight')
+
+def check_astrometry(ra_data, dec_data, ra_true, dec_true, wcs, mjd, savename=None, use_seaborn=True, use_sigmaG=True, **kwargs):
+    """
+    Function to produce astrometry QA plots
+    
+    Args:
+    -----
+    
+    ra_data: ndarray, measured right ascension (in degrees).
+    dec_data: ndarray, measured declination (in degrees).
+    ra_true: ndarray, input right ascension (in degrees).
+    dec_true: ndarray, input declination (in degrees).
+    wcs: astropy.wcs.WCS, WCS of one of the sensors in the visit to check
+    kwargs: keyword arguments to pass to seaborn.jointplot or to matplotlib.pyplot.hexbin
+    """
+    # Compute astrometry residuals
+    d_ra = np.cos(np.radians(dec_data))*(ra_data - ra_true)
+    d_dec = dec_data - dec_true
+    d_ra = 3600*1000*d_ra # To milliarcseconds
+    d_dec = 3600*1000*d_dec # To milliarcseconds
+    
+    # Compute orientation of focal plane's axes
+    
+    xy_vec = np.array([[0,0],[0,300], [300,0]]) # We check 300 px up and to the right
+    radec = wcs.all_pix2world(xy_vec,0)
+    # Y axis
+    dx_y = (radec[1,0]-radec[0,0])*np.cos(np.radians(radec[0,1]))*3600 # To make the arrow 60 mas long
+    dy_y = (radec[1,1]-radec[0,1])*3600
+    # X axis
+    dx_x = (radec[2,0]-radec[0,0])*np.cos(np.radians(radec[0,1]))*3600 # To make the arrow 60 mas long 
+    dy_x = (radec[2,1]-radec[0,1])*3600
+    
+    # Get zenith's orientation
+    
+    cerro_pachon = astropy.coordinates.EarthLocation.of_site('Cerro Pachon')
+    aa_frame = astropy.coordinates.AltAz(obstime=astropy.time.Time(mjd, format='mjd'), location=cerro_pachon)
+    sky_coord = astropy.coordinates.SkyCoord(alt=np.array([0,10])*u.deg, az=np.array([0,0])*u.deg, frame=aa_frame)
+    radec = sky_coord.icrs
+    dx_z = ((radec.ra[1]-radec.ra[0])*np.cos(radec.dec[1].to(u.rad)))/u.deg
+    dy_z = (radec.dec[1]-radec.dec[0])/u.deg
+    mod = np.sqrt(dx_z**2+dy_z**2) #length in deg
+    dx_z = dx_z*50/mod # We want the arrow to be 50 mas long
+    dy_z = dy_z*50/mod
+    
+    # Some stats
+    if use_sigmaG:
+        sigma_ra = 0.741*(np.percentile(d_ra,75)-np.percentile(d_ra,25))
+        sigma_dec = 0.741*(np.percentile(d_dec,75)-np.percentile(d_dec,25))
+    else:
+        sigma_ra = np.std(d_ra)
+        sigma_dec = np.std(d_dec)
+    mean_ra = np.mean(d_ra)
+    mean_dec = np.mean(d_dec)
+    # Make plots
+    if use_seaborn:
+        d_ra = pd.Series(d_ra, name=r'$\Delta_{1} \equiv \Delta \rm{RA}$ $\cos{(\rm{Dec})}$ [mas]')
+        d_dec = pd.Series(d_dec, name=r'$\Delta_{2} \equiv \Delta \rm{Dec}$ [mas]')
+        p1 = sns.jointplot(d_ra, d_dec, **kwargs, marginal_kws={'hist':True, 'kde': True})
+        p1.plot_joint(sns.kdeplot)
+        ax = p1.ax_joint
+        ax.annotate('+x', (dx_x+10, dy_x+10), color='r')
+        ax.annotate('+y', (dx_y+10, dy_y+10), color='r')
+        ax.annotate('Zenith', (dx_z-30, dy_z-20), color='g')
+        ax.annotate(r'$\langle \Delta_{1} \rangle, \sigma_{\Delta_{1}} = (%.1f, %.1f$) [mas]' % (mean_ra, sigma_ra), (90,90), color='black')
+        ax.annotate(r'$\langle \Delta_{2} \rangle, \sigma_{\Delta_{2}} = (%.1f, %.1f$) [mas]' % (mean_dec, sigma_dec), (90,70), color='black')
+
+        ax.arrow(0,0,dx_y, dy_y, color='r', head_width=6)
+        ax.arrow(0,0,dx_x, dy_x, color='r', head_width=6)
+        ax.arrow(0,0,dx_z, dy_z, color='g', head_width=6)
+        if savename is not None:
+            p1.fig.savefig(savename)
+            p1.fig.close()
+    else:
+        f, ax = plt.subplots(ncols=1,nrows=1)
+        im = ax.hexbin(d_ra, d_dec, **kwargs)
+        ax.set_xlabel(r'$\Delta_{1} \equiv \Delta \rm{RA}$ $\cos{(\rm{Dec})}$ [mas]')
+        ax.set_ylabel(r'$\Delta_{2} \equiv \Delta \rm{Dec}$ [mas]')
+        ax.annotate('+x', (dx_x+10, dy_x+10), color='white')
+        ax.annotate('+y', (dx_y+10, dy_y+10), color='white')
+        ax.annotate('Zenith', (dx_z-30, dy_z-20), color='white')
+        ax.annotate(r'$\langle \Delta_{1} \rangle, \sigma_{\Delta_{1}} = (%.1f, %.1f$) [mas]' % (mean_ra, sigma_ra), (-90,90), color='white')
+        ax.annotate(r'$\langle \Delta_{2} \rangle, \sigma_{\Delta_{2}} = (%.1f, %.1f$) [mas]' % (mean_dec, sigma_dec), (-90,70), color='white')
+
+        ax.arrow(0,0,dx_y, dy_y, color='r', head_width=6)
+        ax.arrow(0,0,dx_x,dy_x, color='r', head_width=6)
+        ax.arrow(0,0,dx_z, dy_z, color='g', head_width=6)
+        plt.colorbar(im, label='Objects/bin')
+    #plt.show()
+    if savename is not None:
+        f.savefig(savename)
+        f.close()
 
 class SrcCat:
     def __init__(self, repo, visit, columns, filter_band=None, butler=None, filters=None):
