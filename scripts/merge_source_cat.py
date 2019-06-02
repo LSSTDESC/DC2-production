@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from lsst.geom import radians
-from lsst.afw.geom.spherePoint import SpherePoint
+from lsst.afw.geom import SpherePoint
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
@@ -13,25 +13,28 @@ from lsst.daf.persistence.butlerExceptions import NoResults
 from astropy.coordinates import SkyCoord, matching
 import astropy.units as u
 
-import GCRCatalogs
-from GCRCatalogs.dc2_source import DC2SourceCatalog
+try:
+    import GCRCatalogs
+    from GCRCatalogs.dc2_source import DC2SourceCatalog
 
-
-class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
-    """
-    A dummy reader class that can be used to generate all native quantities
-    required for the DPDD columns in DC2 Source Catalog
-    """
-    def __init__(self, schema_version=None):
-        self._quantity_modifiers = DC2SourceCatalog._generate_modifiers(dm_schema_version=schema_version)
-
-    @property
-    def required_native_quantities(self):
+    class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
         """
-        the set of native quantities that are required by the quantity modifiers
+        A dummy reader class that can be used to generate all native quantities
+        required for the DPDD columns in DC2 Source Catalog
         """
-        return set(self._translate_quantities(self.list_all_quantities()))
-
+        def __init__(self, schema_version=None):
+            self._quantity_modifiers = DC2SourceCatalog._generate_modifiers(dm_schema_version=schema_version)
+            
+            @property
+            def required_native_quantities(self):
+                """
+                the set of native quantities that are required by the quantity modifiers
+                """
+                return set(self._translate_quantities(self.list_all_quantities()))
+    NOGCR = False
+except ImportError:
+    print('No GCR Catalog available')
+    NOGCR = True
 
 def extract_and_save_visit(butler, visit, filename, object_table=None,
                            dm_schema_version=3,
@@ -53,7 +56,10 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
     """
     data_refs = butler.subset('src', dataId={'visit': visit})
 
-    columns_to_keep = list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
+    if NOGCR:
+        columns_to_keep = None
+    else:
+        list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
 
     collected_cats = pd.DataFrame()
     for dr in data_refs:
@@ -61,12 +67,12 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
             if verbose:
                 print("Skipping non-existent dataset: ", dr.dataId)
             continue
-
         if verbose:
             print("Processing ", dr.dataId)
         src_cat = load_detector(dr, object_table=object_table,
                                 columns_to_keep=columns_to_keep,
                                 verbose=verbose, **kwargs)
+        print(src_cat)
         if len(src_cat) == 0:
             if verbose:
                 print("  No good entries for ", dr.dataId)
@@ -82,7 +88,10 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
             print("No sources collected from ", data_refs.dataId)
             return
 
-    collected_cats.to_parquet(filename)
+    if NOGCR:
+        collected_cats.to_hdf(filename,"forced_%d"%visit,format='fixed')
+    ellse:
+        collected_cats.to_parquet(filename)
 
 
 def load_detector(data_ref, object_table=None, matching_radius=1,
@@ -129,7 +138,7 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     cat['filter'] = data_ref.dataId['filter']
 
     # Calibrate magnitudes and fluxes
-    calib = data_ref.get('calexp_calib')
+    calib = data_ref.get('calexp_photoCalib')
     calib.setThrowOnNegativeFlux(False)
 
     mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
@@ -434,7 +443,10 @@ v3: '_instFlux', '_instFluxError'
     butler = Butler(args.repo)
     for visit in args.visits:
         filebase = '{:s}_visit_{:d}'.format(args.name, visit)
-        filename = os.path.join(args.output_dir, filebase + '.parquet')
+        if NOGCR:
+            filename = os.path.join(args.output_dir, filebase + '.hdf5')
+        else:
+            filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
                                object_table=object_table,
                                matching_radius=args.radius,
