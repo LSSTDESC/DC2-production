@@ -7,6 +7,7 @@ https://ls.st/dpdd
 """
 
 import os
+import sys
 
 import pandas as pd
 
@@ -111,6 +112,8 @@ if __name__ == '__main__':
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('repo', type=str,
                         help='Filepath to LSST DM Stack Butler repository.')
+    parser.add_argument('tract', type=int, nargs='+',
+                        help='Skymap tract[s] to process.')
     parser.add_argument('--dataset', type=str, default='deepDiff_diaObject',
                         help='''
 Butler catalog dataset type. %(default)s
@@ -122,8 +125,6 @@ Override the base_dir setting of the reader.
 This is motivated by the need to run on different file systems due to problems
 locking files for access from the compute nodes on some file systems.
 ''')
-    parser.add_argument('tract', type=int, nargs='+',
-                        help='Skymap tract[s] to process.')
     parser.add_argument('--patches', nargs='+',
                         help='''
 Skymap patch[es] within each tract to process.
