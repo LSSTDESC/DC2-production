@@ -11,6 +11,7 @@ import os
 import pandas as pd
 
 from lsst.daf.persistence import Butler
+from lsst.daf.persistence.butlerExceptions import NoResults
 
 
 def load_patch(butler_or_repo, tract, patch,
@@ -40,7 +41,6 @@ def load_patch(butler_or_repo, tract, patch,
     else:
         butler = butler_or_repo
 
-    # Define the filters and order in which to sort them.:
     tract_patch_data_id = {'tract': tract, 'patch': patch}
     cat = butler.get(datasetType=dataset_type, dataId=tract_patch_data_id)
     cat = cat.asAstropy().to_pandas()
@@ -74,20 +74,30 @@ def load_and_save_tract(repo, tract, filename,
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
 
-    tract_cat = pd.DataFrame()
+    tract_cat_list = []
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
         tract_patch_data_id = {'tract': tract, 'patch': patch}
-        cat = butler.get(datasetType=dataset_type, dataId=tract_patch_data_id)
-        cat = cat.asAstropy().to_pandas()
-        patch_cat = load_patch(butler, tract, patch, verbose=verbose, **kwargs)
+        try:
+            patch_cat = load_patch(butler, tract, patch, verbose=verbose, **kwargs)
+        except NoResults as e:
+            if verbose:
+                print(e)
+                print("  No good entries for tract %d, patch %s" % (tract, patch))
+            continue
         if len(patch_cat) == 0:
             if verbose:
                 print("  No good entries for tract %d, patch %s" % (tract, patch))
             continue
 
-        tract_cat.append(patch_cat)
+        tract_cat_list.append(patch_cat)
+
+    tract_cat = pd.concat(tract_cat_list)
+
+    if len(tract_cat) == 0:
+        print("  No good entries found.  Not writing file.")
+        return
 
     tract_cat.to_parquet(filename)
 
