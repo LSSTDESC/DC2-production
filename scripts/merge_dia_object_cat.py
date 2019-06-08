@@ -16,7 +16,7 @@ from lsst.daf.persistence.butlerExceptions import NoResults
 
 
 def load_patch(butler_or_repo, tract, patch,
-               dataset_type='deepCoadd_diaObject',
+               dataset_type='deepDiff_diaObject',
                verbose=False,
                debug=False
                ):
@@ -50,7 +50,7 @@ def load_patch(butler_or_repo, tract, patch,
 
 
 def load_and_save_tract(repo, tract, filename,
-                        dataset_type='deepCoadd_diaObject',
+                        dataset_type='deepDiff_diaObject',
                         patches=None,
                         overwrite=True, verbose=False, **kwargs):
     """Save catalogs to Parquet from diaObject
@@ -144,8 +144,8 @@ A common use-case for this option is quick testing.
     args = parser.parse_args(sys.argv[1:])
 
     for tract in args.tract:
-        filebase = '{:s}_tract_{:d}'.format(args.name, tract)
-        filename = os.path.join(args.output_dir, filebase + '.hdf5')
+        filebase = '{:s}_tract_{:d}'.format(args.output_name, tract)
+        filename = os.path.join(args.output_dir, filebase + '.parquet')
         load_and_save_tract(args.repo, tract, filename,
                             dataset_type=args.dataset,
                             patches=args.patches,
