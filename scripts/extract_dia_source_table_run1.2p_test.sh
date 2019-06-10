@@ -3,8 +3,8 @@
 VISIT_FILE=$1
 echo "Processing: " $VISIT_FILE
 
-# REPO=/global/cscratch1/sd/rearmstr/new_templates/diffim_template
-REPO=/global/cscratch1/sd/wmwv/DC2/diffim_template
+REPO=/global/cscratch1/sd/rearmstr/new_templates/diffim_template
+# REPO=/global/cscratch1/sd/wmwv/DC2/diffim_template
 SCRIPT_DIR=${HOME}/local/lsst/DC2-production/scripts
 OUTPUT_DIR=${SCRATCH}/DC2/Run1.2p/dia_src_visit
 
