@@ -5,7 +5,10 @@ import numpy as np
 import pandas as pd
 
 from lsst.geom import radians
-from lsst.afw.geom.spherePoint import SpherePoint
+try:
+    from lsst.geom import SpherePoint
+except ImportError:
+    from lsst.afw.geom.spherePoint import SpherePoint
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
