@@ -463,7 +463,15 @@ v3: '_instFlux', '_instFluxError'
             config_override['base_dir'] = args.base_dir
         cat = GCRCatalogs.load_catalog(args.reader,
                                        config_overwrite=config_override)
-        object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
+        id_col = 'objectId'
+        # Crude way to define ID column based on reader name.
+        if args.reader.index('dia_object'):
+            id_col = 'diaObjectId'
+
+        object_table = pd.DataFrame(cat.get_quantities([id_col, 'ra', 'dec']))
+        # Standardize name of ID column in DataFrame
+        object_table.rename(index=str, columns={'': 'id'})
+
         del cat
 
     if args.visit_file:
