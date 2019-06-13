@@ -402,7 +402,7 @@ if __name__ == '__main__':
     or individually to each merged detection reference file from the coadd.
     The numbers will come out the same.
 
-    * If an Object Table reader is provided through '--reader', then the catalog
+    * If an Object Table reader is provided through '--object_reader', then the catalog
     read by that Generic Catalog Reader will be used to match Object IDs.
 
     * If this reader is not provided, then source catalogs will be matched against
