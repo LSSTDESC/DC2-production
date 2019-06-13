@@ -19,6 +19,6 @@ export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs
 . ${SCRIPT_DIR}/setup_shifter_env.sh
 
 python ${SCRIPT_DIR}/merge_source_cat.py ${REPO} \
-   --reader ${OBJECT_TABLE} \
+   --object_reader ${OBJECT_TABLE} \
    --output_dir ${OUTPUT_DIR} \
    --visit_file ${VISIT_FILE}

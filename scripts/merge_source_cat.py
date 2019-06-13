@@ -202,23 +202,28 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     return cat
 
 
-def associate_object_ids(cat, data_ref=None, object_table=None, **kwargs):
+def associate_object_ids(cat, data_ref=None, object_table=None, object_dataset=None, **kwargs):
     """Wrapper for development to easily switch
     Object-Table based
     coadd file based
 
     associate_object_ids
     """
-    if object_table is None:
-        associated_ids = associate_object_ids_to_coadd(cat, data_ref=data_ref, **kwargs)
-    else:
+    if object_dataset is not None:
+        associated_ids = associate_object_ids_to_coadd(cat,
+                                                       data_ref=data_ref,
+                                                       object_dataset=object_dataset,
+                                                       **kwargs)
+    elif object_table is not None:
         associated_ids = associate_object_ids_to_table(cat, object_table=object_table, **kwargs)
 
     return associated_ids
 
 
-def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
-    """Load and match to deepcoadd references."""
+def associate_object_ids_to_coadd(cat, data_ref=None,
+                                  object_dataset='deepCoadd_ref',
+                                  verbose=True, **kwargs):
+    """Load and match to deepCoadd or deepDiff_diaObject references."""
 
     skymap = data_ref.get(datasetType='deepCoadd_skyMap')
 
@@ -249,7 +254,7 @@ def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
             if verbose:
                 print("Searching ", tract_patch_data_id)
             try:
-                ref_table = data_ref.getButler().get(datasetType='deepCoadd_ref',
+                ref_table = data_ref.getButler().get(datasetType=object_dataset,
                                                      dataId=tract_patch_data_id)
             except NoResults:
                 if verbose:
@@ -427,8 +432,10 @@ if __name__ == '__main__':
 Butler catalog dataset type.
 E.g., "src", "deepCoadd_diaSrc"(default: %(default)s)
 """)
-    parser.add_argument('--reader', default='',
+    parser.add_argument('--object_reader', type=str, default=None,
                         help='Name of Object Table reader.')
+    parser.add_argument('--object_dataset', type=str, default=None,
+                        help='Name of Object dataset type.  E.g., "deepCoadd", "deepDiff_diaObject".')
     parser.add_argument('--base_dir', default=None,
                         help='Override the base_dir setting of the reader.  This is motivated by the need to run on different file systems due to problems sometimes locking files for access from the compute nodes.')
     parser.add_argument('--visits', type=int, nargs='+',
@@ -500,6 +507,7 @@ v3: '_instFlux', '_instFluxError'
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
                                dataset=args.dataset,
+                               object_dataset=args.object_dataset,
                                object_table=object_table,
                                matching_radius=args.radius,
                                dm_schema_version=args.dm_schema_version,
