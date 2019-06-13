@@ -471,15 +471,15 @@ v3: '_instFlux', '_instFluxError'
     args = parser.parse_args(sys.argv[1:])
 
     object_table = None
-    if args.reader:
+    if args.object_reader:
         config_override = {}
         if args.base_dir:
             config_override['base_dir'] = args.base_dir
-        cat = GCRCatalogs.load_catalog(args.reader,
+        cat = GCRCatalogs.load_catalog(args.object_reader,
                                        config_overwrite=config_override)
         id_col = 'objectId'
         # Crude way to define ID column based on reader name.
-        if args.reader.index('dia_object'):
+        if args.object_reader.index('dia_object'):
             id_col = 'diaObjectId'
 
         object_table = pd.DataFrame(cat.get_quantities([id_col, 'ra', 'dec']))
