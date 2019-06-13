@@ -484,7 +484,7 @@ v3: '_instFlux', '_instFluxError'
 
         object_table = pd.DataFrame(cat.get_quantities([id_col, 'ra', 'dec']))
         # Standardize name of ID column in DataFrame
-        object_table.rename(index=str, columns={'': 'id'})
+        object_table = object_table.rename(index=str, columns={id_col: 'id'})
 
         del cat
 
