@@ -165,8 +165,12 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     cat['filter'] = data_ref.dataId['filter']
 
     # Calibrate magnitudes and fluxes
-    calib_dataset_map = {'src': 'calexp_calib', 'deepDiff_diaSrc': 'deepDiff_differenceExp_calib'}
-    calib = data_ref.get(datasetType=calib_dataset_map[dataset])
+    calib_dataset_map = {'src': 'calexp', 'deepDiff_diaSrc': 'deepDiff_differenceExp'}
+    try:
+        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_photoCalib')
+    except AttributeError:
+        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_calib')
+
     calib.setThrowOnNegativeFlux(False)
 
     mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
