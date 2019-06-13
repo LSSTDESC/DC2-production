@@ -1,6 +1,7 @@
 #!/bin/bash
 
-VISIT_FILE=$1
+# VISIT_FILE=$1
+VISIT_FILE=run_1.2_visits.txt
 echo "Processing: " $VISIT_FILE
 
 REPO=/global/cscratch1/sd/rearmstr/new_templates/diffim_template
@@ -16,10 +17,11 @@ mkdir -p ${OUTPUT_DIR}
 # Need w.2018.39-run1.2-v3_diff branch of obs_lsst
 export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs:${HOME}/local/lsst/obs_lsst
 
-. ${SCRIPT_DIR}/setup_shifter_env.sh
+# . ${SCRIPT_DIR}/setup_shifter_env.sh
 
 python ${SCRIPT_DIR}/merge_source_cat.py ${REPO} \
    --dataset deepDiff_diaSrc \
+   --object_reader dc2_dia_object_run1.2p_test \
    --output_name dia_src \
    --output_dir ${OUTPUT_DIR} \
    --visit_file ${VISIT_FILE}
