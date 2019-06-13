@@ -10,6 +10,7 @@ try:
 except ImportError:
     from lsst.afw.geom.spherePoint import SpherePoint
 
+import lsst.daf.base
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
 
@@ -139,6 +140,8 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     with photometric calibration and associated Object
     """
     cat = data_ref.get(datasetType=dataset)
+    # Here we get the calexp soley to get the MJD
+    calexp_visitInfo = data_ref.get(datasetType='calexp_visitInfo')
 
     flux_field_names_per_schema_version = {
         1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma'},
@@ -163,6 +166,9 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     cat['visit'] = data_ref.dataId['visit']
     cat['detector'] = data_ref.dataId['detector']
     cat['filter'] = data_ref.dataId['filter']
+
+    mjd = calexp_visitInfo.getDate().get(lsst.daf.base.DateTime.MJD)  # TAI MJD
+    cat['mjd'] = mjd
 
     # Calibrate magnitudes and fluxes
     calib_dataset_map = {'src': 'calexp', 'deepDiff_diaSrc': 'deepDiff_differenceExp'}
