@@ -1,7 +1,7 @@
 """
 DIA Object extraction and collation
 
-Takes a LSST DM Science Pipelines repository extracts the key information
+Takes a LSST DM Science Pipelines repository and extracts the key information
 needed for a DIA Object table following the LSST Data Products Definition Document.
 https://ls.st/dpdd
 """
