@@ -6,9 +6,11 @@ needed for a DIA Object table following the LSST Data Products Definition Docume
 https://ls.st/dpdd
 """
 
+import math
 import os
 import sys
 
+import numpy as np
 import pandas as pd
 
 from lsst.daf.persistence import Butler
@@ -17,6 +19,7 @@ from lsst.daf.persistence.butlerExceptions import NoResults
 
 def load_patch(butler_or_repo, tract, patch,
                dataset_type='deepDiff_diaObject',
+               dia_source_table=None,
                verbose=False,
                debug=False
                ):
@@ -46,7 +49,66 @@ def load_patch(butler_or_repo, tract, patch,
     cat = butler.get(datasetType=dataset_type, dataId=tract_patch_data_id)
     cat = cat.asAstropy().to_pandas()
 
+    if dia_source_table is not None:
+        cat = calculate_stats_from_dia_source_table(cat)
+
     return cat
+
+
+def calculate_stats_from_dia_source_table(dia_object_df, dia_source_table):
+    """Calculate summary statistics for DIA Objects from the DIA Source table.
+
+    Parameters
+    --
+    dia_object_df:
+        Pandas DataFrame with list of diaObject IDs in 'diaObjectId'.
+    GCRCatalogs catalog:
+        The DIA Source Table
+
+    Returns
+    --
+    Pandas DataFrame with additional summary columns added to input DataFrame.
+    """
+    dia_flux_columns = ['psFlux', 'psFluxErr', 'filter']
+    stats = []
+    for dia_object_id in dia_object_df['diaObjectId']:
+        condition = ((lambda x: x == dia_object_id), 'diaObjectId')
+        df = dia_source_table.get_quantities(dia_flux_columns, filter=condition)
+        _stats = calculate_stats_for_one_dia_object(df)
+        _stats['diaObjectId'] = dia_object_id
+        stats.append(_stats)
+
+    df_stats = pd.DataFrame(stats)
+    dia_object_df_with_stats = dia_object_df.join(df_stats, on='diaObjectId')
+
+    return dia_object_df_with_stats
+
+
+def calculate_stats_for_one_dia_object(dia_source_df):
+    """Calculate summary statistics for the DIA Source rows matching a DIA Object.
+
+    Parameters
+    --
+    dia_source_df:
+        Pandas DataFrame
+
+    Returns
+    --
+    Dict of Summary statistics
+    """
+    filters = np.unique(dia_source_df['filter'])
+    results = {}
+    for band in filters:
+        df = dia_source_df.query(f'filter == "{band}"')
+        results[f'psFluxMean_{band}'] = np.mean(df['psFlux'])
+        results[f'psFluxSigma_{band}'] = np.std(df['psFlux'], ddof=1)
+        results[f'psFluxNdata_{band}'] = len(df)
+        results[f'psFluxMeanErr_{band}'] = \
+            results[f'psFluxSigma_{band}'] / math.sqrt(len(df))
+        residuals = df['psFlux'] - results[f'psFluxMean_{band}']
+        results[f'psFluxChi2_{band}'] = np.sum((residuals / df['psFluxErr'])**2)
+
+    return results
 
 
 def load_and_save_tract(repo, tract, filename,
