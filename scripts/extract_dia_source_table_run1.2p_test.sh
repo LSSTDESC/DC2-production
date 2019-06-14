@@ -15,13 +15,14 @@ mkdir -p ${OUTPUT_DIR}
 # by the sourcing of the setup file
 # Need issues/290 branch of gcr-catalogs
 # Need w.2018.39-run1.2-v3_diff branch of obs_lsst
-export DESCPYTHONPATH=${HOME}/local/lsst/gcr-catalogs:${HOME}/local/lsst/obs_lsst
+export PYTHONPATH=${HOME}/local/lsst/gcr-catalogs:${PYTHONPATH}
 
 # . ${SCRIPT_DIR}/setup_shifter_env.sh
 
+#   --object_reader dc2_dia_object_run1.2p_test \
 python ${SCRIPT_DIR}/merge_source_cat.py ${REPO} \
    --dataset deepDiff_diaSrc \
-   --object_reader dc2_dia_object_run1.2p_test \
+   --object_dataset deepDiff_diaObject \
    --output_name dia_src \
    --output_dir ${OUTPUT_DIR} \
    --visit_file ${VISIT_FILE}
