@@ -21,6 +21,8 @@ export DESCPYTHONPATH=${HOME}/local/lsst/obs_lsst
 python ${SCRIPT_DIR}/merge_dia_object_cat.py ${REPO} \
    ${TRACT} \
    --dataset deepDiff_diaObject \
+   --dia_source_reader dc2_dia_source_run1.2p_test \
+   --base_dir /global/cscratch1/sd/wmwv/DC2/Run1.2p/dia_src_visit_from_deepDiff_diaObject \
    --output_name dia_object \
    --verbose \
    --output_dir ${OUTPUT_DIR} \

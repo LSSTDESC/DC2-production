@@ -19,7 +19,6 @@ export PYTHONPATH=${HOME}/local/lsst/gcr-catalogs:${PYTHONPATH}
 
 # . ${SCRIPT_DIR}/setup_shifter_env.sh
 
-#   --object_reader dc2_dia_object_run1.2p_test \
 python ${SCRIPT_DIR}/merge_source_cat.py ${REPO} \
    --dataset deepDiff_diaSrc \
    --object_dataset deepDiff_diaObject \
