@@ -57,6 +57,7 @@ class DummyDC2DiaSourceCatalog(GCRCatalogs.BaseGenericCatalog):
 def extract_and_save_visit(butler, visit, filename,
                            dataset='src',
                            object_table=None,
+                           object_dataset=None,
                            dm_schema_version=3,
                            overwrite=True, verbose=False, debug=False,
                            **kwargs):
@@ -96,8 +97,10 @@ def extract_and_save_visit(butler, visit, filename,
 
         if verbose:
             print("Processing ", dr.dataId)
-        src_cat = load_detector(dr, object_table=object_table,
+        src_cat = load_detector(dr,
                                 dataset=dataset,
+                                object_table=object_table,
+                                object_dataset=object_dataset,
                                 columns_to_keep=columns_to_keep,
                                 verbose=verbose, debug=debug, **kwargs)
         if len(src_cat) == 0:
@@ -118,9 +121,14 @@ def extract_and_save_visit(butler, visit, filename,
     collected_cats.to_parquet(filename)
 
 
-def load_detector(data_ref, object_table=None, matching_radius=1,
+def load_detector(data_ref,
                   dataset='src',
-                  columns_to_keep=None, debug=False, **kwargs):
+                  object_table=None,
+                  object_dataset=None,
+                  matching_radius=1,
+                  columns_to_keep=None,
+                  debug=False,
+                  **kwargs):
     """Load detector source catalog and associate sources with Object Table.
 
     Parameters
@@ -193,11 +201,12 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     flux_mag0, flux_mag0_err = calib.getFluxMag0()
     cat['fluxmag0'] = flux_mag0
 
-    if object_table is not None:
+    if object_table is not None or object_dataset is not None:
         # Associate with closest
         object_id = associate_object_ids(cat,
                                          data_ref=data_ref,
                                          object_table=object_table,
+                                         object_dataset=object_dataset,
                                          matching_radius=matching_radius,
                                          **kwargs)
         cat['objectId'] = object_id
