@@ -16,6 +16,8 @@ import pandas as pd
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
 
+import GCRCatalogs
+
 
 def load_patch(butler_or_repo, tract, patch,
                dataset_type='deepDiff_diaObject',
@@ -50,7 +52,7 @@ def load_patch(butler_or_repo, tract, patch,
     cat = cat.asAstropy().to_pandas()
 
     if dia_source_table is not None:
-        cat = calculate_stats_from_dia_source_table(cat)
+        cat = calculate_stats_from_dia_source_table(cat, dia_source_table)
 
     return cat
 
@@ -71,9 +73,9 @@ def calculate_stats_from_dia_source_table(dia_object_df, dia_source_table):
     """
     dia_flux_columns = ['psFlux', 'psFluxErr', 'filter']
     stats = []
-    for dia_object_id in dia_object_df['diaObjectId']:
+    for dia_object_id in dia_object_df['id']:
         condition = ((lambda x: x == dia_object_id), 'diaObjectId')
-        df = dia_source_table.get_quantities(dia_flux_columns, filter=condition)
+        df = pd.DataFrame(dia_source_table.get_quantities(dia_flux_columns, filters=[condition]))
         _stats = calculate_stats_for_one_dia_object(df)
         _stats['diaObjectId'] = dia_object_id
         stats.append(_stats)
@@ -181,6 +183,11 @@ if __name__ == '__main__':
 Butler catalog dataset type. %(default)s
 Mostly intended for use if there is a different set of templates with a new datasetType name.
 ''')
+    parser.add_argument('--dia_source_reader', type=str, default=None,
+                        help='''
+GCRCatalogs reader for DIA Source objects.
+Used to calculate summary statistics for DIA Object catalog.
+''')
     parser.add_argument('--base_dir', default=None,
                         help='''
 Override the base_dir setting of the reader.
@@ -205,11 +212,16 @@ A common use-case for this option is quick testing.
 
     args = parser.parse_args(sys.argv[1:])
 
+    dia_source_table = None
+    if args.dia_source_reader is not None:
+        dia_source_table = GCRCatalogs.load_catalog(args.dia_source_reader)
+
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.output_name, tract)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         load_and_save_tract(args.repo, tract, filename,
                             dataset_type=args.dataset,
+                            dia_source_table=dia_source_table,
                             patches=args.patches,
                             verbose=args.verbose,
                             debug=args.debug)
