@@ -462,5 +462,5 @@ The files provided to the collaboration are in a shared space owned by the `desc
 chgrp -R lsst ${SCRATCH}/DC2/Run1.2p/dia_object
 collabsu desc
 
-cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/dia_object /global/projecta/projectdirs/lsst/production/DC2_PhoSim/Run1.2p/dpdd/dia_object_test
+cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/dia_object /global/projecta/projectdirs/lsst/production/DC2_PhoSim/Run1.2p/dpdd/dia_object_catalog_test
 ```
