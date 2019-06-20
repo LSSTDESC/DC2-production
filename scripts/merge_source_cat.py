@@ -146,9 +146,15 @@ def load_detector(data_ref,
     --
     Pandas DataFrame of all sources for a visit in one catalog
     with photometric calibration and associated Object
+
+    If length of dataset catalog is 0, it will return the catalog immediately
+    without adding or calculating any additional columns.
     """
     cat = data_ref.get(datasetType=dataset)
-    # Here we get the calexp soley to get the MJD
+    if len(cat) == 0:
+        return cat
+
+    # Here we get the calexp solely to get the MJD
     calexp_visitInfo = data_ref.get(datasetType='calexp_visitInfo')
 
     flux_field_names_per_schema_version = {
@@ -201,7 +207,7 @@ def load_detector(data_ref,
     flux_mag0, flux_mag0_err = calib.getFluxMag0()
     cat['fluxmag0'] = flux_mag0
 
-    if object_table is not None or object_dataset is not None:
+    if (object_table is not None or object_dataset is not None) and (len(cat) > 0):
         # Associate with closest
         object_id = associate_object_ids(cat,
                                          data_ref=data_ref,
