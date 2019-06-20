@@ -424,6 +424,8 @@ Wrote new `merge_dia_object_cat.py`.  Relies on DIA Source table to already exis
 bash ${SCRIPT_DIR}/extract_dia_object_table_run1.2p_test.sh
 ```
 
+*** WARNING *** Due to very inefficient processing of the DIA Source files and the simplistic single-threading, the creation of the DIA Object for just this one patch takes 36 hours!.
+
 ### Update gcr-catalog
 
 ```yaml
