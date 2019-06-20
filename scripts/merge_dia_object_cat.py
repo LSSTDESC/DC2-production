@@ -50,6 +50,8 @@ def load_patch(butler_or_repo, tract, patch,
     tract_patch_data_id = {'tract': tract, 'patch': patch}
     cat = butler.get(datasetType=dataset_type, dataId=tract_patch_data_id)
     cat = cat.asAstropy().to_pandas()
+    # Rename 'id' -> 'diaObjectId' to match DPDD
+    cat.rename(index=str, columns={'id': 'diaObjectId'}, inplace=True)
 
     if dia_source_table is not None:
         cat = calculate_stats_from_dia_source_table(cat, dia_source_table)
@@ -73,15 +75,17 @@ def calculate_stats_from_dia_source_table(dia_object_df, dia_source_table):
     """
     dia_flux_columns = ['psFlux', 'psFluxErr', 'filter']
     stats = []
-    for dia_object_id in dia_object_df['id']:
+    for dia_object_id in dia_object_df['diaObjectId']:
+        print(f'Calculating stats for {dia_object_id}')
         condition = ((lambda x: x == dia_object_id), 'diaObjectId')
         df = pd.DataFrame(dia_source_table.get_quantities(dia_flux_columns, filters=[condition]))
         _stats = calculate_stats_for_one_dia_object(df)
         _stats['diaObjectId'] = dia_object_id
         stats.append(_stats)
+        print(_stats)
 
     df_stats = pd.DataFrame(stats)
-    dia_object_df_with_stats = dia_object_df.join(df_stats, on='diaObjectId')
+    dia_object_df_with_stats = dia_object_df.merge(df_stats, how='left', on='diaObjectId')
 
     return dia_object_df_with_stats
 
