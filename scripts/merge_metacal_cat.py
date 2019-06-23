@@ -49,11 +49,13 @@ def load_and_save_tract(repo, tract, filename, patches=None,
         else:
             df = df.append(patch_merged_cat)
 
-    if overwrite:
-        if os.path.exists(filename):
-            os.remove(filename)
+    # Only proceed to write if we have something to write
+    if df is not None:
+        if overwrite:
+            if os.path.exists(filename):
+                os.remove(filename)
 
-    df.to_parquet(filename)
+        df.to_parquet(filename)
 
 def load_metacal_patch(butler_or_repo, tract, patch,
                fields_to_join=('id',),
