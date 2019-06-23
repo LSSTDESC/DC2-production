@@ -34,7 +34,11 @@ def load_and_save_tract(repo, tract, filename, patches=None,
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
-        patch_merged_cat = load_metacal_patch(butler, tract, patch, verbose=verbose, **kwargs)
+        # Try to open the metacal patch, but  sometimes the patch exists but mcal didnt run
+        try:
+            patch_merged_cat = load_metacal_patch(butler, tract, patch, verbose=verbose, **kwargs)
+        except:
+            patch_merged_cat = []
         if len(patch_merged_cat) == 0:
             if verbose:
                 print("  No good entries for tract %d, patch %s" % (tract, patch))
