@@ -8,6 +8,9 @@ SCRIPT_DIR=${HOME}/local/lsst/DC2-production/scripts/
 OUTPUT_DIR=${SCRATCH}/DC2/Run1.2i/src_visit
 OBJECT_TABLE=dc2_object_run1.2i
 
+# We can't lock over NFS file system
+export HDF5_USE_FILE_LOCKING=FALSE
+
 mkdir -p ${OUTPUT_DIR}
 
 # DESCPYTHONPATH will get prepended to the PYTHONPATH

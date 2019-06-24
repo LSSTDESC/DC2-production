@@ -5,8 +5,12 @@ import numpy as np
 import pandas as pd
 
 from lsst.geom import radians
-from lsst.afw.geom.spherePoint import SpherePoint
+try:
+    from lsst.geom import SpherePoint
+except ImportError:
+    from lsst.afw.geom.spherePoint import SpherePoint
 
+import lsst.daf.base
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
 
@@ -15,6 +19,7 @@ import astropy.units as u
 
 import GCRCatalogs
 from GCRCatalogs.dc2_source import DC2SourceCatalog
+from GCRCatalogs.dc2_dia_source import DC2DiaSourceCatalog
 
 
 class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
@@ -33,9 +38,29 @@ class DummyDC2SourceCatalog(GCRCatalogs.BaseGenericCatalog):
         return set(self._translate_quantities(self.list_all_quantities()))
 
 
-def extract_and_save_visit(butler, visit, filename, object_table=None,
+class DummyDC2DiaSourceCatalog(GCRCatalogs.BaseGenericCatalog):
+    """
+    A dummy reader class that can be used to generate all native quantities
+    required for the DPDD columns in DC2 Source Catalog
+    """
+    def __init__(self, schema_version=None):
+        self._quantity_modifiers = DC2DiaSourceCatalog._generate_modifiers(dm_schema_version=schema_version)
+
+    @property
+    def required_native_quantities(self):
+        """
+        the set of native quantities that are required by the quantity modifiers
+        """
+        return set(self._translate_quantities(self.list_all_quantities()))
+
+
+def extract_and_save_visit(butler, visit, filename,
+                           dataset='src',
+                           object_table=None,
+                           object_dataset=None,
                            dm_schema_version=3,
-                           overwrite=True, verbose=False, **kwargs):
+                           overwrite=True, verbose=False, debug=False,
+                           **kwargs):
     """Save catalogs to Parquet from visit-level source catalogs.
 
     Associates an ObjectID.
@@ -47,13 +72,21 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
     visit: int
         Visit to process
     filename: str
-        Filename for HDF file.
+        Filename for output Parquet file.
     overwrite: bool
         Overwrite an existing parquet file.
     """
-    data_refs = butler.subset('src', dataId={'visit': visit})
+    visit = str(visit)
+    data_refs = butler.subset(dataset, dataId={'visit': visit})
+    if debug:
+        print("DATA_REFS: ", data_refs)
 
-    columns_to_keep = list(DummyDC2SourceCatalog(dm_schema_version).required_native_quantities)
+    if dataset == 'deepDiff_diaSrc':
+        dummy_catalog = DummyDC2DiaSourceCatalog(dm_schema_version)
+    else:
+        dummy_catalog = DummyDC2SourceCatalog(dm_schema_version)
+
+    columns_to_keep = list(dummy_catalog.required_native_quantities)
 
     collected_cats = pd.DataFrame()
     for dr in data_refs:
@@ -64,9 +97,12 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
 
         if verbose:
             print("Processing ", dr.dataId)
-        src_cat = load_detector(dr, object_table=object_table,
+        src_cat = load_detector(dr,
+                                dataset=dataset,
+                                object_table=object_table,
+                                object_dataset=object_dataset,
                                 columns_to_keep=columns_to_keep,
-                                verbose=verbose, **kwargs)
+                                verbose=verbose, debug=debug, **kwargs)
         if len(src_cat) == 0:
             if verbose:
                 print("  No good entries for ", dr.dataId)
@@ -85,8 +121,14 @@ def extract_and_save_visit(butler, visit, filename, object_table=None,
     collected_cats.to_parquet(filename)
 
 
-def load_detector(data_ref, object_table=None, matching_radius=1,
-                  columns_to_keep=None, debug=False, **kwargs):
+def load_detector(data_ref,
+                  dataset='src',
+                  object_table=None,
+                  object_dataset=None,
+                  matching_radius=1,
+                  columns_to_keep=None,
+                  debug=False,
+                  **kwargs):
     """Load detector source catalog and associate sources with Object Table.
 
     Parameters
@@ -104,13 +146,22 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     --
     Pandas DataFrame of all sources for a visit in one catalog
     with photometric calibration and associated Object
+
+    If length of dataset catalog is 0, it will return the catalog immediately
+    without adding or calculating any additional columns.
     """
-    cat = data_ref.get(datasetType='src')
+    cat = data_ref.get(datasetType=dataset)
+    if len(cat) == 0:
+        return cat
+
+    # Here we get the calexp solely to get the MJD
+    calexp_visitInfo = data_ref.get(datasetType='calexp_visitInfo')
 
     flux_field_names_per_schema_version = {
         1: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxSigma'},
         2: {'psf_flux': 'base_PsfFlux_flux', 'psf_flux_err': 'base_PsfFlux_fluxErr'},
-        3: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr'}
+        3: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr'},
+        4: {'psf_flux': 'base_PsfFlux_instFlux', 'psf_flux_err': 'base_PsfFlux_instFluxErr'},
     }
 
     if debug:
@@ -119,6 +170,8 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
 
     # Get a Pandas DataFrame out that we can more easily manipulate:
     cat = cat.asAstropy().to_pandas()
+    if debug:
+        print("Looking at {} entries".format(len(cat)))
 
     # Add visit, filter information as columns.
     # There's no separate metadata field so we redundantly include here
@@ -128,8 +181,16 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     cat['detector'] = data_ref.dataId['detector']
     cat['filter'] = data_ref.dataId['filter']
 
+    mjd = calexp_visitInfo.getDate().get(lsst.daf.base.DateTime.MJD)  # TAI MJD
+    cat['mjd'] = mjd
+
     # Calibrate magnitudes and fluxes
-    calib = data_ref.get('calexp_calib')
+    calib_dataset_map = {'src': 'calexp', 'deepDiff_diaSrc': 'deepDiff_differenceExp'}
+    try:
+        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_photoCalib')
+    except AttributeError:
+        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_calib')
+
     calib.setThrowOnNegativeFlux(False)
 
     mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
@@ -146,13 +207,15 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     flux_mag0, flux_mag0_err = calib.getFluxMag0()
     cat['fluxmag0'] = flux_mag0
 
-    # Associate with closest
-    object_id = associate_object_ids(cat,
-                                     data_ref=data_ref,
-                                     object_table=object_table,
-                                     matching_radius=matching_radius,
-                                     **kwargs)
-    cat['objectId'] = object_id
+    if (object_table is not None or object_dataset is not None) and (len(cat) > 0):
+        # Associate with closest
+        object_id = associate_object_ids(cat,
+                                         data_ref=data_ref,
+                                         object_table=object_table,
+                                         object_dataset=object_dataset,
+                                         matching_radius=matching_radius,
+                                         **kwargs)
+        cat['objectId'] = object_id
 
     # Restrict to columns that we need
     cat = cat[columns_to_keep]
@@ -160,23 +223,28 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
     return cat
 
 
-def associate_object_ids(cat, data_ref=None, object_table=None, **kwargs):
+def associate_object_ids(cat, data_ref=None, object_table=None, object_dataset=None, **kwargs):
     """Wrapper for development to easily switch
     Object-Table based
     coadd file based
 
     associate_object_ids
     """
-    if object_table is None:
-        associated_ids = associate_object_ids_to_coadd(cat, data_ref=data_ref, **kwargs)
-    else:
+    if object_dataset is not None:
+        associated_ids = associate_object_ids_to_coadd(cat,
+                                                       data_ref=data_ref,
+                                                       object_dataset=object_dataset,
+                                                       **kwargs)
+    elif object_table is not None:
         associated_ids = associate_object_ids_to_table(cat, object_table=object_table, **kwargs)
 
     return associated_ids
 
 
-def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
-    """Load and match to deepcoadd references."""
+def associate_object_ids_to_coadd(cat, data_ref=None,
+                                  object_dataset='deepCoadd_ref',
+                                  verbose=True, **kwargs):
+    """Load and match to deepCoadd or deepDiff_diaObject references."""
 
     skymap = data_ref.get(datasetType='deepCoadd_skyMap')
 
@@ -207,7 +275,7 @@ def associate_object_ids_to_coadd(cat, data_ref=None, verbose=True, **kwargs):
             if verbose:
                 print("Searching ", tract_patch_data_id)
             try:
-                ref_table = data_ref.getButler().get(datasetType='deepCoadd_ref',
+                ref_table = data_ref.getButler().get(datasetType=object_dataset,
                                                      dataId=tract_patch_data_id)
             except NoResults:
                 if verbose:
@@ -355,7 +423,7 @@ if __name__ == '__main__':
     or individually to each merged detection reference file from the coadd.
     The numbers will come out the same.
 
-    * If an Object Table reader is provided through '--reader', then the catalog
+    * If an Object Table reader is provided through '--object_reader', then the catalog
     read by that Generic Catalog Reader will be used to match Object IDs.
 
     * If this reader is not provided, then source catalogs will be matched against
@@ -380,8 +448,17 @@ if __name__ == '__main__':
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('repo', type=str,
                         help='Filepath to LSST DM Stack Butler repository.')
-    parser.add_argument('--reader', default='',
+    parser.add_argument('--dataset', type=str, default='src',
+                        help="""
+Butler catalog dataset type.
+E.g., "src", "deepCoadd_diaSrc"(default: %(default)s)
+""")
+    parser.add_argument('--object_reader', type=str, default=None,
                         help='Name of Object Table reader.')
+    parser.add_argument('--object_dataset', type=str, default=None,
+                        help='Name of Object dataset type.  E.g., "deepCoadd", "deepDiff_diaObject".')
+    parser.add_argument('--base_dir', default=None,
+                        help='Override the base_dir setting of the reader.  This is motivated by the need to run on different file systems due to problems sometimes locking files for access from the compute nodes.')
     parser.add_argument('--visits', type=int, nargs='+',
                         help='Visit IDs to process.')
     parser.add_argument('--visit_file', type=str, default=None,
@@ -394,14 +471,16 @@ visit_file are appended to the list specified in visits.
                         help="""
 Matching radius for object association [arcsec].  (default: %(default)s'
 """)
-    parser.add_argument('--name', default='src',
-                        help='Base name of files: <name>_visit_0235062.hdf5')
+    parser.add_argument('--output_name', default='src',
+                        help='Base name of files: <output_name>_visit_0235062.parquet')
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', dest='verbose', default=True,
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
+    parser.add_argument('--debug', dest='debug', default=True,
+                        action='store_true', help='Debug mode.')
     parser.add_argument('--dm_schema_version', default=3,
                         help="""
 The schema version of the DM tables.
@@ -413,9 +492,21 @@ v3: '_instFlux', '_instFluxError'
     args = parser.parse_args(sys.argv[1:])
 
     object_table = None
-    if args.reader:
-        cat = GCRCatalogs.load_catalog(args.reader)
-        object_table = pd.DataFrame(cat.get_quantities(['id', 'ra', 'dec']))
+    if args.object_reader:
+        config_override = {}
+        if args.base_dir:
+            config_override['base_dir'] = args.base_dir
+        cat = GCRCatalogs.load_catalog(args.object_reader,
+                                       config_overwrite=config_override)
+        id_col = 'objectId'
+        # Crude way to define ID column based on reader name.
+        if args.object_reader.index('dia_object'):
+            id_col = 'diaObjectId'
+
+        object_table = pd.DataFrame(cat.get_quantities([id_col, 'ra', 'dec']))
+        # Standardize name of ID column in DataFrame
+        object_table = object_table.rename(index=str, columns={id_col: 'id'})
+
         del cat
 
     if args.visit_file:
@@ -433,10 +524,12 @@ v3: '_instFlux', '_instFluxError'
 
     butler = Butler(args.repo)
     for visit in args.visits:
-        filebase = '{:s}_visit_{:d}'.format(args.name, visit)
+        filebase = '{:s}_visit_{:d}'.format(args.output_name, visit)
         filename = os.path.join(args.output_dir, filebase + '.parquet')
         extract_and_save_visit(butler, visit, filename,
+                               dataset=args.dataset,
+                               object_dataset=args.object_dataset,
                                object_table=object_table,
                                matching_radius=args.radius,
                                dm_schema_version=args.dm_schema_version,
-                               verbose=args.verbose)
+                               verbose=args.verbose, debug=args.debug)
