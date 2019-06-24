@@ -357,8 +357,12 @@ cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit /global/projecta/p
 
 Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2p/forced_src_visit` is my `${SCRATCH}/DC2/Run1.2p/forced_src_visit`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
 
+## How To Generate DIASource + DIAObject Tables from DM processing outputs
+*by Michael Wood-Vasey [@wmwv]*
 
-### Make DIA Source Files
+DIA generation and the relationship between the DIASource and DIAObject tables is fundamentally different than for the standard Source and OBject tables and so we document their creation separately in this section.  DIAObjects are created by association of DIASource detections, whereas the Object table which is created by detections on the coadded images in a process completely separate from the creation of the Source tables.  Thus DIASource and DIAObject are more intimately related, which is reflected by the related processing below.
+
+### Make DIASource Files
 
 #### Run 1.2p test
 
@@ -417,7 +421,7 @@ cp -pr /global/cscratch1/sd/wmwv/DC2/Run1.2p/dia_src_visit /global/projecta/proj
 
 Where the above `/global/cscratch1/sd/wmwv/DC2/Run1.2p/` is my `${SCRATCH}/DC2/Run1.2p`.  We have to explicitly spell out the pathname because once we switch to the `desc` user, the `${SCRATCH}` variable will now be that of the `desc` user intead of the user who ran the job to create the files.
 
-### Make DIA Object Files
+### Make DIAObject Files
 
 Wrote new `merge_dia_object_cat.py`.  Relies on DIA Source table to already exist as a GCR product to calculate summary statistics.
 ```
