@@ -40,7 +40,8 @@ def load_trim_save_patch(outfile, infile_handle, key, columns_to_keep):
 
 def make_trim_file(infile, output_file=None, output_dir=None,
                    clobber=True, schema_version=None,
-                   check_all_patches_exist=False):
+                   check_all_patches_exist=False,
+                   verbose=False):
 
     if output_file is None:
         if output_dir is None:
@@ -55,6 +56,8 @@ def make_trim_file(infile, output_file=None, output_dir=None,
     columns_to_keep = DummyDC2ObjectCatalog(schema_version).required_native_quantities
 
     patches = []
+    if verbose:
+        print("Reading: ", infile)
     with pd.HDFStore(infile, 'r') as fh:
         for key in fh:
             if not re.match(GROUP_PATTERN, key.lstrip('/')):
@@ -96,9 +99,11 @@ v3: '_instFlux', '_instFluxError'
 """)
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s))')
+    parser.add_argument('--verbose', default=False, action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
     for infile in args.input_files:
         make_trim_file(infile,
                        schema_version=args.schema_version,
-                       output_dir=args.output_dir)
+                       output_dir=args.output_dir,
+                       verbose=args.verbose)
