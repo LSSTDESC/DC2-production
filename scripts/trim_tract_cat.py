@@ -90,7 +90,7 @@ if __name__ == "__main__":
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('input_files', type=str, nargs='+', default=[],
                         help='Input HDF5 files to be trimmed.')
-    parser.add_argument('--schema_version', default=3,
+    parser.add_argument('--schema_version', default=3, type=int,
                         help="""
 The schema version of the DM tables.
 v1: '_flux', '_fluxSigma'
