@@ -58,11 +58,18 @@ def make_trim_file(infile, output_file=None, output_dir=None,
     patches = []
     if verbose:
         print("Reading: ", infile)
-    with pd.HDFStore(infile, 'r') as fh:
+    with pd.HDFStore(infile, 'r', errors='replace') as fh:
         for key in fh:
+            if verbose:
+                print("Key: ", key)
             if not re.match(GROUP_PATTERN, key.lstrip('/')):
                 continue
-            load_trim_save_patch(output_file, fh, key, columns_to_keep)
+            try:
+                load_trim_save_patch(output_file, fh, key, columns_to_keep)
+            except UnicodeDecodeError as e:
+                print(e)
+                print(f'Unicode Decoding Error in {output_file} {key}.  Skipping')
+
             patches.append(key.rpartition('_')[-1])
 
     if check_all_patches_exist:
