@@ -35,10 +35,10 @@ def load_and_save_tract(repo, tract, filename, patches=None,
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
         # Try to open the metacal patch, but  sometimes the patch exists but mcal didnt run
-        try:
-            patch_merged_cat = load_metacal_patch(butler, tract, patch, verbose=verbose, **kwargs)
-        except:
-            patch_merged_cat = []
+#        try:
+        patch_merged_cat = load_metacal_patch(butler, tract, patch, verbose=verbose, **kwargs)
+#        except:
+#            patch_merged_cat = []
         if len(patch_merged_cat) == 0:
             if verbose:
                 print("  No good entries for tract %d, patch %s" % (tract, patch))
@@ -112,9 +112,6 @@ def load_metacal_patch(butler_or_repo, tract, patch,
     metacal = metacal[isPrimary]
     # Dropping redundant columns with the main reference catalog
     metacal = metacal.drop(["coord_ra", "coord_dec", "parent"], axis=1)
-
-    # TODO: Remove this when we can create composite catalogs
-    metacal = pd.merge(metacal, ref_table, on=fields_to_join, sort=False)
 
     return metacal
 
