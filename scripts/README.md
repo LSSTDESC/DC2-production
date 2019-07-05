@@ -173,7 +173,7 @@ python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/produ
 
 Run 2.1i dr1b
 ```bash
-python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run2.1i/w_2019_19-v1/dpdd/calexp-v1\:coadd-dr1b-v1/object_table_summary/object_tract_*.hdf5
+python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/production/DC2_ImSim/Run2.1i/dpdd/calexp-v1\:coadd-dr1b-v1/object_table_summary/object_tract_*.hdf5
 ```
 
 ### Update gcr-catalog
