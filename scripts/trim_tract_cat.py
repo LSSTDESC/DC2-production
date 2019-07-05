@@ -40,7 +40,8 @@ def load_trim_save_patch(outfile, infile_handle, key, columns_to_keep):
 
 def make_trim_file(infile, output_file=None, output_dir=None,
                    clobber=True, schema_version=None,
-                   check_all_patches_exist=False):
+                   check_all_patches_exist=False,
+                   verbose=False):
 
     if output_file is None:
         if output_dir is None:
@@ -55,11 +56,24 @@ def make_trim_file(infile, output_file=None, output_dir=None,
     columns_to_keep = DummyDC2ObjectCatalog(schema_version).required_native_quantities
 
     patches = []
-    with pd.HDFStore(infile, 'r') as fh:
+    if verbose:
+        print("Reading: ", infile)
+    with pd.HDFStore(infile, 'r', errors='replace') as fh:
         for key in fh:
+            if verbose:
+                print("Key: ", key)
             if not re.match(GROUP_PATTERN, key.lstrip('/')):
                 continue
-            load_trim_save_patch(output_file, fh, key, columns_to_keep)
+            # TODO  MWV: 2019-07-05:  Fix this by one of:
+            #   1. Identify cause in original encoding.
+            #   2. Identify why GCR doesn't suffer from this issue (different HDF5 access approach)
+            #   3. When we switch to Parquet files make sure this UnicodeDecodeError problem goes away.
+            try:
+                load_trim_save_patch(output_file, fh, key, columns_to_keep)
+            except UnicodeDecodeError as e:
+                print(e)
+                print(f'Unicode Decoding Error in {output_file} {key}.  Skipping')
+
             patches.append(key.rpartition('_')[-1])
 
     if check_all_patches_exist:
@@ -87,7 +101,7 @@ if __name__ == "__main__":
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('input_files', type=str, nargs='+', default=[],
                         help='Input HDF5 files to be trimmed.')
-    parser.add_argument('--schema_version', default=3,
+    parser.add_argument('--schema_version', default=3, type=int,
                         help="""
 The schema version of the DM tables.
 v1: '_flux', '_fluxSigma'
@@ -96,9 +110,11 @@ v3: '_instFlux', '_instFluxError'
 """)
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s))')
+    parser.add_argument('--verbose', action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
     for infile in args.input_files:
         make_trim_file(infile,
                        schema_version=args.schema_version,
-                       output_dir=args.output_dir)
+                       output_dir=args.output_dir,
+                       verbose=args.verbose)

@@ -133,6 +133,8 @@ SCRIPT_DIR=/global/homes/w/wmwv/local/lsst/DC2-production/scripts
 nohup python "${SCRIPT_DIR}"/merge_tract_cat.py "${REPO}" ${TRACTS} > merge_tract_cat_${TRACT}.log 2>&1 < /dev/null
 ```
 
+* Starting with Run 2.1i, the Object Tables were generated as part of the processing pipeline.
+
 ### Make Trimmed Files
 
 Generate "Trimmed" Object Tables
@@ -161,9 +163,18 @@ This trim step uses the Generic Catalog Reader to determine the columns required
 
 Run 1.2p v4
 ```bash
-python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog_v4/object_tract_cat_*.hdf5
+python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/global/in2p3/Run1.2p/object_catalog_v4/object_tract_*.hdf5
 ```
 
+Run 2.1i dr1a
+```bash
+python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/production/DC2_ImSim/Run2.1i/dpdd/calexp-v1:coadd-v1/object_table_summary/object_tract_*.hdf5
+```
+
+Run 2.1i dr1b
+```bash
+python "${SCRIPT_DIR}"/trim_tract_cat.py /global/projecta/projectdirs/lsst/production/DC2_ImSim/Run2.1i/dpdd/calexp-v1\:coadd-dr1b-v1/object_table_summary/object_tract_*.hdf5
+```
 
 ### Update gcr-catalog
 
@@ -212,9 +223,10 @@ In addition to renaming columns, this also translates to derived columns that ar
 For speed, this is done by default on the already trimmed object tables (from the step just above).  But it would be possible to do it directly from the full Object merged_tract_cat files instead.
 
 ```bash
-python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.1p
-python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2p
-python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py --reader dc2_object_run1.2i
+python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py dc2_object_run1.1p
+python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py dc2_object_run1.2p
+python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py dc2_object_run1.2i
+python "${SCRIPT_DIR}"/convert_merged_tract_to_dpdd.py dc2_object_run2.1i
 ```
 
 This will create individual per-tract Parquet files.  To create a merged Parquet file of all tracts, use the very simple `merge_parquet_files.py` utility.  E.g.,
