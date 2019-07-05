@@ -64,6 +64,10 @@ def make_trim_file(infile, output_file=None, output_dir=None,
                 print("Key: ", key)
             if not re.match(GROUP_PATTERN, key.lstrip('/')):
                 continue
+            # TODO  MWV: 2019-07-05:  Fix this by one of:
+            #   1. Identify cause in original encoding.
+            #   2. Identify why GCR doesn't suffer from this issue (different HDF5 access approach)
+            #   3. When we switch to Parquet files make sure this UnicodeDecodeError problem goes away.
             try:
                 load_trim_save_patch(output_file, fh, key, columns_to_keep)
             except UnicodeDecodeError as e:
