@@ -110,7 +110,7 @@ v3: '_instFlux', '_instFluxError'
 """)
     parser.add_argument('--output_dir', default='./',
                         help='Output directory.  (default: %(default)s))')
-    parser.add_argument('--verbose', default=False, action='store_true')
+    parser.add_argument('--verbose', action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
     for infile in args.input_files:
