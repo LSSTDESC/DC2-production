@@ -199,7 +199,7 @@ Skymap patch[es] within each tract to process. Format should be "11,21,31"
                         help='Overwrite existing files')
     parser.add_argument('--hsc', dest='hsc', action='store_true',
                         help='Uses HSC filters')
-    parser.add_argument('--parquet_engine', destination='engine', default='pyarrow',
+    parser.add_argument('--parquet_engine', dest='engine', default='pyarrow',
                         choices=['fastparquet', 'pyarrow'],
                         help="""(default: %(default)s)""")
     args = parser.parse_args()
