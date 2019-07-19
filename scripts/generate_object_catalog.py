@@ -154,13 +154,10 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
         cat = cat.asAstropy()
         cat = cat[isPrimary]
 
-        """
-        # TODO for wmwv: fix the magnitude issue here:
-        flux_names = flux_field_names_per_schema_version[cat.schema.VERSION]
+        # Magnitudes will be calculated in the GCR reader / DPDD formatting
+        # For now we just extract the grey FLUXMAG0
         calib = butler.get('deepCoadd_calexp_photoCalib', this_data_id)
-        cat['mag'], cat['mag_err'] = calib.instFluxToMagnitude(cat, flux_names['psf_flux']).T
-        cat['modelfit_mag'], cat['modelfit_mag_err'] = calib.instFluxToMagnitude(cat, flux_names['modelfit_flux']).T
-        """
+        cat['FLUXMAG0'] = calib.getInstFluxMagAtZeroMagnitude()
 
         if cat_dtype is None:
             cat_dtype = cat.dtype
