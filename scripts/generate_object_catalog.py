@@ -13,6 +13,10 @@ from lsst.daf.persistence.butlerExceptions import NoResults
 
 _default_fill_value = {'i': -1, 'b': False, 'U': ''}
 
+def _ensure_butler_instance(butler_or_repo):
+    if not isinstance(butler_or_repo, Butler):
+        return Butler(butler_or_repo)
+    return butler_or_repo
 
 def _get_fill_value(name, dtype):
     kind = np.dtype(dtype).kind
@@ -46,11 +50,9 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
     parquet_engine : str, optional
         default is pyarrow
     """
-    if not isinstance(butler, Butler):
-        butler = Butler(butler)
-
     if not patches:
         # Extract the patches for this tract from the skymap
+        butler = _ensure_butler_instance(butler)
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
     else:
@@ -77,7 +79,9 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
                 print("  Skipping tract %d, patch %s because output file exist" % (tract, patch))
             continue
 
+        butler = _ensure_butler_instance(butler)
         merged_cat = merge_coadd_forced_src(butler, tract, patch, verbose=verbose, **kwargs)
+
         if merged_cat is None:
             if verbose:
                 print("  No entries for tract %d, patch %s" % (tract, patch))
@@ -112,8 +116,7 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
     --
     Pandas DataFrame of patch catalog merged across filters.
     """
-    if not isinstance(butler, Butler):
-        butler = Butler(butler)
+    butler = _ensure_butler_instance(butler)
 
     # Define the filters and order in which to sort them.:
     tract_patch_data_id = {'tract': tract, 'patch': patch}
