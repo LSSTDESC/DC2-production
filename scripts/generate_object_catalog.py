@@ -148,7 +148,7 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
         # Magnitudes will be calculated in the GCR reader / DPDD formatting
         # For now we just extract the grey FLUXMAG0
         calib = butler.get('deepCoadd_calexp_photoCalib', this_data_id)
-        cat['FLUXMAG0'] = calib.getInstFluxMagAtZeroMagnitude()
+        cat['FLUXMAG0'] = calib.getInstFluxAtZeroMagnitude()
 
         if cat_dtype is None:
             cat_dtype = cat.dtype
