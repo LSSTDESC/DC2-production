@@ -68,7 +68,7 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
             continue
         file_path = os.path.join(
             output_dir,
-            '_'.join((filename_prefix, tract, patch.replace(',', ''))) + '.parquet',
+            '_'.join((filename_prefix, str(tract), patch.replace(',', ''))) + '.parquet',
         )
         if os.path.exists(file_path) and not overwrite:
             if verbose:
