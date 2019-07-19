@@ -61,19 +61,24 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
     for patch in patches:
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
-        merged_cat = merge_coadd_forced_src(butler, tract, patch, verbose=verbose, **kwargs)
-        if merged_cat is None:
-            if verbose:
-                print("  No good entries for tract %d, patch %s" % (tract, patch))
-            continue
+
         file_path = os.path.join(
             output_dir,
             '_'.join((filename_prefix, str(tract), patch.replace(',', ''))) + '.parquet',
         )
-        if os.path.exists(file_path) and not overwrite:
+
+        if not overwrite and (os.path.exists(file_path) or os.path.exists(file_path + '.empty')):
             if verbose:
                 print("  Skipping tract %d, patch %s because output file exist" % (tract, patch))
             continue
+
+        merged_cat = merge_coadd_forced_src(butler, tract, patch, verbose=verbose, **kwargs)
+        if merged_cat is None:
+            if verbose:
+                print("  No entries for tract %d, patch %s" % (tract, patch))
+            open(file_path + '.empty', 'w').close()
+            continue
+
         merged_cat.to_parquet(
             file_path,
             engine=parquet_engine,
