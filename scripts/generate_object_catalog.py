@@ -168,7 +168,7 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
 
         cat.meta = None
         for name in cat_dtype.names:
-            if name == 'id':
+            if name in keys_join_on:
                 continue
             cat.rename_column(name, '{}_{}'.format(filter_this, name))
 
@@ -179,6 +179,8 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
 
     for filter_this in missing_filters:
         for name, (dt, _) in cat_dtype.fields.items():
+            if name in keys_join_on:
+                continue
             merged_cat['{}_{}'.format(filter_this, name)] = _get_fill_value(name, dt)
 
     return merged_cat.to_pandas() if return_pandas else merged_cat
