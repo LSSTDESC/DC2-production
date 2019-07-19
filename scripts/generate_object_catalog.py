@@ -1,3 +1,8 @@
+"""
+generate_object_catalog.py
+
+Save catalogs to parquet from forced-photometry coadds across available filters.
+"""
 import os
 
 import numpy as np
