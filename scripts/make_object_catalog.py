@@ -4,19 +4,22 @@ make_object_catalog.py
 Save catalogs to parquet from forced-photometry coadds across available filters.
 """
 import os
+import re
 
 import numpy as np
-from astropy.table import join
+from astropy.table import hstack
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
 
-_default_fill_value = {'i': -1, 'b': False, 'U': ''}
 
 def _ensure_butler_instance(butler_or_repo):
     if not isinstance(butler_or_repo, Butler):
         return Butler(butler_or_repo)
     return butler_or_repo
+
+
+_default_fill_value = {'i': -1, 'b': False, 'U': ''}
 
 def _get_fill_value(name, dtype):
     kind = np.dtype(dtype).kind
@@ -55,15 +58,11 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
         butler = _ensure_butler_instance(butler)
         skymap = butler.get(datasetType='deepCoadd_skyMap')
         patches = ['%d,%d' % patch.getIndex() for patch in skymap[tract]]
-    else:
-        try:
-            patches = patches.split(',')
-        except AttributeError:
-            pass
-        else:
-            if not all(len(p) == 2 for p in patches):
-                raise ValueError('patches should be a list or a string in "11,22,33" format')
-            patches = ['{},{}'.format(*p) for p in patches]
+    elif hasattr(patches, 'split'):
+        patches = patches.split('^')
+
+    if not all(re.match(r'\d,\d$', p) for p in patches):
+        raise ValueError('patches should be a list or a string in "1,1^2,2^3,3" format')
 
     for patch in patches:
         if verbose:
@@ -98,7 +97,8 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
 
 
 def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
-                           filters='ugrizy', verbose=False, return_pandas=True):
+                           filters='ugrizy', verbose=False, return_pandas=True,
+                           debug=False):
     """Load patch catalogs.  Return merged catalog across filters.
 
     butler: Butler object or str
@@ -135,14 +135,14 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
             print("  No good isPrimary entries for tract {}, patch {}".format(tract, patch))
         return
 
-    merged_cat = ref_table[isPrimary]
-    del ref_table
-
-    merged_cat['tract'] = int(tract)
-    merged_cat['patch'] = str(patch)
+    ref_table = ref_table[isPrimary]
+    ref_table['tract'] = int(tract)
+    ref_table['patch'] = str(patch)
 
     cat_dtype = None
     missing_filters = list()
+    tables_to_merge = [ref_table]
+
     for filter_this in filters:
         filter_name = filters.get(filter_this) if hasattr(filters, 'get') else filter_this
         this_data_id = dict(tract_patch_data_id, filter=filter_name)
@@ -157,6 +157,9 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
 
         cat = cat.asAstropy()
         cat = cat[isPrimary]
+        if debug:
+            assert (cat['id'] == ref_table['id']).all()
+        del cat['id']
 
         # Magnitudes will be calculated in the GCR reader / DPDD formatting
         # For now we just extract the grey FLUXMAG0
@@ -168,19 +171,18 @@ def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
 
         cat.meta = None
         for name in cat_dtype.names:
-            if name in keys_join_on:
-                continue
             cat.rename_column(name, '{}_{}'.format(filter_this, name))
 
-        merged_cat = join(merged_cat, cat, list(keys_join_on), 'outer')
-        del cat
+        tables_to_merge.append(cat)
 
-    assert cat_dtype is not None
+    if debug:
+        assert cat_dtype is not None
+
+    merged_cat = hstack(tables_to_merge, join_type='exact')
+    del tables_to_merge
 
     for filter_this in missing_filters:
         for name, (dt, _) in cat_dtype.fields.items():
-            if name in keys_join_on:
-                continue
             merged_cat['{}_{}'.format(filter_this, name)] = _get_fill_value(name, dt)
 
     return merged_cat.to_pandas() if return_pandas else merged_cat
@@ -200,7 +202,7 @@ if __name__ == '__main__':
                         help='Skymap tract[s] to process.')
     parser.add_argument('--patches', type=str, default="",
                         help='''
-Skymap patch[es] within each tract to process. Format should be "11,21,31"
+Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
 ''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.hdf5')
