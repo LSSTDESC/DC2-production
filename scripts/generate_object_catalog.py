@@ -62,7 +62,7 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
         if verbose:
             print("Processing tract %d, patch %s" % (tract, patch))
         merged_cat = merge_coadd_forced_src(butler, tract, patch, verbose=verbose, **kwargs)
-        if not merged_cat:
+        if merged_cat is None:
             if verbose:
                 print("  No good entries for tract %d, patch %s" % (tract, patch))
             continue
