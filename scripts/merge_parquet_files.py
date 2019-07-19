@@ -1,25 +1,26 @@
-import sys
+"""
+merge_parquet_files.py
+"""
 
 import pandas as pd
 
-# Write with append for Parquet is not supported as of Pandas 0.23
-# So we build up a dataframe from all tracts and then write once
+def load_parquet_files_into_dataframe(parquet_files):
+    return pd.concat(
+        [pd.read_parquet(f) for f in parquet_files],
+        axis=0,
+        ignore_index=True,
+    )
 
-def load_files_into_dataframe(parquet_files):
-    df = None
-    for data_file in parquet_files:
-        this_df = pd.read_parquet(data_file)
-        if df is None:
-            df = this_df
-        else:
-            df = df.append(this_df)
-
-    return df
-
-
-def run(input_files, output_file='dpdd_object.parquet'):
-    df = load_files_into_dataframe(input_files)
-    df.to_parquet(output_file)
+def run(input_files, output_file, sort_input_files=False, parquet_engine='pyarrow'):
+    if sort_input_files:
+        input_files = sorted(input_files)
+    df = load_parquet_files_into_dataframe(input_files)
+    df.to_parquet(
+        output_file,
+        engine=parquet_engine,
+        compression=None,
+        index=False,
+    )
 
 
 if __name__ == "__main__":
@@ -30,23 +31,25 @@ if __name__ == "__main__":
 
     Examples
     --
-    python %(prog)s dpdd_object_*.parquet
+    python %(prog)s object_4850_*.parquet -o bar/object_tract_4850.parquet --sort-input-files
 
-    Will take the glob of `dpdd_object_*.parquet` file in the current directory
-    and write an output file `dpdd_object.parquet`.
-
-    python %(prog)s foo/dpdd_object_*.parquet --output_file bar/dpdd.parquet
-
-    will take the glob of `foo/dpdd_object_*.parquet` and write an output file
-    `bar/dpdd.parquet`.
+    Will take the glob of `object_4850_*.parquet` file in the current directory
+    merge them, and write an output file `bar/object_tract_4850.parquet`.
     """
 
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument('input_files', type=str, nargs='+', default=[],
                         help='Space-separated list of Parquet files to merge.')
-    parser.add_argument('--output_file', default='dpdd_object.parquet',
+    parser.add_argument('-o', '--output-file', default='merged.parquet',
                         help='Output filepath. (default: %(default)s)')
+    parser.add_argument('-s', '--sort-input-files', action='store_true',
+                        help='Sort input files')
+    parser.add_argument('--parquet_engine', default='pyarrow',
+                        choices=['fastparquet', 'pyarrow'],
+                        help="""(default: %(default)s)""")
+    args = parser.parse_args()
 
-    args = parser.parse_args(sys.argv[1:])
-    run(input_files=args.input_files, output_file=args.output_file)
+    if not args.input_files:
+        parser.error('Must provide input files')
+    run(**vars(args))
