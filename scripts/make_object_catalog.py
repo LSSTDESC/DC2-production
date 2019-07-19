@@ -1,5 +1,5 @@
 """
-generate_object_catalog.py
+make_object_catalog.py
 
 Save catalogs to parquet from forced-photometry coadds across available filters.
 """
