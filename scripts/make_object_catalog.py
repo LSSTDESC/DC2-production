@@ -200,13 +200,13 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
-    parser.add_argument('--patches', type=str, default="",
+    parser.add_argument('-p', '--patches', type=str, default="",
                         help='''
 Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
 ''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062.hdf5')
-    parser.add_argument('--output_dir', default='./',
+    parser.add_argument('-o', '--output-dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', default=True,
                         action='store_true', help='Verbose mode.')
