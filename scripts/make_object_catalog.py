@@ -35,7 +35,7 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
                             parquet_engine='pyarrow',
                             **kwargs):
     """Save catalogs to parquet from forced-photometry coadds across available filters.
-    Iterates through patches, saving each in append mode to the save HDF5 file.
+    Iterates through patches, saving each in append mode to the save parquet file.
     Parameters
     --
     output_dir : str
@@ -49,7 +49,7 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
         With the addition that the comma will be removed from the patch name
         to provide a valid Python identifier: e.g., 'coadd_4849_11'
     overwrite: bool
-        Overwrite an existing HDF file.
+        Overwrite existing output file(s).
     parquet_engine : str, optional
         default is pyarrow
     """
@@ -96,8 +96,8 @@ def generate_object_catalog(output_dir, butler, tract, patches=None,
         del merged_cat
 
 
-def merge_coadd_forced_src(butler, tract, patch, keys_join_on=('id',),
-                           filters='ugrizy', verbose=False, return_pandas=True,
+def merge_coadd_forced_src(butler, tract, patch, filters='ugrizy',
+                           verbose=False, return_pandas=True,
                            debug=False):
     """Load patch catalogs.  Return merged catalog across filters.
 
@@ -200,12 +200,12 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
-    parser.add_argument('-p', '--patches', type=str, default="",
-                        help='''
+    parser.add_argument('-p', '--patch', '--patches', desc='patches', type=str,
+                        default="", help='''
 Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
 ''')
     parser.add_argument('--name', default='object',
-                        help='Base name of files: <name>_tract_5062.hdf5')
+                        help='Base name of files: <name>_tract_5062_11.parquet')
     parser.add_argument('-o', '--output-dir', default='./',
                         help='Output directory.  (default: %(default)s)')
     parser.add_argument('--verbose', default=True,
@@ -227,7 +227,7 @@ Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
                    'z': 'HSC-Z', 'y': 'HSC-Y'}
 
     if len(args.tract) > 1 and args.patches:
-        print("You specified more than 1 tract but only need partical patches??")
+        print("You specified more than 1 tract but only need partial patches??")
 
     for tract in args.tract:
         generate_object_catalog(
