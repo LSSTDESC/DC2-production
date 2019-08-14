@@ -194,7 +194,7 @@ def load_patch(butler_or_repo, tract, patch,
         # Then join in memory space.
         cat = cat.asAstropy().to_pandas()
 
-        calib = butler.get('deepCoadd_calexp_calib', this_data)
+        calib = butler.get('deepCoadd_calexp_photoCalib', this_data)
         calib.setThrowOnNegativeFlux(False)
 
         mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values, cat[flux_names['psf_flux_err']].values)
@@ -317,15 +317,11 @@ A common use-case for this option is quick testing.
                         action='store_true', help='Verbose mode.')
     parser.add_argument('--silent', dest='verbose', action='store_false',
                         help='Turn off verbosity.')
-    parser.add_argument('--hsc', dest='hsc', action='store_true',
-                        help='Uses HSC filters')
     args = parser.parse_args(sys.argv[1:])
 
-    if args.hsc:
-        filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
-                   'z': 'HSC-Z', 'y': 'HSC-Y'}
-    else:
-        filters = {'u': 'u', 'g': 'g', 'r': 'r', 'i': 'i', 'z': 'z', 'y': 'y'}
+    butler = Butler(args.repo)
+    filterList = butler.queryMetadata('raw', ["filter"])
+    filters = dict(zip(filterList, filterList))
 
     for tract in args.tract:
         filebase = '{:s}_tract_{:d}'.format(args.name, tract)
