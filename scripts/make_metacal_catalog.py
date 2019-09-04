@@ -139,7 +139,10 @@ def load_metacal_patch(butler, tract, patch, verbose=False, return_pandas=True,
         assert (metacal['id'] == ref_table['id']).all()
 
     # Dropping redundant columns with the main reference catalog
-    metacal = metacal.drop(["coord_ra", "coord_dec", "parent", "id"], axis=1)
+    del metacal["coord_ra"]
+    del metacal["coord_dec"]
+    del metacal["parent"]
+    del metacal["id"]
 
     return metacal.to_pandas() if return_pandas else metacal
 
