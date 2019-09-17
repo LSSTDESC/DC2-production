@@ -194,7 +194,7 @@ def load_patch(butler_or_repo, tract, patch,
         # Then join in memory space.
         cat = cat.asAstropy().to_pandas()
 
-        calib = butler.get('deepCoadd_calexp_calib', this_data)
+        calib = butler.get('deepCoadd_calexp_photoCalib', this_data)
         calib.setThrowOnNegativeFlux(False)
 
         mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values, cat[flux_names['psf_flux_err']].values)
