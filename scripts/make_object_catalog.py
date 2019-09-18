@@ -200,10 +200,9 @@ if __name__ == '__main__':
                         help='Filepath to LSST DM Stack Butler repository.')
     parser.add_argument('tract', type=int, nargs='+',
                         help='Skymap tract[s] to process.')
-    parser.add_argument('-p', '--patch', '--patches', desc='patches', type=str,
+    parser.add_argument('-p', '--patch', '--patches', dest='patches', type=str,
                         default="", help='''
-Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
-''')
+Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1" ''')
     parser.add_argument('--name', default='object',
                         help='Base name of files: <name>_tract_5062_11.parquet')
     parser.add_argument('-o', '--output-dir', default='./',
@@ -221,7 +220,8 @@ Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
                         help="""(default: %(default)s)""")
     args = parser.parse_args()
 
-    filters = 'ugrizy'
+    #filters = 'ugrizy'
+    filters='u,g,r,i,z,i2,u3,g3,r3,i3,z3'.split(',')
     if args.hsc:
         filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
                    'z': 'HSC-Z', 'y': 'HSC-Y'}
