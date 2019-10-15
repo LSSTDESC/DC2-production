@@ -23,10 +23,10 @@ print(gc.get_catalog_info('description'))
 
 #data=gc.get_quantities([q for q in gc.list_all_quantities()],native_filters=['healpix_pixel == 9813'])
 
-cols=['halo_id','is_central','stellar_mass','position_x','position_y','position_z','position_angle_true','ra','dec','redshift','size_true']
+cols=['galaxy_id','is_central','halo_mass','stellar_mass','ra','dec','redshift','size']
 filters=['u','g','r','i','z','y']
 for f in filters:
-    s="mag_{0},mag_true_{0},Mag_true_{0}_lsst_z0".format(f)
+    s="mag_{0},Mag_true_{0}_lsst_z0".format(f)
     cols+=s.split(',')
 
 print(cols)
@@ -56,9 +56,9 @@ for ipix in healpix_pixels:
     t1=time()
     print("Read {}M data: {:2.1f}s".format(df.index.size/1e6,t1-t0))
     #convert float64 columns to float32
-    for n in cols:
-        if str(df.dtypes[n])=='float64':
-            df[n]=df[n].astype('float32') 
+    #for n in cols:
+    #    if str(df.dtypes[n])=='float64':
+    #        df[n]=df[n].astype('float32') 
     #writing
     #df.to_parquet(parquet_file,append=os.path.exists(parquet_file),
     #                  file_scheme='hive',engine='fastparquet',compression=None)
