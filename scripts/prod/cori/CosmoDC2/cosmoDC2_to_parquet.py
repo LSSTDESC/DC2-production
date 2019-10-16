@@ -1,4 +1,4 @@
-
+# desc_python
 import os
 import sys
 import numpy as np
@@ -23,7 +23,7 @@ print(gc.get_catalog_info('description'))
 
 #data=gc.get_quantities([q for q in gc.list_all_quantities()],native_filters=['healpix_pixel == 9813'])
 
-cols=['galaxy_id','is_central','halo_mass','stellar_mass','ra','dec','redshift','size']
+cols=['galaxy_id','is_central','halo_mass','stellar_mass','ra','dec','redshift']
 filters=['u','g','r','i','z','y']
 for f in filters:
     s="mag_{0},Mag_true_{0}_lsst_z0".format(f)
