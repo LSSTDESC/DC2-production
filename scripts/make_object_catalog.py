@@ -26,7 +26,7 @@ def _get_fill_value(name, dtype):
     fill_value = _default_fill_value.get(kind, np.nan)
     if kind == 'b' and (name.endswith('_flag_bad') or name.endswith('_flag_noGoodPixels')):
         fill_value = True
-    return fill_value
+    return np.array(fill_value, dtype=np.dtype(dtype))
 
 
 def generate_object_catalog(output_dir, butler, tract, patches=None,
@@ -175,6 +175,7 @@ def merge_coadd_forced_src(butler, tract, patch, filters='ugrizy',
         assert all(cat_dtype == cat.dtype for cat in tables_to_merge.values())
 
     merged_cat = ref_table  # merged_cat will start with the reference table
+    merged_cat.meta = None
     for filter_this in filters:
         if filter_this in tables_to_merge:
             cat = tables_to_merge[filter_this]
