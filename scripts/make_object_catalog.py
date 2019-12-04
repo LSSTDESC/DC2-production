@@ -7,7 +7,6 @@ import os
 import re
 
 import numpy as np
-from astropy.table import hstack
 
 from lsst.daf.persistence import Butler
 from lsst.daf.persistence.butlerExceptions import NoResults
@@ -21,12 +20,13 @@ def _ensure_butler_instance(butler_or_repo):
 
 _default_fill_value = {'i': -1, 'b': False, 'U': ''}
 
+
 def _get_fill_value(name, dtype):
     kind = np.dtype(dtype).kind
     fill_value = _default_fill_value.get(kind, np.nan)
     if kind == 'b' and (name.endswith('_flag_bad') or name.endswith('_flag_noGoodPixels')):
         fill_value = True
-    return fill_value
+    return np.array(fill_value, dtype=np.dtype(dtype))
 
 
 def generate_object_catalog(output_dir, butler, tract, patches=None,
@@ -139,10 +139,7 @@ def merge_coadd_forced_src(butler, tract, patch, filters='ugrizy',
     ref_table['tract'] = int(tract)
     ref_table['patch'] = str(patch)
 
-    cat_dtype = None
-    missing_filters = list()
-    tables_to_merge = [ref_table]
-
+    tables_to_merge = dict()
     for filter_this in filters:
         filter_name = filters.get(filter_this) if hasattr(filters, 'get') else filter_this
         this_data_id = dict(tract_patch_data_id, filter=filter_name)
@@ -152,7 +149,6 @@ def merge_coadd_forced_src(butler, tract, patch, filters='ugrizy',
         except NoResults as e:
             if verbose:
                 print("  ", e)
-            missing_filters.append(filter_this)
             continue
 
         cat = cat.asAstropy()
@@ -166,24 +162,29 @@ def merge_coadd_forced_src(butler, tract, patch, filters='ugrizy',
         calib = butler.get('deepCoadd_calexp_photoCalib', this_data_id)
         cat['FLUXMAG0'] = calib.getInstFluxAtZeroMagnitude()
 
-        if cat_dtype is None:
-            cat_dtype = cat.dtype
+        tables_to_merge[filter_this] = cat
 
-        cat.meta = None
-        for name in cat_dtype.names:
-            cat.rename_column(name, '{}_{}'.format(filter_this, name))
-
-        tables_to_merge.append(cat)
+    try:
+        cat_dtype = next(iter(tables_to_merge.values())).dtype
+    except StopIteration:
+        if verbose:
+            print("  No filter can be found in deepCoadd_forced_src")
+        return
 
     if debug:
-        assert cat_dtype is not None
+        assert all(cat_dtype == cat.dtype for cat in tables_to_merge.values())
 
-    merged_cat = hstack(tables_to_merge, join_type='exact')
-    del tables_to_merge
-
-    for filter_this in missing_filters:
-        for name, (dt, _) in cat_dtype.fields.items():
-            merged_cat['{}_{}'.format(filter_this, name)] = _get_fill_value(name, dt)
+    merged_cat = ref_table  # merged_cat will start with the reference table
+    merged_cat.meta = None
+    for filter_this in filters:
+        if filter_this in tables_to_merge:
+            cat = tables_to_merge[filter_this]
+            for name in cat_dtype.names:
+                merged_cat['{}_{}'.format(filter_this, name)] = cat[name]
+            del cat, tables_to_merge[filter_this]
+        else:
+            for name, (dt, _) in cat_dtype.fields.items():
+                merged_cat['{}_{}'.format(filter_this, name)] = _get_fill_value(name, dt)
 
     return merged_cat.to_pandas() if return_pandas else merged_cat
 
