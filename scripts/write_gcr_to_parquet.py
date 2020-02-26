@@ -96,8 +96,8 @@ def write_dataframe_to_files(
     # Append iff the file already exists
     parquet_append = append and os.path.exists(output_filename)
     df.to_parquet(output_filename,
-                  append=parquet_append,
-                  file_scheme=parquet_scheme,
+                  #append=parquet_append,
+                  #file_scheme=parquet_scheme,
                   engine=parquet_engine,
                   compression=parquet_compression)
 
