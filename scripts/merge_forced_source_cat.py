@@ -121,8 +121,19 @@ def load_detector(data_ref, object_table=None, matching_radius=1,
 
     # Calibrate magnitudes and fluxes
     calib = data_ref.get('calexp_photoCalib')
-    # For now we just extract the grey FLUXMAG0
-    cat['FLUXMAG0'] = calib.getInstFluxAtZeroMagnitude()
+
+    mag, mag_err = calib.instFluxToMagnitude(cat[flux_names['psf_flux']].values,
+                                      cat[flux_names['psf_flux_err']].values)
+
+    cat['mag'] = mag
+    cat['mag_err'] = mag_err
+    cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
+                        cat[flux_names['psf_flux_err']])
+
+    # TODO Need to calibrate fluxes as well
+    # For now we'll just save this information in an additional column
+    # to be available further downstream.
+    cat['fluxmag0'] = calib.getInstFluxAtZeroMagnitude()
 
     # Restrict to columns that we need
     cat = cat[columns_to_keep]

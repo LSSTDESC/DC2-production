@@ -186,28 +186,20 @@ def load_detector(data_ref,
 
     # Calibrate magnitudes and fluxes
     calib_dataset_map = {'src': 'calexp', 'deepDiff_diaSrc': 'deepDiff_differenceExp'}
-    try:
-        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_photoCalib')
-        cat['FLUXMAG0'] = calib.getInstFluxAtZeroMagnitude()
-    except AttributeError:
-        calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_calib')
+    calib = data_ref.get(datasetType=calib_dataset_map[dataset]+'_photoCalib')
 
-        calib.setThrowOnNegativeFlux(False)
-
-        mag, mag_err = calib.getMagnitude(cat[flux_names['psf_flux']].values,
+    mag, mag_err = calib.instFluxToMagnitude(cat[flux_names['psf_flux']].values,
                                       cat[flux_names['psf_flux_err']].values)
 
-        cat['mag'] = mag
-        cat['mag_err'] = mag_err
+    cat['mag'] = mag
+    cat['mag_err'] = mag_err
+    cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
+                        cat[flux_names['psf_flux_err']])
 
-        # TODO Need to calibrate fluxes as well
-        # For now we'll just save this information in an additional column
-        # to be available further downstream.
-        flux_mag0, flux_mag0_err = calib.getFluxMag0()
-        cat['fluxmag0'] = flux_mag0
-        
-        cat['SNR'] = np.abs(cat[flux_names['psf_flux']] /
-                            cat[flux_names['psf_flux_err']])
+    # TODO Need to calibrate fluxes as well
+    # For now we'll just save this information in an additional column
+    # to be available further downstream.
+    cat['fluxmag0'] = calib.getInstFluxAtZeroMagnitude()
 
     if (object_table is not None or object_dataset is not None) and (len(cat) > 0):
         # Associate with closest
