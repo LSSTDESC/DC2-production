@@ -142,8 +142,11 @@ def load_metacal_patch(butler, tract, patch, verbose=False, return_pandas=True,
     del metacal["coord_ra"]
     del metacal["coord_dec"]
     del metacal["parent"]
-    del metacal["id"]
 
+    # Store tract and patch info
+    metacal['tract'] = int(tract)
+    metacal['patch'] = str(patch)
+    
     return metacal.to_pandas() if return_pandas else metacal
 
 
