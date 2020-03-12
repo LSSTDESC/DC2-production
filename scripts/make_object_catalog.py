@@ -5,6 +5,7 @@ Save catalogs to parquet from forced-photometry coadds across available filters.
 """
 import os
 import re
+import warnings
 
 import numpy as np
 
@@ -216,19 +217,33 @@ Skymap patch[es] within each tract to process. Format should be "1,1^2,1^3,1"
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing files')
     parser.add_argument('--hsc', dest='hsc', action='store_true',
-                        help='Uses HSC filters')
+                        help='Deprecated. Use `--filters=hsc` instead.')
+    parser.add_argument('--filters', type=str, default='ugrizy',
+                        help='''
+Specify the filter names. Can be comma separated if filter names are more than more character. Can also set to "hsc" or "cfht". (default: %(default)s)''')
     parser.add_argument('--parquet_engine', dest='engine', default='pyarrow',
                         choices=['fastparquet', 'pyarrow'],
                         help="""(default: %(default)s)""")
     args = parser.parse_args()
 
-    filters = 'ugrizy'
     if args.hsc:
+        warnings.warn("Use `--filters=hsc` instead.", DeprecationWarning)
+
+    if args.hsc or args.filters.lower() == 'hsc':
         filters = {'u': 'HSC-U', 'g': 'HSC-G', 'r': 'HSC-R', 'i': 'HSC-I',
                    'z': 'HSC-Z', 'y': 'HSC-Y'}
+    elif args.filters.lower() == 'cfht':
+        filters = 'u,g,r,i,z,i2,u3,g3,r3,i3,z3'.split(',')
+    elif ',' in args.filters:
+        filters = args.filters.split(',')
+    else:
+        filters = args.filters
+
+    if len(set(filters)) != len(filters):
+        parser.error("Has repeated filter names! Make sure --filters is set correctly.")
 
     if len(args.tract) > 1 and args.patches:
-        print("You specified more than 1 tract but only need partial patches??")
+        warnings.warn("You specified more than 1 tract but only need partial patches??")
 
     for tract in args.tract:
         generate_object_catalog(
