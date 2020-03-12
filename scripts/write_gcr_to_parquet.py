@@ -65,7 +65,6 @@ def write_dataframe_to_files(
         parquet_scheme='simple',
         parquet_engine='fastparquet',
         parquet_compression='gzip',
-        append=True,
         verbose=True,
         **kwargs):
     """Write out dataframe to Parquet file.
@@ -76,11 +75,6 @@ def write_dataframe_to_files(
         Pandas DataFrame with the input catalog data to write out.
     output_filename : str, optional
         Output filename. Default is 'cat.parquet'.
-    parquet_scheme : str, optional   ['simple' or 'hive']
-            'simple' stores everything in one file per tract
-            'hive' stores one directory with a _metadata file and then
-                the columns partitioned into row groups.
-            Default is simple
     parquet_engine : str, optional
         Engine to write parquet on disk. Available: fastparquet, pyarrow.
         Default is fastparquet.
@@ -93,11 +87,7 @@ def write_dataframe_to_files(
     """
     if verbose:
         print("Writing chunk {} to Parquet file.".format(df))
-    # Append iff the file already exists
-    parquet_append = append and os.path.exists(output_filename)
     df.to_parquet(output_filename,
-                  #append=parquet_append,
-                  #file_scheme=parquet_scheme,
                   engine=parquet_engine,
                   compression=parquet_compression)
 
