@@ -1,30 +1,37 @@
 #!/usr/bin/env python
 
 """
-Write a GCR Catalog out to a Parquet file.
-
-pandas  # version >= 0.21
-generic-catalog-reader
-LSSTDESC/gcr-catalog
-
-and either
-pyarrow or fastparquet.
+Write a catalog in GCRCatalogs out to a Parquet file
 """
+from argparse import ArgumentParser, RawTextHelpFormatter
 
-
-import os
-import sys
-
-import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 import GCRCatalogs
+
+__all__ = ["convert_cat_to_parquet"]
+
+
+if hasattr(pa.Table, "from_pydict"):
+    # only available in pyarrow >= 0.14.0
+    pa_table_from_pydict = pa.Table.from_pydict
+else:
+    def pa_table_from_pydict(mapping):
+        names = []
+        arrays = []
+        for k, v in mapping.items():
+            names.append(k)
+            arrays.append(pa.array(v))
+        return pa.Table.from_arrays(arrays, names)
 
 
 def convert_cat_to_parquet(reader,
                            output_filename=None,
+                           columns=None,
                            include_native=False,
                            **kwargs):
-    """Save columns from input GCR catalog.
+    """Write a catalog in GCRCatalogs out to a Parquet file
 
     Parameters
     ----------
@@ -35,116 +42,65 @@ def convert_cat_to_parquet(reader,
     ----------------
     output_filename : str, optional
         If None, then will be constructed as '<reader>.parquet'
-    include_native : Include the native quantities from the GCR reader class
-                     in addition to the standardized non-native quantities.
+    columns : list, optional
+        Columns to be stored in the parquet file.
+        If None (default), store all columns (see also `include_native`)
+    include_native : bool, optional (default: False)
+        Include the native quantities from the GCR reader class
+        in addition to the standardized derived quantities.
     **kwargs
-        *kwargs* are optional properties writing the dataframe to files.
-        See `write_dataframe_to_files` for more information.
+        Any other keyword arguments will be passed to `config_overwrite` when loading the catalog
     """
     if output_filename is None:
-        output_filename = '{}.{}'.format(reader, 'parquet')
+        output_filename = str(reader)
+        if kwargs.get('tract'):
+            output_filename += '_tract{}'.format(kwargs['tract'])
+        output_filename += '.parquet'
 
-    cat = GCRCatalogs.load_catalog(reader)
-    # We don't want to use the cache we don't want to use the extra memory
-    # when we know we are just going through the data once.
-    cat.use_cache = False
+    config_overwrite = dict(use_cache=False, **kwargs)
+    cat = GCRCatalogs.load_catalog(reader, config_overwrite=config_overwrite)
 
-    columns = cat.list_all_quantities(include_native=include_native)
+    columns = columns or cat.list_all_quantities(include_native=include_native)
+    chunk_iter = map(pa_table_from_pydict, cat.get_quantities(columns, return_iterator=True))
+    table = next(chunk_iter)
 
-    quantities = cat.get_quantities(columns, return_iterator=True)
-    for quantities_this_chunk in quantities:
-        quantities_this_chunk = pd.DataFrame.from_dict(quantities_this_chunk)
-        write_dataframe_to_files(quantities_this_chunk,
-                                 output_filename=output_filename,
-                                 **kwargs)
-
-
-def write_dataframe_to_files(
-        df,
-        output_filename='cat.parquet',
-        parquet_scheme='simple',
-        parquet_engine='fastparquet',
-        parquet_compression='gzip',
-        verbose=True,
-        **kwargs):
-    """Write out dataframe to Parquet file.
-
-    Parameters
-    ----------
-    df : Pandas DataFrame
-        Pandas DataFrame with the input catalog data to write out.
-    output_filename : str, optional
-        Output filename. Default is 'cat.parquet'.
-    parquet_engine : str, optional
-        Engine to write parquet on disk. Available: fastparquet, pyarrow.
-        Default is fastparquet.
-    parquet_compression : str, optional
-        Compression algorithm to use when writing Parquet files.
-        Potential: gzip, snappy, lzo, uncompressed. Default is gzip.
-        Availability depends on the engine used.
-    verbose : boolean, optional
-        If True, print out debug messages. Default is True.
-    """
-    if verbose:
-        print("Writing chunk {} to Parquet file.".format(df))
-    df.to_parquet(output_filename,
-                  engine=parquet_engine,
-                  compression=parquet_compression)
+    with pq.ParquetWriter(output_filename, table.schema, flavor='spark') as pqwriter:
+        pqwriter.write_table(table)
+        for table in chunk_iter:
+            pqwriter.write_table(table)
 
 
-if __name__ == "__main__":
-    from argparse import ArgumentParser, RawTextHelpFormatter
+def main():
     usage = """
-Produce Parquet output file from a GCR catalog.
+Produce parquet output file from a catalog within GCRCatalogs. Requires pyarrow.
 
-Example:
+For example, to produce an output Parquet file from the 'dc2_object_run2.2i_dr3' GCR catalog:
 
-To produce an output Parquet file from the 'dc2_object_run1.2p' GCR catalog:
+  python %(prog)s dc2_object_run2.2i_dr3
 
-python %(prog)s dc2_object_run1.2p
+By default the output name will be 'dc2_object_run2.2i_dr3.parquet'.
+You could specify a different one on the command line:
 
-By default the output name will be 'dc2_object_run1.2p.parquet'.  You could specify a different one on the command line:
+  python %(prog)s dc2_object_run2.2i_dr3 --output_filename dc2_object_test.parquet
 
-python %(prog)s dc2_object_run1.2p --output_filename dc2_object.parquet
+For catalogs that use a reader that is based on GCRCatalogs.DC2DMTractCatalog (e.g., newer object catalogs),
+one can specify a tract to process:
 
-You can also specify the Parquet scheme, engine, and compression to use.
+    python %(prog)s dc2_object_run2.2i_dr3 --tract 3830
 
-python %(prog)s
-    --parquet_scheme hive
-    --parquet_engine fastparquet
-    --parquet_compression gzip
+This would only process one tract and produce the file 'dc2_object_run2.2i_dr3_tract3830.parquet'
 
-The selected engine needs to be installed on your machine to use.  E.g.,
-
-pip install fastparquet --user
-pip install pyarrow --user
-
-Potential compression algorithms are gzip (default), snappy, lzo, uncompressed.
-Availability depends on the installation of the engine used.
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
-    parser.add_argument('reader', help='GCR catalog to read.')
-    parser.add_argument('--output_filename', default=None,
-                        help='Output filename')
-    parser.add_argument('--include_native', action='store_true', default=False,
-                        help='Include the native along with the non-native GCR catalog quantities')
-    parser.add_argument('--parquet_scheme', default='simple',
-                        choices=['hive', 'simple'],
-                        help="""'simple': one file.
-'hive': one directory with a metadata file and
-the data partitioned into row groups.
-(default: %(default)s)
-""")
-    parser.add_argument('--parquet_engine', default='fastparquet',
-                        choices=['fastparquet', 'pyarrow'],
-                        help="""(default: %(default)s)""")
-    parser.add_argument('--parquet_compression', default='gzip',
-                        choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
-                        help="""(default: %(default)s)""")
-    parser.add_argument('--verbose', default=False, action='store_true')
+    parser.add_argument('reader', help='Catalog (name as in GCRCatalogs) to read.')
+    parser.add_argument('--output_filename', help='Output filename. Default to <reader>.parquet')
+    parser.add_argument('--include_native', action='store_true',
+                        help='Include the native quantities along with the derived GCR quantities')
+    parser.add_argument('--tract', type=int, help='tract to process')
 
-    args = parser.parse_args()
-    kwargs = vars(args)
+    convert_cat_to_parquet(**vars(parser.parse_args()))
 
-    convert_cat_to_parquet(**kwargs)
+
+if __name__ == "__main__":
+    main()
