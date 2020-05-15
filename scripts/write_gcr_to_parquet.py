@@ -42,7 +42,10 @@ def convert_cat_to_parquet(reader,
         See `write_dataframe_to_files` for more information.
     """
     if output_filename is None:
-        output_filename = '{}.{}'.format(reader, 'parquet')
+        if 'tract' in kwargs:
+            output_filename = '{}_{}.{}'.format(reader, kwargs['tract'], 'parquet')
+        else:
+            output_filename = '{}.{}'.format(reader, 'parquet')
 
     cat = GCRCatalogs.load_catalog(reader)
     # We don't want to use the cache we don't want to use the extra memory
@@ -136,13 +139,14 @@ Availability depends on the installation of the engine used.
 the data partitioned into row groups.
 (default: %(default)s)
 """)
-    parser.add_argument('--parquet_engine', default='fastparquet',
+    parser.add_argument('--parquet_engine', default='pyarrow',
                         choices=['fastparquet', 'pyarrow'],
                         help="""(default: %(default)s)""")
     parser.add_argument('--parquet_compression', default='gzip',
                         choices=['gzip', 'snappy', 'lzo', 'uncompressed'],
                         help="""(default: %(default)s)""")
     parser.add_argument('--verbose', default=False, action='store_true')
+    parser.add_argument('--tract', default=None, help='tract to process')
 
     args = parser.parse_args()
     kwargs = vars(args)
