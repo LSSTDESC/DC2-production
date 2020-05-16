@@ -52,10 +52,6 @@ def convert_cat_to_parquet(reader,
         Any other keyword arguments will be passed to `config_overwrite` when loading the catalog
     """
 
-    # FIXME: A temporary fix. Should be removed when https://github.com/LSSTDESC/gcr-catalogs/pull/437 is merged
-    if 'tract' in kwargs and kwargs['tract'] is None:
-        del kwargs['tract']
-
     if output_filename is None:
         output_filename = str(reader)
         if kwargs.get('tract'):
