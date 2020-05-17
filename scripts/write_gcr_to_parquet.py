@@ -62,7 +62,16 @@ def convert_cat_to_parquet(reader,
     cat = GCRCatalogs.load_catalog(reader, config_overwrite=config_overwrite)
 
     columns = columns or cat.list_all_quantities(include_native=include_native)
-    chunk_iter = map(pa_table_from_pydict, cat.get_quantities(columns, return_iterator=True))
+
+    def chunk_data_generator():
+        for data in cat.get_quantities(columns, return_iterator=True):
+            table = pa_table_from_pydict(data)
+            del data
+            if hasattr(cat, "close_all_file_handles"):
+                cat.close_all_file_handles()
+            yield table
+
+    chunk_iter = chunk_data_generator()
     table = next(chunk_iter)
 
     with pq.ParquetWriter(output_filename, table.schema, flavor='spark') as pqwriter:
