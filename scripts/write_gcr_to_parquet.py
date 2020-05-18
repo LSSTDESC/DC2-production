@@ -67,8 +67,10 @@ def convert_cat_to_parquet(reader,
         for data in cat.get_quantities(columns, return_iterator=True):
             table = pa_table_from_pydict(data)
             del data
-            if hasattr(cat, "close_all_file_handles"):
+            try:
                 cat.close_all_file_handles()
+            except (AttributeError, TypeError):
+                pass
             yield table
 
     chunk_iter = chunk_data_generator()
