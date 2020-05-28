@@ -61,7 +61,12 @@ def convert_cat_to_parquet(reader,
     config_overwrite = dict(use_cache=False, **kwargs)
     cat = GCRCatalogs.load_catalog(reader, config_overwrite=config_overwrite)
 
-    columns = columns or cat.list_all_quantities(include_native=include_native)
+    if not columns:
+        columns = cat.list_all_quantities(include_native=include_native)
+        if not include_native:
+            for col in ("tract", "patch"):
+                if cat.has_quantity(col):
+                    columns.append(col)
 
     def chunk_data_generator():
         for data in cat.get_quantities(columns, return_iterator=True):
