@@ -65,7 +65,7 @@ def convert_cat_to_parquet(reader,
         columns = cat.list_all_quantities(include_native=include_native)
         if not include_native:
             for col in ("tract", "patch"):
-                if cat.has_quantity(col):
+                if col not in columns and cat.has_quantity(col):
                     columns.append(col)
 
     def chunk_data_generator():
