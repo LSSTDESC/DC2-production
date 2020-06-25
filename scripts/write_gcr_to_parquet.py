@@ -95,7 +95,7 @@ def convert_cat_to_parquet(reader,
     if partition:
         for i, table in enumerate(chunk_iter):
             if is_tract_catalog:
-                output_filename_this = output_filename.format('_tract{}'.format(table['tract'][0]))
+                output_filename_this = output_filename.format('_tract{}'.format(table.column('tract')[0]))
             else:
                 output_filename_this = output_filename.format('_chunk{}'.format(i))
             with pq.ParquetWriter(output_filename_this, table.schema, flavor='spark') as pqwriter:
