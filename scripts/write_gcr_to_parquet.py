@@ -52,7 +52,7 @@ def convert_cat_to_parquet(reader,
         Include the native quantities from the GCR reader class
         in addition to the standardized derived quantities.
     partition : bool, optional (default: False)
-        If true, save each partition as a single file
+        If true, save each chunk as a separate file
     **kwargs
         Any other keyword arguments will be passed to `config_overwrite` when loading the catalog
     """
@@ -141,7 +141,7 @@ This would only process one tract and produce the file 'dc2_object_run2.2i_dr3_t
     parser.add_argument('--output_filename', help='Output filename. Default to <reader>.parquet')
     parser.add_argument('--include_native', action='store_true',
                         help='Include the native quantities along with the derived GCR quantities')
-    parser.add_argument('--partition', action='store_true', help='Store each partition as a single file')
+    parser.add_argument('--partition', action='store_true', help='Store each chunk as a separate file')
     parser.add_argument('--tract', type=int, help='tract to process')
 
     convert_cat_to_parquet(**vars(parser.parse_args()))
