@@ -9,6 +9,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 import GCRCatalogs
+from GCRCatalogs import BaseGenericCatalog
+from GCRCatalogs.dc2_dm_catalog import DC2DMTractCatalog
 
 __all__ = ["convert_cat_to_parquet"]
 
@@ -30,6 +32,7 @@ def convert_cat_to_parquet(reader,
                            output_filename=None,
                            columns=None,
                            include_native=False,
+                           partition=False,
                            **kwargs):
     """Write a catalog in GCRCatalogs out to a Parquet file
 
@@ -48,27 +51,67 @@ def convert_cat_to_parquet(reader,
     include_native : bool, optional (default: False)
         Include the native quantities from the GCR reader class
         in addition to the standardized derived quantities.
+    partition : bool, optional (default: False)
+        If true, save each chunk as a separate file
     **kwargs
         Any other keyword arguments will be passed to `config_overwrite` when loading the catalog
     """
 
+    if isinstance(reader, BaseGenericCatalog):
+        cat = reader
+    else:
+        config_overwrite = dict(use_cache=False, **kwargs)
+        cat = GCRCatalogs.load_catalog(reader, config_overwrite=config_overwrite)
+
+    is_tract_catalog = isinstance(cat, DC2DMTractCatalog)
+
+    if not columns:
+        columns = cat.list_all_quantities(include_native=include_native)
+        if is_tract_catalog and not include_native:
+            for col in ("tract", "patch"):
+                if col not in columns and cat.has_quantity(col):
+                    columns.append(col)
+
+    def chunk_data_generator():
+        for data in cat.get_quantities(columns, return_iterator=True):
+            table = pa_table_from_pydict(data)
+            del data
+            try:
+                cat.close_all_file_handles()
+            except (AttributeError, TypeError):
+                pass
+            yield table
+
     if output_filename is None:
-        output_filename = str(reader)
-        if kwargs.get('tract'):
-            output_filename += '_tract{}'.format(kwargs['tract'])
-        output_filename += '.parquet'
+        output_filename = str(reader) + '{}.parquet'
+    elif '{}' not in output_filename:
+        if output_filename.endswith('.parquet'):
+            output_filename = output_filename[:-8] + '{}.parquet'
+        else:
+            output_filename = output_filename + '{}'
 
-    config_overwrite = dict(use_cache=False, **kwargs)
-    cat = GCRCatalogs.load_catalog(reader, config_overwrite=config_overwrite)
+    chunk_iter = chunk_data_generator()
 
-    columns = columns or cat.list_all_quantities(include_native=include_native)
-    chunk_iter = map(pa_table_from_pydict, cat.get_quantities(columns, return_iterator=True))
-    table = next(chunk_iter)
+    if partition:
+        for i, table in enumerate(chunk_iter):
+            if is_tract_catalog:
+                output_filename_this = output_filename.format('_tract{}'.format(table.column('tract')[0]))
+            else:
+                output_filename_this = output_filename.format('_chunk{}'.format(i))
+            with pq.ParquetWriter(output_filename_this, table.schema, flavor='spark') as pqwriter:
+                pqwriter.write_table(table)
 
-    with pq.ParquetWriter(output_filename, table.schema, flavor='spark') as pqwriter:
-        pqwriter.write_table(table)
-        for table in chunk_iter:
+    else:
+        if is_tract_catalog and kwargs.get('tract'):
+            output_filename_this = output_filename.format('_tract{}'.format(kwargs['tract']))
+        else:
+            output_filename_this = output_filename.format('')
+
+        table = next(chunk_iter)
+        with pq.ParquetWriter(output_filename_this, table.schema, flavor='spark') as pqwriter:
             pqwriter.write_table(table)
+            for table in chunk_iter:
+                pqwriter.write_table(table)
 
 
 def main():
@@ -98,6 +141,7 @@ This would only process one tract and produce the file 'dc2_object_run2.2i_dr3_t
     parser.add_argument('--output_filename', help='Output filename. Default to <reader>.parquet')
     parser.add_argument('--include_native', action='store_true',
                         help='Include the native quantities along with the derived GCR quantities')
+    parser.add_argument('--partition', action='store_true', help='Store each chunk as a separate file')
     parser.add_argument('--tract', type=int, help='tract to process')
 
     convert_cat_to_parquet(**vars(parser.parse_args()))
