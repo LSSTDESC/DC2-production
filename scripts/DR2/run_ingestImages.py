@@ -34,9 +34,8 @@ with sqlite3.connect(opsim_db_file) as conn:
     visits = list(df['obsHistID'])
 
 # Loop over visits and find directory of raw image files for each visit.
-#raw_file_dirs = '/global/cfs/cdirs/lsst/production/DC2_ImSim/Run3.1i/sim/y*-ddf'
-raw_file_dirs = '/global/cfs/cdirs/lsst/production/DC2_ImSim/Run2.2i/sim/y*-wfd'
-run22 = 'Run2.2i' in raw_file_dirs
+run = 'Run3.1i'
+raw_file_dirs = f'/global/cfs/cdirs/lsst/production/DC2_ImSim/{run}/sim/y*-???'
 
 repo = 'repo'
 
@@ -51,7 +50,7 @@ for visit in visits:
         # Directory with raw files not found for this visit.  Identify
         # it as missing if it overlaps the DDF or if we are ingesting
         # Run2.2i data.
-        if run22 or visit in ddf_visits:
+        if (run == 'Run2.2i') or (visit in ddf_visits):
             missing.append(visit)
     else:
         command = f'ingestImages.py {repo} {visit_dir}/lsst*.fits --ignore-ingested'
@@ -60,5 +59,5 @@ for visit in visits:
         subprocess.check_call(command, shell=True)
         print(f"{visit} ingest time:", time.time() - t0)
 
-print("# DDF visits found:", len(found))
-print("# DDF visits missing:", len(missing))
+print(f"# {run} visits found:", len(found))
+print(f"# {run} visits missing:", len(missing))
