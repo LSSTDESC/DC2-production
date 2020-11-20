@@ -16,10 +16,17 @@ def is_dir_or_link(path):
     """Alias for `os.path.isdir(path) or os.path.islink(path)`"""
     return os.path.isdir(path) or os.path.islink(path)
 
+def make_symlink(src, dest, dry_run=False):
+    """Make the symlink."""
+    print(f"{src} -> {dest}")
+    if dry_run:
+        return None
+    return os.symlink(src, dest)
+
 repo = 'repo'
 rerun_dir = os.path.join(repo, 'rerun', 'dr2-calexp')
-calexp_dir = ('/global/cfs/cdirs/lsst/production/DC2_ImSim/Run2.2i/'
-              'desc_dm_drp/v19.0.0-v1/rerun/run2.2i-calexp-v1')
+calexp_dir = ('/global/cscratch1/sd/descdm/DC2/Run2.2i-parsl/v19.0.0-v1/'
+              'rerun/run2.2i-calexp-v1-copy')
 
 with sqlite3.connect(os.path.join(repo, 'registry.sqlite3')) as conn:
     df = pd.read_sql('select * from raw', conn)
@@ -37,7 +44,7 @@ for dataset_dir in dataset_dirs:
         if not is_dir_or_link(dest_dir):
             # Make symlink to Run2.2i visit folder if there is no
             # Run3.1i folder or an already existing symlink.
-            os.symlink(src_dir, dest_dir)
+            make_symlink(src_dir, dest_dir)
             continue
         if os.path.islink(dest_dir):
             continue
@@ -47,7 +54,7 @@ for dataset_dir in dataset_dirs:
             dest_raft_dir = os.path.join(dest_dir,
                                          os.path.basename(src_raft_dir))
             if not is_dir_or_link(dest_raft_dir):
-                os.symlink(src_raft_dir, dest_raft_dir)
+                make_symlink(src_raft_dir, dest_raft_dir)
                 continue
             if os.path.islink(dest_raft_dir):
                 continue
@@ -57,4 +64,4 @@ for dataset_dir in dataset_dirs:
                 dest_item = os.path.join(dest_raft_dir,
                                          os.path.basename(src_item))
                 if not os.path.isfile(dest_item):
-                    os.symlink(src_item, dest_item)
+                    make_symlink(src_item, dest_item)

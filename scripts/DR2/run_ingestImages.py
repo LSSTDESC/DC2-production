@@ -22,8 +22,8 @@ opsim_db_file \
 
 # MJD values corresponding to y1 and y2 selections.
 t0 = 59580               # start of minion 1016 survey.
-t1 = t0 + 365
-t2 = t0 + 2.*365
+t1 = 59945.12
+t2 = 60309.29
 
 # Get y1 visit list for WFD visits (propID=54).
 tmax = t1
@@ -34,7 +34,8 @@ with sqlite3.connect(opsim_db_file) as conn:
     visits = list(df['obsHistID'])
 
 # Loop over visits and find directory of raw image files for each visit.
-run = 'Run3.1i'
+#run = 'Run3.1i'
+run = 'Run2.2i'
 raw_file_dirs = f'/global/cfs/cdirs/lsst/production/DC2_ImSim/{run}/sim/y*-???'
 
 repo = 'repo'
