@@ -142,7 +142,17 @@ def save_df_to_disk(df, output_dir, name="truth", silent=False, **kwargs):
 
 
 def main():
-    usage = """TODO: add usage
+    usage = """Merge truth catalogs for a given tract, and then, optionally, match to object catalog
+
+To merge a repartitioned truth catalog, run
+  python %(prog)s /path/to/repartitioned/truth/<tract>
+
+Usually you may want to match with the object catalog too:
+  python %(prog)s /path/to/repartitioned/truth/<tract> --object=/path/to/object-catalog_tract<tract>.parquet
+
+If you have a ready-to-use truth catalog, you can skip the merge step, and only run the matching code:
+  python %(prog)s /path/to/truth.parquet --object=/path/to/object-catalog_tract<tract>.parquet --matching-only
+
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
@@ -153,12 +163,20 @@ def main():
     parser.add_argument("--object-catalog-path", help="Path to the object catalog for sky match")
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--matching-only", action="store_true")
 
     args = parser.parse_args()
 
-    df = merge_truth_per_tract(**vars(args))
+    if not args.matching_only:
+        df = merge_truth_per_tract(**vars(args))
+
     if args.object_catalog_path:
+        if args.matching_only:
+            df = args.input_dir
         df = match_object_with_merged_truth(df, args.object_catalog_path, **vars(args))
+    elif args.matching_only:
+        parser.error("--object-catalog-path must be specified when --matching-only is set.")
+
     save_df_to_disk(df, **vars(args))
 
 
