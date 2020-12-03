@@ -33,8 +33,27 @@ def repartition_into_tracts(
     silent=False,
     **kwargs
 ):
-    """
-    TODO: add docstring
+    """ Take a parquet catalog and split it into tracts according to a given skymap, and write to disk
+
+    Parameters
+    ----------
+    input_file : str
+        Path to the input parquet file.
+    output_root_dir : str
+        Path to the output directory. The output files will have the following filename
+        <output_root_dir>/<tract>/<input_file_basename>
+    skymap_source_repo : str
+        Path or existing key if desc_dc2_dm_data.REPOS to indicate the bulter repo for loading skymap
+
+    Optional Parameters
+    ----------------
+    ra_label : str, optional
+        Column name for RA, default to 'ra'. The unit is assumed to be degrees.
+    dec_label : str, optional
+        Column name for Dec, default to 'dec'. The unit is assumed to be degrees.
+        If None (default), store all columns (see also `include_native`)
+    silent : bool, optional (default: False)
+        If true, turn off most printout.
     """
     my_print = (lambda x: None) if silent else print
     tqdm_disable = silent or None
@@ -65,8 +84,17 @@ def repartition_into_tracts(
 
 
 def main():
-    usage = """
-    TODO: add usage
+    usage = """Take a parquet catalog and split it into tracts according to a given skymap, and write to disk
+
+For example, to repartition a truth catalog, you can run
+
+  python %(prog)s truth_summary_hp10068.parquet -o $CSCRATCH/truth_repartition
+
+The output files will be put into directories:
+   $CSCRATCH/truth_repartition/3259/truth_summary_hp10068.parquet
+   $CSCRATCH/truth_repartition/3260/truth_summary_hp10068.parquet
+   ...
+With each tract directory can be then merged to produce a single file.
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
