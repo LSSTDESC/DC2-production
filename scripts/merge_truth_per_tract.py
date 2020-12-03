@@ -131,9 +131,13 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
     return full_table
 
 
-def save_df_to_disk(df, output_dir, name="truth", **kwargs):
+def save_df_to_disk(df, output_dir, name="truth", silent=False, **kwargs):
+    my_print = (lambda x: None) if silent else print
+
     tract = df.loc[0, "tract"]
     output_path = os.path.join(output_dir, "{}_tract{}.parquet".format(name, tract))
+
+    my_print("Writing output to disk at", output_path)
     df.to_parquet(output_path, index=False)
 
 
@@ -144,10 +148,9 @@ def main():
                             formatter_class=RawTextHelpFormatter)
     parser.add_argument("input_dir", help="Input directory that corresponds to one tract")
     parser.add_argument('--name', default='truth',
-                        help='Base name of files: <name>_tract_5062.parquet')
-    parser.add_argument('-o', '--output-dir', default='.',
-                        help='Output directory.  (default: %(default)s)')
-    parser.add_argument("--object-catalog-path")
+                        help='Base name of files: <name>_tract5062.parquet (default: %(default)s)')
+    parser.add_argument('-o', '--output-dir', default='.', help='Output directory.  (default: %(default)s)')
+    parser.add_argument("--object-catalog-path", help="Path to the object catalog for sky match")
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--silent", action="store_true")
 
