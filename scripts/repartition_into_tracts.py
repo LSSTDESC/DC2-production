@@ -56,7 +56,7 @@ def repartition_into_tracts(
         Path to the output directory. The output files will have the following filename
         <output_root_dir>/<tract>/<input_file_basename>
     skymap_source_repo : str
-        Path or existing key if desc_dc2_dm_data.REPOS to indicate the bulter repo for loading skymap
+    Path or existing key if desc_dc2_dm_data.REPOS to indicate the butler repo for loading skymap
 
     Optional Parameters
     ----------------
