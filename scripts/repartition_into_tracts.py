@@ -5,8 +5,10 @@ Repartition a parquet file into tracts
 Author: Yao-Yuan Mao
 """
 import os
+import multiprocessing as mp
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -25,12 +27,22 @@ def get_tract_patch(skymap, ra, dec):
     return tractInfo.getId(), "{},{}".format(*patchInfo.getIndex())
 
 
+def get_tract_patch_arrays(skymap, ra_arr, dec_arr, disable_tqdm=None):
+    tract, patch = [], []
+    for ra, dec in tqdm(zip(ra_arr, dec_arr), total=len(ra_arr), disable=disable_tqdm):
+        tract_this, patch_this = get_tract_patch(skymap, ra, dec)
+        tract.append(tract_this)
+        patch.append(patch_this)
+    return tract, patch
+
+
 def repartition_into_tracts(
     input_file,
     output_root_dir,
     skymap_source_repo,
     ra_label="ra",
     dec_label="dec",
+    n_cores=None,
     silent=False,
     **kwargs
 ):
@@ -66,15 +78,17 @@ def repartition_into_tracts(
     my_print("Loading input parquet file", input_file)
     df = pd.read_parquet(input_file)
 
-    my_print("Finding tract and patch for each row")
-    tract, patch = [], []
-    for ra, dec in tqdm(zip(df[ra_label], df[dec_label]), total=len(df), disable=tqdm_disable):
-        tract_this, patch_this = get_tract_patch(skymap, ra, dec)
-        tract.append(tract_this)
-        patch.append(patch_this)
-    df["tract"] = tract
-    df["patch"] = patch
-    del tract, patch
+    n_cores = n_cores or os.cpu_count
+    my_print("Finding tract and patch for each row, using", n_cores, "cores")
+    ra_split = np.array_split(df[ra_label].values, n_cores)
+    dec_split = np.array_split(df[dec_label].values, n_cores)
+    tqdm_split = [True] * n_cores
+    tqdm_split[0] = tqdm_disable
+    with mp.Pool(n_cores) as pool:
+        tractpatch = pool.map(lambda args: get_tract_patch_arrays(skymap, *args), zip(ra_split, dec_split, tqdm_split))
+    df["tract"] = np.concatenate([tp[0] for tp in tractpatch])
+    df["patch"] = np.concatenate([tp[1] for tp in tractpatch])
+    del tractpatch
 
     my_print("Writing out parquet file for each tract in", output_root_dir)
     for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
