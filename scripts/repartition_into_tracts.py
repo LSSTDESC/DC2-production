@@ -80,15 +80,17 @@ def repartition_into_tracts(
 
     n_cores = n_cores or os.cpu_count() or 1
     my_print("Finding tract and patch for each row, using", n_cores, "cores")
-    ra_split = np.array_split(df[ra_label].values, n_cores)
-    dec_split = np.array_split(df[dec_label].values, n_cores)
-    tqdm_split = [True] * n_cores
-    tqdm_split[0] = tqdm_disable
+
+    skymap_arr = [skymap] * n_cores
+    ra_arr = np.array_split(df[ra_label].values, n_cores)
+    dec_arr = np.array_split(df[dec_label].values, n_cores)
+    tqdm_arr = [True] * n_cores
+    tqdm_arr[0] = tqdm_disable
     with mp.Pool(n_cores) as pool:
-        tractpatch = pool.map(lambda args: get_tract_patch_arrays(skymap, *args), zip(ra_split, dec_split, tqdm_split))
+        tractpatch = pool.starmap(get_tract_patch_arrays, zip(skymap_arr, ra_arr, dec_arr, tqdm_arr))
     df["tract"] = np.concatenate([tp[0] for tp in tractpatch])
     df["patch"] = np.concatenate([tp[1] for tp in tractpatch])
-    del tractpatch
+    del skymap_arr, skymap, ra_arr, dec_arr, tqdm_arr, tractpatch
 
     my_print("Writing out parquet file for each tract in", output_root_dir)
     for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
@@ -117,6 +119,7 @@ With each tract directory can be then merged to produce a single file.
     parser.add_argument("-o", '--output-root-dir', default='.', help="Output root directory.")
     parser.add_argument("--skymap-source-repo", default="2.2i_dr6_wfd")
     parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--n-cores", default=0, type=int)
 
     repartition_into_tracts(**vars(parser.parse_args()))
 
