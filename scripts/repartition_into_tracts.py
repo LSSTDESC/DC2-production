@@ -2,6 +2,7 @@
 
 """
 Repartition a parquet file into tracts
+Author: Yao-Yuan Mao
 """
 import os
 from argparse import ArgumentParser, RawTextHelpFormatter
