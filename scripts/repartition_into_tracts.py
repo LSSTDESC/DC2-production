@@ -56,7 +56,7 @@ def repartition_into_tracts(
     for tract, df_this_tract in df.groupby("tract"):
         output_dir = os.path.join(output_root_dir, str(tract))
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, input_file)
+        output_path = os.path.join(output_dir, os.path.basename(input_file))
         df_this_tract.to_parquet(output_path, index=False)
 
 
