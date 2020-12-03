@@ -64,7 +64,6 @@ def repartition_into_tracts(
         Column name for RA, default to 'ra'. The unit is assumed to be degrees.
     dec_label : str, optional
         Column name for Dec, default to 'dec'. The unit is assumed to be degrees.
-        If None (default), store all columns (see also `include_native`)
     silent : bool, optional (default: False)
         If true, turn off most printout.
     """
@@ -80,7 +79,6 @@ def repartition_into_tracts(
 
     n_cores = n_cores or os.cpu_count() or 1
     my_print("Finding tract and patch for each row, using", n_cores, "cores")
-
     skymap_arr = [skymap] * n_cores
     ra_arr = np.array_split(df[ra_label].values, n_cores)
     dec_arr = np.array_split(df[dec_label].values, n_cores)
