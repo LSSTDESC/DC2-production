@@ -78,7 +78,7 @@ def repartition_into_tracts(
     my_print("Loading input parquet file", input_file)
     df = pd.read_parquet(input_file)
 
-    n_cores = n_cores or os.cpu_count
+    n_cores = n_cores or os.cpu_count() or 1
     my_print("Finding tract and patch for each row, using", n_cores, "cores")
     ra_split = np.array_split(df[ra_label].values, n_cores)
     dec_split = np.array_split(df[dec_label].values, n_cores)
