@@ -30,21 +30,25 @@ def repartition_into_tracts(
     skymap_source_repo,
     ra_label="ra",
     dec_label="dec",
+    silent=False,
     **kwargs
 ):
     """
     TODO: add docstring
     """
-    # obtain skymap
+    my_print = (lambda x: None) if silent else print
+    tqdm_disable = silent or None
+
     repo = desc_dc2_dm_data.REPOS.get(skymap_source_repo, skymap_source_repo)
+    my_print("Obtain skymap from", repo)
     skymap = Butler(repo).get("deepCoadd_skyMap")
 
-    # load input parquet file
+    my_print("Loading input parquet file", input_file)
     df = pd.read_parquet(input_file)
 
-    # find tract and patch for each row
+    my_print("Finding tract and patch for each row")
     tract, patch = [], []
-    for ra, dec in tqdm(zip(df[ra_label], df[dec_label]), total=len(df)):
+    for ra, dec in tqdm(zip(df[ra_label], df[dec_label]), total=len(df), disable=tqdm_disable):
         tract_this, patch_this = get_tract_patch(skymap, ra, dec)
         tract.append(tract_this)
         patch.append(patch_this)
@@ -52,8 +56,8 @@ def repartition_into_tracts(
     df["patch"] = patch
     del tract, patch
 
-    # write out each tract
-    for tract, df_this_tract in df.groupby("tract"):
+    my_print("Writing out parquet file for each tract in", output_root_dir)
+    for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
         output_dir = os.path.join(output_root_dir, str(tract))
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, os.path.basename(input_file))
@@ -69,6 +73,7 @@ def main():
     parser.add_argument("input_file", help="Parquet file to read.")
     parser.add_argument("-o", '--output-root-dir', default='.', help="Output root directory.")
     parser.add_argument("--skymap-source-repo", default="2.2i_dr6_wfd")
+    parser.add_argument("--silent", action="store_true")
 
     repartition_into_tracts(**vars(parser.parse_args()))
 
