@@ -7,6 +7,7 @@ import os
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import pandas as pd
+from tqdm import tqdm
 
 import lsst.geom
 from lsst.daf.persistence import Butler
@@ -35,7 +36,7 @@ def repartition_into_tracts(
     TODO: add docstring
     """
     # obtain skymap
-    repo = desc_dc2_dm_data.REPO.get(skymap_source_repo, skymap_source_repo)
+    repo = desc_dc2_dm_data.REPOS.get(skymap_source_repo, skymap_source_repo)
     skymap = Butler(repo).get("deepCoadd_skyMap")
 
     # load input parquet file
@@ -43,7 +44,7 @@ def repartition_into_tracts(
 
     # find tract and patch for each row
     tract, patch = [], []
-    for ra, dec in zip(df[ra_label], df[dec_label]):
+    for ra, dec in tqdm(zip(df[ra_label], df[dec_label]), total=len(df)):
         tract_this, patch_this = get_tract_patch(skymap, ra, dec)
         tract.append(tract_this)
         patch.append(patch_this)
