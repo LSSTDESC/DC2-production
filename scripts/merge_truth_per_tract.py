@@ -6,6 +6,7 @@ Author: Yao-Yuan Mao
 """
 import os
 import re
+import warnings
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import numpy as np
@@ -15,8 +16,12 @@ import pandas as pd
 __all__ = ["merge_truth_per_tract", "match_object_with_merged_truth"]
 
 
-def merge_truth_per_tract(input_dir, validate=False, silent=False, **kwargs):
-    """Merge all the truth catalogs in one single tract directory
+def merge_truth_per_tract(input_dir, truth_types=("gal", "star", "sn"), validate=False, silent=False, **kwargs):
+    """Merge all the truth catalogs in one single tract directory.
+
+    This function assumes the truth catalogs are in parquet format and have specifc file name patterns.
+    The filename prefix should match one of those specified in truth_types.
+    For galaxy type, it is further assumed that the cosmodc2 healpix id is embedded in the filename.
 
     Parameters
     ----------
@@ -25,6 +30,8 @@ def merge_truth_per_tract(input_dir, validate=False, silent=False, **kwargs):
 
     Optional Parameters
     ----------------
+    truth_types : tuple of str, optional (default: ("gal", "star", "sn"))
+        The types of truth objects. The string should be the prefix of truth files.
     validate : bool, optional (default: False)
         If true, check the tract column has only one value
     silent : bool, optional (default: False)
@@ -36,19 +43,35 @@ def merge_truth_per_tract(input_dir, validate=False, silent=False, **kwargs):
     files_to_merge = sorted(os.listdir(input_dir))
     df_to_merge = []
     for filename in files_to_merge:
+
         my_print("Loading", filename)
+
+        # determine truth type
+        type_code = 0
+        for i, type_prefix in enumerate(truth_types):
+            if filename.startswith(type_prefix):
+                type_code = i + 1
+
+        # obtain healpix id for galaxies (type_code == 1)
+        healpix = -1
+        if type_code == 1:
+            m = re.search(r"_hp(\d+)\b", filename)
+            if m is None:
+                warnings.warn("Cannot identify healpix id in", filename)
+            else:
+                healpix = int(m.groups()[0])
+
+        # read in files and add columns
         df = pd.read_parquet(os.path.join(input_dir, filename))
-        m = re.search(r"_hp(\d+)\b", filename)
-        if m is not None:
-            hp = int(m.groups()[0])
-            df["cosmodc2_hp"] = hp
-            df["cosmodc2_id"] = df["id"]
-            df["id"] = df["id"].astype(str)
-        else:
-            df["cosmodc2_hp"] = -1
-            df["cosmodc2_id"] = -1
-        df["is_sn"] = True if filename.startswith("sn_") else False
+        df["truth_type"] = type_code
+        df["cosmodc2_hp"] = healpix
+        df["cosmodc2_id"] = df["id"] if type_code == 1 else -1
+        df["id"] = df["id"].astype(str)
+        # TODO: this is added to maintain compatibility with validateion notebook. Remove this when finalize schema.
+        df["is_sn"] = (type_code == 3)
+
         df_to_merge.append(df)
+
     df = pd.concat(df_to_merge, ignore_index=True)
     del df_to_merge
 
@@ -63,10 +86,10 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
 
     Parameters
     ----------
-    truth_cat : str or pd.DataFrame
-        Truth catalog or its path
-    object_cat : str or pd.DataFrame
-        Object catalog or its path
+    truth_cat : pd.DataFrame or str
+        Truth catalog or its path (needs to be a parquet file)
+    object_cat : pd.DataFrame or str
+        Object catalog or its path (needs to be a parquet file)
 
     Optional Parameters
     ----------------

@@ -20,6 +20,22 @@ import desc_dc2_dm_data
 __all__ = ["get_tract_patch", "repartition_into_tracts"]
 
 
+def get_number_of_workers(input_n_cores=None):
+    try:
+        n = int(input_n_cores)
+    except (TypeError, ValueError):
+        try:
+            n = len(os.sched_getaffinity(0))
+        except AttributeError:
+            try:
+                n = int(os.cpu_count())
+            except (TypeError, ValueError):
+                n = 1
+    if n < 1:
+        n = 1
+    return n
+
+
 def get_tract_patch(skymap, ra, dec):
     radec = lsst.geom.SpherePoint(ra, dec, lsst.geom.degrees)
     tractInfo = skymap.findTract(radec)
@@ -77,7 +93,8 @@ def repartition_into_tracts(
     my_print("Loading input parquet file", input_file)
     df = pd.read_parquet(input_file)
 
-    n_cores = n_cores or os.cpu_count() or 1
+    # Add tract, patch columns to df (i.e., input)
+    n_cores = get_number_of_workers(n_cores)
     my_print("Finding tract and patch for each row, using", n_cores, "cores")
     skymap_arr = [skymap] * n_cores
     ra_arr = np.array_split(df[ra_label].values, n_cores)
@@ -109,7 +126,7 @@ The output files will be put into directories:
    $CSCRATCH/truth_repartition/3259/truth_summary_hp10068.parquet
    $CSCRATCH/truth_repartition/3260/truth_summary_hp10068.parquet
    ...
-With each tract directory can be then merged to produce a single file.
+Files within each tract directory can be then merged to produce a single file (use `merge_truth_per_tract.py`)
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
@@ -117,7 +134,7 @@ With each tract directory can be then merged to produce a single file.
     parser.add_argument("-o", '--output-root-dir', default='.', help="Output root directory.")
     parser.add_argument("--skymap-source-repo", default="2.2i_dr6_wfd")
     parser.add_argument("--silent", action="store_true")
-    parser.add_argument("--n-cores", default=0, type=int)
+    parser.add_argument("--n-cores", type=int)
 
     repartition_into_tracts(**vars(parser.parse_args()))
 
