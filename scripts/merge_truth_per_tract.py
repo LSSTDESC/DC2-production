@@ -161,7 +161,7 @@ def save_df_to_disk(df, output_dir, name="truth", silent=False, **kwargs):
     output_path = os.path.join(output_dir, "{}_tract{}.parquet".format(name, tract))
 
     my_print("Writing output to disk at", output_path)
-    df.to_parquet(output_path, index=False)
+    df.to_parquet(output_path, index=False, engine="pyarrow", flavor="spark")
 
 
 def main():
