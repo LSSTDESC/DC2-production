@@ -145,7 +145,7 @@ This would only process one tract and produce the file 'dc2_object_run2.2i_dr3_t
                         help='Include the native quantities along with the derived GCR quantities')
     parser.add_argument('--partition', action='store_true', help='Store each chunk as a separate file')
     parser.add_argument('--tract', type=int, help='tract to process')
-    parser.add_argument('--healpix', type=int, nargs='1', dest='healpix_pixels', help='healpix to process (for cosmoDC2)')
+    parser.add_argument('--healpix', type=int, nargs=1, dest='healpix_pixels', help='healpix to process (for cosmoDC2)')
 
     convert_cat_to_parquet(**vars(parser.parse_args()))
 
