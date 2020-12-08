@@ -16,12 +16,13 @@ import pandas as pd
 __all__ = ["merge_truth_per_tract", "match_object_with_merged_truth"]
 
 
-def merge_truth_per_tract(input_dir, truth_types=("gal", "star", "sn"), validate=False, silent=False, **kwargs):
+def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), validate=False, silent=False, **kwargs):
     """Merge all the truth catalogs in one single tract directory.
 
     This function assumes the truth catalogs are in parquet format and have specifc file name patterns.
     The filename prefix should match one of those specified in truth_types.
-    For galaxy type, it is further assumed that the cosmodc2 healpix id is embedded in the filename.
+    For galaxy type (filename starting with "truth_"),
+    it is further assumed that the cosmodc2 healpix id is embedded in the filename.
 
     Parameters
     ----------
@@ -30,7 +31,7 @@ def merge_truth_per_tract(input_dir, truth_types=("gal", "star", "sn"), validate
 
     Optional Parameters
     ----------------
-    truth_types : tuple of str, optional (default: ("gal", "star", "sn"))
+    truth_types : tuple of str, optional (default: ("truth_", "star_", "sn_"))
         The types of truth objects. The string should be the prefix of truth files.
     validate : bool, optional (default: False)
         If true, check the tract column has only one value
