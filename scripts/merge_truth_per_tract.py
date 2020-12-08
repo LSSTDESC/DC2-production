@@ -76,6 +76,7 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
 
     if validate:
         assert len(np.unique(df["tract"].values)) == 1
+        assert (df["truth_type"] > 0).all()
 
     return df
 
