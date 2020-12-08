@@ -67,8 +67,6 @@ def merge_truth_per_tract(input_dir, truth_types=("gal", "star", "sn"), validate
         df["cosmodc2_hp"] = healpix
         df["cosmodc2_id"] = df["id"] if type_code == 1 else -1
         df["id"] = df["id"].astype(str)
-        # TODO: this is added to maintain compatibility with validateion notebook. Remove this when finalize schema.
-        df["is_sn"] = (type_code == 3)
 
         df_to_merge.append(df)
 
