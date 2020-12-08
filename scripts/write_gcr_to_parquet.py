@@ -3,6 +3,7 @@
 """
 Write a catalog in GCRCatalogs out to a Parquet file
 """
+import warnings
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import pyarrow as pa
@@ -71,6 +72,20 @@ def convert_cat_to_parquet(reader,
             for col in ("tract", "patch"):
                 if col not in columns and cat.has_quantity(col):
                     columns.append(col)
+
+    # Check all column names are unique after sanitized
+    columns_sanitized = dict()
+    for col in columns:
+        col_sanitized = str(col).lower()
+        if col_sanitized in columns_sanitized:
+            warnings.warn(
+                "Column name `{0}` collides with `{1}` after sterilized; `{0}` will not be included.".format(
+                    col, columns_sanitized[col_sanitized]
+                )
+            )
+        else:
+            columns_sanitized[col_sanitized] = col
+    columns = list(columns_sanitized.values())
 
     def chunk_data_generator():
         for data in cat.get_quantities(columns, return_iterator=True):
