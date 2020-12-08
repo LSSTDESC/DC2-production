@@ -74,18 +74,18 @@ def convert_cat_to_parquet(reader,
                     columns.append(col)
 
     # Check all column names are unique after sanitized
-    columns_sanitized = dict()
+    columns = sorted(columns)
+    columns_sanitized = {str(col).lower(): col for col in columns}
+    new_columns = list(columns_sanitized.values())
     for col in columns:
-        col_sanitized = str(col).lower()
-        if col_sanitized in columns_sanitized:
+        if col not in new_columns:
             warnings.warn(
                 "Column name `{0}` collides with `{1}` after sterilized; `{0}` will not be included.".format(
-                    col, columns_sanitized[col_sanitized]
+                    col, columns_sanitized[str(col).lower()]
                 )
             )
-        else:
-            columns_sanitized[col_sanitized] = col
-    columns = list(columns_sanitized.values())
+    columns = new_columns
+    del columns_sanitized, new_columns
 
     def chunk_data_generator():
         for data in cat.get_quantities(columns, return_iterator=True):
