@@ -80,7 +80,7 @@ def convert_cat_to_parquet(reader,
     for col in columns:
         if col not in new_columns:
             warnings.warn(
-                "Column name `{0}` collides with `{1}` after sterilized; `{0}` will not be included.".format(
+                "Column name `{0}` collides with `{1}` after sanitized; `{0}` will not be included.".format(
                     col, columns_sanitized[str(col).lower()]
                 )
             )
