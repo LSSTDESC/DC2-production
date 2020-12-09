@@ -195,13 +195,11 @@ one can specify a subset of tracts to process. Use --partition to put each tract
 This would process only two tracts and produce two files:
 'dc2_object_run2.2i_dr3_tract3830.parquet' and 'dc2_object_run2.2i_dr3_tract3831.parquet'
 
-If you want to process all tracts, but create one output file per tract, use just --partition.
-You can optionally specify --n-cores to speed things up.
-Because this is an I/O intensive work, it is *not* recommended that you use too many cores at once.
+If you want to process *all* tracts, but create one output file per tract, use just --partition with out --tracts:
 
-   python %(prog)s dc2_object_run2.2i_dr3 --partition --n-cores=4
+   python %(prog)s dc2_object_run2.2i_dr3 --partition
 
-If you are working with cosmoDC2, replace "tract" with "healpix" and the above instructions still apply.
+If you are working with cosmoDC2, replace "--tracts" with "--healpix-pixels" and the above instructions still apply.
 
 """
     parser = ArgumentParser(description=usage,
