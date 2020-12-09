@@ -115,6 +115,8 @@ def repartition_into_tracts(
             output_path = os.path.join(output_dir, os.path.basename(input_file))
             df_this_tract.to_parquet(output_path, index=False)
 
+        my_print("Done with", input_file)
+
 
 def main():
     usage = """Take a parquet catalog and split it into tracts according to a given skymap, and write to disk
