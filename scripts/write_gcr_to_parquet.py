@@ -4,7 +4,6 @@
 Write a catalog in GCRCatalogs out to a Parquet file
 """
 import warnings
-import multiprocessing as mp
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import pyarrow as pa
@@ -30,7 +29,7 @@ else:
         return pa.Table.from_arrays(arrays, names)
 
 
-def _chunk_data_generator(cat, columns, native_filters=None, **kwargs):
+def _chunk_data_generator(cat, columns, native_filters=None):
     for data in cat.get_quantities(columns, native_filters=native_filters, return_iterator=True):
         table = pa_table_from_pydict(data)
         del data
@@ -41,11 +40,11 @@ def _chunk_data_generator(cat, columns, native_filters=None, **kwargs):
         yield table
 
 
-def _write_one_partition(kwargs):
-    my_print = (lambda *x: None) if kwargs.get("silent") else print
-    output_path = kwargs["output_path"]
+def _write_one_partition(output_path, cat, columns, native_filters=None, silent=False):
+    my_print = (lambda *x: None) if silent else print
+
     my_print("Generating", output_path)
-    chunk_iter = _chunk_data_generator(**kwargs)
+    chunk_iter = _chunk_data_generator(cat, columns, native_filters)
     table = next(chunk_iter)
     with pq.ParquetWriter(output_path, table.schema, flavor='spark') as pqwriter:
         pqwriter.write_table(table)
@@ -59,7 +58,6 @@ def convert_cat_to_parquet(reader,
                            columns=None,
                            include_native=False,
                            partition=False,
-                           n_cores=1,
                            silent=False,
                            **kwargs):
     """Write a catalog in GCRCatalogs out to a Parquet file
@@ -128,7 +126,7 @@ def convert_cat_to_parquet(reader,
             filename_postfix = "_tract{}"
         elif "healpix_pixel" in cat.native_filter_quantities and hasattr(cat, "_file_list"):
             partition = "healpix_pixel"
-            partition_values = sorted((k[1] for k in cat._file_list))
+            partition_values = sorted(set((k[1] for k in cat._file_list)))
             filename_postfix = "_healpix{}"
         else:
             partition = "iter"
@@ -148,9 +146,10 @@ def convert_cat_to_parquet(reader,
             output_filename = output_filename[:-8] + filename_postfix + '.parquet'
         else:
             output_filename = output_filename + filename_postfix
+    my_print("Output path pattern is", output_filename)
 
     if not partition:
-        _write_one_partition(dict(cat=cat, columns=columns, output_path=output_filename))
+        _write_one_partition(output_filename, cat, columns, silent=silent)
 
     elif partition == "iter":
         for i, table in enumerate(_chunk_data_generator(cat, columns)):
@@ -161,20 +160,14 @@ def convert_cat_to_parquet(reader,
             my_print("Done with", output_path)
 
     elif partition_values:
-        kwargs_array = []
         for value in partition_values:
-            kwargs_this = dict(
-                cat=cat,
-                columns=columns,
+            _write_one_partition(
+                output_filename.format(value),
+                cat,
+                columns,
                 native_filters="{} == {}".format(partition, value),
-                output_path=output_filename.format(value),
                 silent=silent,
             )
-            kwargs_array.append(kwargs_this)
-
-        n_cores = max(n_cores, 1)
-        with mp.Pool(n_cores) as pool:
-            pool.map(_write_one_partition, kwargs_array)
 
     else:
         raise ValueError("Unknown partition scheme")
@@ -219,7 +212,7 @@ If you are working with cosmoDC2, replace "tract" with "healpix" and the above i
     parser.add_argument('--partition', action='store_true', help='Store each chunk as a separate file')
     parser.add_argument('--tracts', type=int, nargs="+", help='Limiting tracts to process (for tract catalogs)')
     parser.add_argument('--healpix-pixels', type=int, nargs="+", help='Limiting healpix pixels to process (for cosmoDC2)')
-    parser.add_argument("--n-cores", type=int, default=1)
+    parser.add_argument("--silent", action="store_true")
 
     convert_cat_to_parquet(**vars(parser.parse_args()))
 
