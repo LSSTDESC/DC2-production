@@ -244,6 +244,12 @@ If you want to process *all* tracts, but create one output file per tract, use j
 
 If you are working with cosmoDC2, replace "--tracts" with "--healpix-pixels" and the above instructions still apply.
 
+When running this script with cosmoDC2, it's useful to enable --checkpoint-dir. This will keep track of the generation
+status in the checkpoint dir by creating empty files <filename>.lock and <filename>.done.
+The former means the corresponding file is being generated, and the latter means the corresponding file is completed.
+
+   python %(prog)s cosmoDC2_v1.1.4_image --partition --checkpoint-dir=/path/to/checkpoint/dir
+
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
