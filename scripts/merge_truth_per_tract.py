@@ -7,6 +7,7 @@ Author: Yao-Yuan Mao
 import os
 import re
 import warnings
+import multiprocessing as mp
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import numpy as np
@@ -108,6 +109,9 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
         my_print("Loading object catalog from", object_cat)
         object_cat = pd.read_parquet(object_cat, columns=["objectId", "ra", "dec"])
 
+    if "tract" in object_cat.columns and truth_cat.loc[0, "tract"] != object_cat.loc[0, "tract"]:
+        warnings.warn("Tract number does not match between truth and object catalog!!")
+
     my_print("Performing nearest neighbor match")
     object_sc = SkyCoord(object_cat["ra"].values, object_cat["dec"].values, unit="deg")
     truth_sc = SkyCoord(truth_cat["ra"].values, truth_cat["dec"].values, unit="deg")
@@ -163,18 +167,42 @@ def save_df_to_disk(df, output_dir, name="truth", silent=False, **kwargs):
     my_print("Writing output to disk at", output_path)
     df.to_parquet(output_path, index=False, engine="pyarrow", flavor="spark")
 
+    my_print("Done with writing to", output_path)
+
+
+def run_one_tract(kwargs):
+    if kwargs.get("matching_only"):
+        df = kwargs.get("input_dir")
+    else:
+        df = merge_truth_per_tract(**kwargs)
+
+    if kwargs.get("object_catalog_path"):
+        df = match_object_with_merged_truth(df, kwargs["object_catalog_path"], **kwargs)
+
+    save_df_to_disk(df, **kwargs)
+
 
 def main():
     usage = """Merge truth catalogs for a given tract, and then, optionally, match to object catalog
 
-To merge a repartitioned truth catalog, run
+To merge one repartitioned truth catalog, run
   python %(prog)s /path/to/repartitioned/truth/<tract>
 
 Usually you may want to match with the object catalog too:
-  python %(prog)s /path/to/repartitioned/truth/<tract> --object=/path/to/object-catalog_tract<tract>.parquet
+  python %(prog)s /path/to/repartitioned/truth/<tract> --object=/path/to/object_tract<tract>.parquet
 
-If you have a ready-to-use truth catalog, you can skip the merge step, and only run the matching code:
-  python %(prog)s /path/to/truth.parquet --object=/path/to/object-catalog_tract<tract>.parquet --matching-only
+If you have a ready-to-match truth catalog, you can skip the merge step, and only run the matching code:
+  python %(prog)s /path/to/truth.parquet --object=/path/to/object_tract<tract>.parquet --matching-only
+
+If you want to run on multiple tracts at once, you can use --tracts or --tract-list, together with --n-cores
+
+  python %(prog)s /path/to/repartitioned/truth/{} --object=/path/to/object_tract{}.parquet --tracts=3834,3835 --n-cores=2
+
+or
+
+  python %(prog)s /path/to/repartitioned/truth/{} --object=/path/to/object_tract{}.parquet --tract-list=/path/to/tract_list.txt --n-cores=2
+
+Because this is an I/O intensive work, it is *not* recommended that you use too many cores at once.
 
 """
     parser = ArgumentParser(description=usage,
@@ -187,20 +215,34 @@ If you have a ready-to-use truth catalog, you can skip the merge step, and only 
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--silent", action="store_true")
     parser.add_argument("--matching-only", action="store_true")
+    parser.add_argument("--tracts", nargs="+", type=int, help="List of tract numbers to run. Use to format input_dir and object_catalog_path")
+    parser.add_argument("--tract-list", help="File contains a list of tract numbers to run. Use to format input_dir and object_catalog_path")
+    parser.add_argument("--n-cores", type=int, default=1)
 
     args = parser.parse_args()
+    kwargs = vars(args)
 
-    if not args.matching_only:
-        df = merge_truth_per_tract(**vars(args))
+    if args.tract_list or args.tracts:
+        tracts = set(args.tracts) if args.tracts else set()
+        if args.tract_list:
+            with open(args.tract_list) as f:
+                tracts.update(map(int, f.readlines()))
 
-    if args.object_catalog_path:
-        if args.matching_only:
-            df = args.input_dir
-        df = match_object_with_merged_truth(df, args.object_catalog_path, **vars(args))
-    elif args.matching_only:
-        parser.error("--object-catalog-path must be specified when --matching-only is set.")
+        kwargs_array = list()
+        for tract in tracts:
+            new_kwargs = dict(
+                kwargs,
+                input_dir=kwargs["input_dir"].format(tract),
+                object_catalog_path=(kwargs["object_catalog_path"].format(tract) if kwargs.get("object_catalog_path") else None)
+            )
+            kwargs_array.append(new_kwargs)
 
-    save_df_to_disk(df, **vars(args))
+        n_cores = max(1, args.n_cores)
+        with mp.Pool(n_cores) as pool:
+            pool.map(run_one_tract, kwargs_array)
+
+    else:
+        run_one_tract(kwargs)
 
 
 if __name__ == "__main__":
