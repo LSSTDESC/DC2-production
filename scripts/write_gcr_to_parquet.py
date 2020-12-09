@@ -4,6 +4,7 @@
 Write a catalog in GCRCatalogs out to a Parquet file
 """
 import warnings
+import time
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import pyarrow as pa
@@ -43,14 +44,14 @@ def _chunk_data_generator(cat, columns, native_filters=None):
 def _write_one_partition(output_path, cat, columns, native_filters=None, silent=False):
     my_print = (lambda *x: None) if silent else print
 
-    my_print("Generating", output_path)
+    my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
     chunk_iter = _chunk_data_generator(cat, columns, native_filters)
     table = next(chunk_iter)
     with pq.ParquetWriter(output_path, table.schema, flavor='spark') as pqwriter:
         pqwriter.write_table(table)
         for table in chunk_iter:
             pqwriter.write_table(table)
-    my_print("Done with", output_path)
+    my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
 
 
 def convert_cat_to_parquet(reader,
@@ -154,10 +155,10 @@ def convert_cat_to_parquet(reader,
     elif partition == "iter":
         for i, table in enumerate(_chunk_data_generator(cat, columns)):
             output_path = output_filename.format(i)
-            my_print("Generating", output_path)
+            my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
             with pq.ParquetWriter(output_filename.format(i), table.schema, flavor='spark') as pqwriter:
                 pqwriter.write_table(table)
-            my_print("Done with", output_path)
+            my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
 
     elif partition_values:
         for value in partition_values:
