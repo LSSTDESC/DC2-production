@@ -32,33 +32,45 @@ else:
         return pa.Table.from_arrays(arrays, names)
 
 
-@contextmanager
-def write_parquet(path, checkpoint_dir=None, **kwargs):
+class Checkpoint():
+    def __init__(self, path, checkpoint_dir=None):
+        if checkpoint_dir is None:
+            self._checkpoint_lock = self._checkpoint_done = None
+            self.has_run = self._has_run_no_lock
+            self.run = self._run_no_lock
+        else:
+            checkpoint_base = os.path.join(checkpoint_dir, os.path.basename(str(path)))
+            self._checkpoint_lock = checkpoint_base + ".lock"
+            self._checkpoint_done = checkpoint_base + ".done"
+            self.has_run = self._has_run
+            self.run = self._run
 
-    if checkpoint_dir is None:
-        with pq.ParquetWriter(path, **kwargs) as pqwriter:
-            yield pqwriter
-        return
-
-    checkpoint_base = os.path.join(checkpoint_dir, os.path.basename(str(path)))
-    checkpoint_lock = checkpoint_base + ".lock"
-    checkpoint_done = checkpoint_base + ".done"
-
-    if os.path.isfile(checkpoint_lock) or os.path.isfile(checkpoint_done):
-        return
-
-    with open(checkpoint_lock, "w"):
-        pass
-    try:
-        with pq.ParquetWriter(path, **kwargs) as pqwriter:
-            yield pqwriter
-    except:  # noqa: E722
-        raise
-    else:
-        with open(checkpoint_done, "w"):
+    @contextmanager
+    def _run(self):
+        with open(self._checkpoint_lock, "w"):
             pass
-    finally:
-        os.unlink(checkpoint_lock)
+        try:
+            yield
+        except:  # noqa: E722
+            raise
+        else:
+            with open(self._checkpoint_done, "w"):
+                pass
+        finally:
+            try:
+                os.unlink(self._checkpoint_lock)
+            except FileNotFoundError:
+                pass
+
+    @contextmanager
+    def _run_no_lock(self):
+        yield
+
+    def _has_run(self):
+        return os.path.isfile(self._checkpoint_done) or os.path.isfile(self._checkpoint_lock)
+
+    def _has_run_no_lock(self):
+        return False
 
 
 def _chunk_data_generator(cat, columns, native_filters=None):
@@ -72,17 +84,28 @@ def _chunk_data_generator(cat, columns, native_filters=None):
         yield table
 
 
-def _write_one_partition(output_path, cat, columns, native_filters=None, silent=False, checkpoint_dir=None):
+def _write_one_parquet_file(output_path, cat=None, get_quantities_kwargs=None, silent=False, checkpoint_dir=None):
     my_print = (lambda *x: None) if silent else print
 
-    my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
-    chunk_iter = _chunk_data_generator(cat, columns, native_filters)
-    table = next(chunk_iter)
-    with write_parquet(output_path, checkpoint_dir, schema=table.schema, flavor='spark') as pqwriter:
-        pqwriter.write_table(table)
-        for table in chunk_iter:
-            pqwriter.write_table(table)
-    my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
+    checkpoint = Checkpoint(output_path, checkpoint_dir)
+
+    if checkpoint.has_run():
+        my_print("Skipping", output_path, " - checkpoint exists!")
+        return
+
+    with checkpoint.run():
+        my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
+        if not get_quantities_kwargs:
+            with pq.ParquetWriter(output_path, cat.schema, flavor='spark') as pqwriter:
+                pqwriter.write_table(cat)
+        else:
+            chunk_iter = _chunk_data_generator(cat, **get_quantities_kwargs)
+            table = next(chunk_iter)
+            with pq.ParquetWriter(output_path, schema=table.schema, flavor='spark') as pqwriter:
+                pqwriter.write_table(table)
+                for table in chunk_iter:
+                    pqwriter.write_table(table)
+        my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
 
 
 def convert_cat_to_parquet(reader,
@@ -124,7 +147,7 @@ def convert_cat_to_parquet(reader,
     # make sure checkpoint dir is writable
     if checkpoint_dir is not None:
         os.makedirs(checkpoint_dir, exist_ok=True)
-        if not os.access(checkpoint_dir, os.W_OK):
+        if not os.access(checkpoint_dir, os.R_OK + os.W_OK):
             raise ValueError(checkpoint_dir, "not writable!")
 
     if isinstance(reader, BaseGenericCatalog):
@@ -192,23 +215,29 @@ def convert_cat_to_parquet(reader,
     my_print("Output path pattern is", output_filename)
 
     if not partition:
-        _write_one_partition(output_filename, cat, columns, silent=silent, checkpoint_dir=checkpoint_dir)
+        _write_one_parquet_file(
+            output_path=output_filename,
+            cat=cat,
+            get_quantities_kwargs=dict(columns=columns),
+            silent=silent,
+            checkpoint_dir=checkpoint_dir,
+        )
 
     elif partition == "iter":
         for i, table in enumerate(_chunk_data_generator(cat, columns)):
-            output_path = output_filename.format(i)
-            my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
-            with write_parquet(output_filename.format(i), checkpoint_dir, schema=table.schema, flavor='spark') as pqwriter:
-                pqwriter.write_table(table)
-            my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
+            _write_one_parquet_file(
+                output_path=output_filename.format(i),
+                cat=table,
+                silent=silent,
+                checkpoint_dir=checkpoint_dir,
+            )
 
     elif partition_values:
         for value in partition_values:
-            _write_one_partition(
-                output_filename.format(value),
-                cat,
-                columns,
-                native_filters="{} == {}".format(partition, value),
+            _write_one_parquet_file(
+                output_path=output_filename.format(value),
+                cat=cat,
+                get_quantities_kwargs=dict(columns=columns, native_filters="{} == {}".format(partition, value)),
                 silent=silent,
                 checkpoint_dir=checkpoint_dir,
             )
