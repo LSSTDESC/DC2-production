@@ -121,6 +121,12 @@ def convert_cat_to_parquet(reader,
     """
     my_print = (lambda *x: None) if silent else print
 
+    # make sure check point dir is writable
+    if check_point_dir is not None:
+        os.makedirs(check_point_dir, exist_ok=True)
+        if not os.access(check_point_dir, os.W_OK):
+            raise ValueError(check_point_dir, "not writable!")
+
     if isinstance(reader, BaseGenericCatalog):
         cat = reader
     else:
