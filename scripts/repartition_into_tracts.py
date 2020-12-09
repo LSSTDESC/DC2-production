@@ -106,7 +106,7 @@ def repartition_into_tracts(
             tractpatch = pool.starmap(get_tract_patch_arrays, zip(skymap_arr, ra_arr, dec_arr, tqdm_arr))
         df["tract"] = np.concatenate([tp[0] for tp in tractpatch])
         df["patch"] = np.concatenate([tp[1] for tp in tractpatch])
-        del skymap_arr, skymap, ra_arr, dec_arr, tqdm_arr, tractpatch
+        del skymap_arr, ra_arr, dec_arr, tqdm_arr, tractpatch
 
         my_print("Writing out parquet file for each tract in", output_root_dir)
         for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
