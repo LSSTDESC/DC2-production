@@ -5,7 +5,9 @@ Write a catalog in GCRCatalogs out to a Parquet file
 """
 import warnings
 import time
+import os
 from argparse import ArgumentParser, RawTextHelpFormatter
+from contextlib import contextmanager
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -30,6 +32,35 @@ else:
         return pa.Table.from_arrays(arrays, names)
 
 
+@contextmanager
+def write_parquet(path, check_point_dir=None, **kwargs):
+
+    if check_point_dir is None:
+        with pq.ParquetWriter(path, **kwargs) as pqwriter:
+            yield pqwriter
+        return
+
+    check_point_base = os.path.join(check_point_dir, os.path.basename(str(path)))
+    check_point_lock = check_point_base + ".lock"
+    check_point_done = check_point_base + ".done"
+
+    if os.path.isfile(check_point_lock) or os.path.isfile(check_point_done):
+        return
+
+    with open(check_point_lock, "w"):
+        pass
+    try:
+        with pq.ParquetWriter(path, **kwargs) as pqwriter:
+            yield pqwriter
+    except:  # noqa: E722
+        raise
+    else:
+        with open(check_point_done, "w"):
+            pass
+    finally:
+        os.unlink(check_point_lock)
+
+
 def _chunk_data_generator(cat, columns, native_filters=None):
     for data in cat.get_quantities(columns, native_filters=native_filters, return_iterator=True):
         table = pa_table_from_pydict(data)
@@ -41,13 +72,13 @@ def _chunk_data_generator(cat, columns, native_filters=None):
         yield table
 
 
-def _write_one_partition(output_path, cat, columns, native_filters=None, silent=False):
+def _write_one_partition(output_path, cat, columns, native_filters=None, silent=False, check_point_dir=None):
     my_print = (lambda *x: None) if silent else print
 
     my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
     chunk_iter = _chunk_data_generator(cat, columns, native_filters)
     table = next(chunk_iter)
-    with pq.ParquetWriter(output_path, table.schema, flavor='spark') as pqwriter:
+    with write_parquet(output_path, check_point_dir, schema=table.schema, flavor='spark') as pqwriter:
         pqwriter.write_table(table)
         for table in chunk_iter:
             pqwriter.write_table(table)
@@ -59,6 +90,7 @@ def convert_cat_to_parquet(reader,
                            columns=None,
                            include_native=False,
                            partition=False,
+                           check_point_dir=None,
                            silent=False,
                            **kwargs):
     """Write a catalog in GCRCatalogs out to a Parquet file
@@ -80,6 +112,10 @@ def convert_cat_to_parquet(reader,
         in addition to the standardized derived quantities.
     partition : bool, optional (default: False)
         If true, save each chunk as a separate file
+    check_point_dir : str, optional
+        Path to a directory that can store check points. If none, do not use check points.
+    silent : bool, optional
+        Suppress print outs.
     **kwargs
         Any other keyword arguments will be passed to `config_overwrite` when loading the catalog
     """
@@ -150,13 +186,13 @@ def convert_cat_to_parquet(reader,
     my_print("Output path pattern is", output_filename)
 
     if not partition:
-        _write_one_partition(output_filename, cat, columns, silent=silent)
+        _write_one_partition(output_filename, cat, columns, silent=silent, check_point_dir=check_point_dir)
 
     elif partition == "iter":
         for i, table in enumerate(_chunk_data_generator(cat, columns)):
             output_path = output_filename.format(i)
             my_print("Generating", output_path, time.strftime("[%H:%M:%S]"))
-            with pq.ParquetWriter(output_filename.format(i), table.schema, flavor='spark') as pqwriter:
+            with write_parquet(output_filename.format(i), check_point_dir, schema=table.schema, flavor='spark') as pqwriter:
                 pqwriter.write_table(table)
             my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
 
@@ -168,6 +204,7 @@ def convert_cat_to_parquet(reader,
                 columns,
                 native_filters="{} == {}".format(partition, value),
                 silent=silent,
+                check_point_dir=check_point_dir,
             )
 
     else:
@@ -212,6 +249,7 @@ If you are working with cosmoDC2, replace "--tracts" with "--healpix-pixels" and
     parser.add_argument('--tracts', type=int, nargs="+", help='Limiting tracts to process (for tract catalogs)')
     parser.add_argument('--healpix-pixels', type=int, nargs="+", help='Limiting healpix pixels to process (for cosmoDC2)')
     parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--check-point-dir", help="Path to a directory that contains check point. Files with existing check points are skipped.")
 
     convert_cat_to_parquet(**vars(parser.parse_args()))
 
