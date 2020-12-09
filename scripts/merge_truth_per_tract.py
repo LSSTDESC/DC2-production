@@ -39,7 +39,7 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
     silent : bool, optional (default: False)
         If true, turn off most printout.
     """
-    my_print = (lambda x: None) if silent else print
+    my_print = (lambda *x: None) if silent else print
 
     my_print("Merging all files in", input_dir)
     files_to_merge = sorted(os.listdir(input_dir))
@@ -99,7 +99,7 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
     silent : bool, optional (default: False)
         If true, turn off most printout.
     """
-    my_print = (lambda x: None) if silent else print
+    my_print = (lambda *x: None) if silent else print
 
     if isinstance(truth_cat, str):
         my_print("Loading truth catalog from", truth_cat)
@@ -159,7 +159,7 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
 
 
 def save_df_to_disk(df, output_dir, name="truth", silent=False, **kwargs):
-    my_print = (lambda x: None) if silent else print
+    my_print = (lambda *x: None) if silent else print
 
     tract = df.loc[0, "tract"]
     output_path = os.path.join(output_dir, "{}_tract{}.parquet".format(name, tract))

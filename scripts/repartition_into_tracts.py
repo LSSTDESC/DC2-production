@@ -83,7 +83,7 @@ def repartition_into_tracts(
     silent : bool, optional (default: False)
         If true, turn off most printout.
     """
-    my_print = (lambda x: None) if silent else print
+    my_print = (lambda *x: None) if silent else print
     tqdm_disable = silent or None
 
     repo = desc_dc2_dm_data.REPOS.get(skymap_source_repo, skymap_source_repo)
