@@ -144,8 +144,9 @@ def match_object_with_merged_truth(
     # Add magnitude to truth catalog for calculate magnitude difference
     truth_cat[mag_label_truth] = _flux_to_mag(truth_cat[flux_label_truth].values)
 
-    def _calc_dmag(obj_idx, truth_idx):
-        dmag = (object_cat.loc[obj_idx, mag_label_obj].values - truth_cat.loc[truth_idx, mag_label_truth].values)
+    def _calc_dmag(object_indices, truth_indices):
+        with np.errstate(invalid="ignore"):
+            dmag = (object_cat.loc[object_indices, mag_label_obj].values - truth_cat.loc[truth_indices, mag_label_truth].values)
         return np.where(np.isfinite(dmag), np.abs(dmag), np.inf)
 
     # Find all pairs between object and truth that are separated within `sep_limit_arcsec`
@@ -163,20 +164,21 @@ def match_object_with_merged_truth(
     matched = matched.sort_values("dmag").drop_duplicates("object_idx", keep="first")
 
     # For any object entries that do not have a match yet, find the nearest neighbor
-    object_idx_not_matched = np.in1d(object_cat.index.values, matched["object_idx"].values, True, True)
-    truth_idx, sep, _ = object_sc[object_idx_not_matched].match_to_catalog_sky(truth_sc)
+    object_not_matched_mask = np.in1d(object_cat.index.values, matched["object_idx"].values, True, True)
+    object_not_matched_idx = object_cat.index.values[object_not_matched_mask]
+    truth_idx, sep, _ = object_sc[object_not_matched_mask].match_to_catalog_sky(truth_sc)
 
     matched = matched.append(
         pd.DataFrame.from_dict({
-            "object_idx": object_idx_not_matched,
+            "object_idx": object_not_matched_idx,
             "truth_idx": truth_idx,
             "match_sep": sep.arcsec,
-            "dmag": _calc_dmag(object_idx_not_matched, truth_idx),
+            "dmag": _calc_dmag(object_not_matched_idx, truth_idx),
             "is_nearest_neighbor": True,
         }),
         ignore_index=True,
     )
-    del object_idx_not_matched, truth_idx, sep, object_sc, truth_sc, _calc_dmag, truth_cat[mag_label_truth]
+    del object_not_matched_mask, object_not_matched_idx, truth_idx, sep, object_sc, truth_sc, _calc_dmag, truth_cat[mag_label_truth]
 
     # Check if any truth entry appears more than once, and mark those
     matched = matched.sort_values("match_sep")
