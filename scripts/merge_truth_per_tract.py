@@ -9,7 +9,6 @@ import re
 import warnings
 import multiprocessing as mp
 from argparse import ArgumentParser, RawTextHelpFormatter
-from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -86,9 +85,7 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
 
 def _flux_to_mag(flux):
     with np.errstate(divide="ignore"):
-        mag = (flux * u.nJy).to_value(u.ABmag)  # pylint: disable=no-member
-    # Change inf to nan, useful for applying np.nanargmin later on
-    return np.where(np.isfinite(mag), mag, np.nan)
+        return (flux * u.nJy).to_value(u.ABmag)  # pylint: disable=no-member
 
 
 def match_object_with_merged_truth(
@@ -147,71 +144,50 @@ def match_object_with_merged_truth(
     # Add magnitude to truth catalog for calculate magnitude difference
     truth_cat[mag_label_truth] = _flux_to_mag(truth_cat[flux_label_truth].values)
 
+    def _calc_dmag(obj_idx, truth_idx):
+        dmag = (object_cat.loc[obj_idx, mag_label_obj].values - truth_cat.loc[truth_idx, mag_label_truth].values)
+        return np.where(np.isfinite(dmag), np.abs(dmag), np.inf)
+
     # Find all pairs between object and truth that are separated within `sep_limit_arcsec`
-    obj_row_indices, truth_row_indices, sep, _ = search_around_sky(
-        object_sc,
-        truth_sc,
-        sep_limit_arcsec * u.arcsec,  # pylint: disable=no-member
-    )
+    object_idx, truth_idx, sep, _ = search_around_sky(object_sc, truth_sc, sep_limit_arcsec * u.arcsec)  # pylint: disable=no-member
+    matched = pd.DataFrame.from_dict({
+        "object_idx": object_idx,
+        "truth_idx": truth_idx,
+        "match_sep": sep.arcsec,
+        "dmag": _calc_dmag(object_idx, truth_idx),
+    })
+    del object_idx, truth_idx, sep
 
-    matched = defaultdict(list)
-    # Group by `obj_row_indices`, and then iterate over each unique object row index (`obj_row_idx`)
-    # In the for loop below, recall that `(obj_row_indices[idx] == obj_row_idx).all() == True`
-    for obj_row_idx, idx in pd.RangeIndex(stop=obj_row_indices.size).groupby(obj_row_indices):
-        is_nearest = True
-        if len(idx) == 1:  # if only 1 truth match candidate for this object, choose that one
-            match_idx = idx.pop()
-        else:  # if more than 1 truth match candidates
-            nearest_idx = idx[np.argmin(sep[idx].arcsec)]  # keep track of the nearest one
-            mag_obj = object_cat.loc[obj_row_idx, mag_label_obj]
-            mag_truth = truth_cat.loc[truth_row_indices[idx], mag_label_truth]
-            # if valid magnitudes are available, switch to the one with smallest mag difference
-            if np.isfinite(mag_obj) and np.isfinite(mag_truth).any():
-                match_idx = idx[np.nanargmin(np.abs(mag_truth - mag_obj))]
-                is_nearest = (match_idx == nearest_idx)
-            else:  # otherwise, use the nearest one
-                match_idx = nearest_idx
-
-        matched["object_idx"].append(obj_row_idx)
-        matched["truth_idx"].append(truth_row_indices[match_idx])
-        matched["match_sep"].append(sep[match_idx].arcsec)
-        matched["is_nearest_neighbor"].append(is_nearest)
-
-    matched = pd.DataFrame.from_dict(matched)
-    del obj_row_indices, truth_row_indices, sep
+    matched = matched.sort_values("match_sep")
+    matched["is_nearest_neighbor"] = ~matched.duplicated("object_idx", keep="first")
+    matched = matched.sort_values("dmag").drop_duplicates("object_idx", keep="first")
 
     # For any object entries that do not have a match yet, find the nearest neighbor
-    obj_not_matched_row_indices = np.in1d(object_cat.index.values, matched["obj_row_idx"].values, True, True)
-    truth_row_indices, sep, _ = object_sc[obj_not_matched_row_indices].match_to_catalog_sky(truth_sc)
+    object_idx_not_matched = np.in1d(object_cat.index.values, matched["object_idx"].values, True, True)
+    truth_idx, sep, _ = object_sc[object_idx_not_matched].match_to_catalog_sky(truth_sc)
 
     matched = matched.append(
         pd.DataFrame.from_dict({
-            "object_idx": obj_not_matched_row_indices,
-            "truth_idx": truth_row_indices,
+            "object_idx": object_idx_not_matched,
+            "truth_idx": truth_idx,
             "match_sep": sep.arcsec,
+            "dmag": _calc_dmag(object_idx_not_matched, truth_idx),
             "is_nearest_neighbor": True,
         }),
         ignore_index=True,
     )
-    del obj_not_matched_row_indices, truth_row_indices, sep, object_sc, truth_sc
+    del object_idx_not_matched, truth_idx, sep, object_sc, truth_sc, _calc_dmag, truth_cat[mag_label_truth]
 
     # Check if any truth entry appears more than once, and mark those
-    matched.sort_values("match_sep", inplace=True)
+    matched = matched.sort_values("match_sep")
     matched["is_unique_truth_entry"] = ~matched.duplicated("truth_idx", keep="first")
-    matched.sort_values("object_idx", inplace=True)
+    matched = matched.sort_values("object_idx")
     if validate:
         (matched["object_idx"] == object_cat.index.values).all()
-    del match_idx["object_idx"]
-
-    # Recall that `matched` and `object_cat` are now in exactly the same order
     matched["match_objectId"] = object_cat["objectId"].values
-    dmag = object_cat[mag_label_obj].values - truth_cat.loc[matched["truth_idx"], mag_label_truth].values
-    matched["is_good_match"] = (
-        (matched["match_sep"].values < sep_limit_arcsec) & np.isfinite(dmag) & (np.abs(dmag) < dmag_limit)
-    )
-    del dmag, truth_cat[mag_label_truth]
+    matched["is_good_match"] = matched.eval("(match_sep < @sep_limit_arcsec) & (dmag < @dmag_limit)")
 
-    # Reorder the columns to be organized
+    # Select and reorder needed columns to be organized
     matched = matched[["truth_idx", "match_objectId", "match_sep", "is_good_match", "is_nearest_neighbor", "is_unique_truth_entry"]]
 
     # Prepare the remaining entries in the truth catalog that do not have matches
