@@ -105,6 +105,7 @@ def match_object_with_merged_truth(
         Truth catalog or its path (needs to be a parquet file)
     object_cat : pd.DataFrame or str
         Object catalog or its path (needs to be a parquet file)
+
     Optional Parameters
     ----------------
     validate : bool, optional (default: False)
@@ -142,72 +143,88 @@ def match_object_with_merged_truth(
     truth_sc = SkyCoord(truth_cat["ra"].values, truth_cat["dec"].values, unit="deg")
 
     # Add magnitude to truth catalog for calculate magnitude difference
-    truth_cat[mag_label_truth] = _flux_to_mag(truth_cat[flux_label_truth].values)
-
-    def _calc_dmag(object_indices, truth_indices):
-        with np.errstate(invalid="ignore"):
-            dmag = (object_cat.loc[object_indices, mag_label_obj].values - truth_cat.loc[truth_indices, mag_label_truth].values)
-        return np.where(np.isfinite(dmag), np.abs(dmag), np.inf)
+    truth_cat_has_mag = (mag_label_truth in truth_cat.columns)
+    if not truth_cat_has_mag:
+        truth_cat[mag_label_truth] = _flux_to_mag(truth_cat[flux_label_truth].values)
 
     # Find all pairs between object and truth that are separated within `sep_limit_arcsec`
     object_idx, truth_idx, sep, _ = search_around_sky(object_sc, truth_sc, sep_limit_arcsec * u.arcsec)  # pylint: disable=no-member
+
+    # Calculate magnitude difference for all the pairs
+    with np.errstate(invalid="ignore"):
+        dmag = np.abs(
+            object_cat.loc[object_idx, mag_label_obj].values -
+            truth_cat.loc[truth_idx, mag_label_truth].values
+        )
+    # Set invalid or large dmag to `dmag_limit` because we don't want to distinguish them when sorting below
+    dmag[~np.isfinite(dmag)] = dmag_limit
+    dmag[dmag > dmag_limit] = dmag_limit
+
+    # Create a dataframe to store the matched entries
     matched = pd.DataFrame.from_dict({
         "object_idx": object_idx,
         "truth_idx": truth_idx,
         "match_sep": sep.arcsec,
-        "dmag": _calc_dmag(object_idx, truth_idx),
+        "dmag": dmag,
     })
-    del object_idx, truth_idx, sep
+    del object_idx, truth_idx, sep, dmag
 
+    # Mark nearest neighbor
     matched = matched.sort_values("match_sep")
     matched["is_nearest_neighbor"] = ~matched.duplicated("object_idx", keep="first")
-    matched = matched.sort_values("dmag").drop_duplicates("object_idx", keep="first")
 
-    # For any object entries that do not have a match yet, find the nearest neighbor
+    # Choose the smallest `dmag` if less than dmag_limit; otherwise, choose the smallest `match_sep`
+    matched = matched.sort_values(["dmag", "match_sep"]).drop_duplicates("object_idx", keep="first")
+    matched["is_good_match"] = matched.eval("(match_sep < @sep_limit_arcsec) & (dmag < @dmag_limit)")
+    del matched["dmag"]
+    if truth_cat_has_mag:
+        del truth_cat[mag_label_truth]
+
+    # For any *object* entries that do not have a match yet, find the nearest neighbor
+    # We already know these are not good matches because their `match_sep` must be > sep_limit_arcsec
     object_not_matched_mask = np.in1d(object_cat.index.values, matched["object_idx"].values, True, True)
-    object_not_matched_idx = object_cat.index.values[object_not_matched_mask]
     truth_idx, sep, _ = object_sc[object_not_matched_mask].match_to_catalog_sky(truth_sc)
-
     matched = matched.append(
         pd.DataFrame.from_dict({
-            "object_idx": object_not_matched_idx,
+            "object_idx": object_cat.index.values[object_not_matched_mask],
             "truth_idx": truth_idx,
             "match_sep": sep.arcsec,
-            "dmag": _calc_dmag(object_not_matched_idx, truth_idx),
             "is_nearest_neighbor": True,
+            "is_good_match": False,
         }),
         ignore_index=True,
     )
-    del object_not_matched_mask, object_not_matched_idx, truth_idx, sep, object_sc, truth_sc, _calc_dmag, truth_cat[mag_label_truth]
+    del object_not_matched_mask, truth_idx, sep, object_sc, truth_sc
 
     # Check if any truth entry appears more than once, and mark those
     matched = matched.sort_values("match_sep")
     matched["is_unique_truth_entry"] = ~matched.duplicated("truth_idx", keep="first")
+
+    # Reorder `matched` so that it has exactly the same row order as `object_cat`
     matched = matched.sort_values("object_idx")
     if validate:
         (matched["object_idx"] == object_cat.index.values).all()
     matched["match_objectId"] = object_cat["objectId"].values
-    matched["is_good_match"] = matched.eval("(match_sep < @sep_limit_arcsec) & (dmag < @dmag_limit)")
 
     # Select and reorder needed columns to be organized
     matched = matched[["truth_idx", "match_objectId", "match_sep", "is_good_match", "is_nearest_neighbor", "is_unique_truth_entry"]]
 
-    # Prepare the remaining entries in the truth catalog that do not have matches
-    not_matched_truth_idx = truth_cat.index.values[np.in1d(truth_cat.index.values, matched["truth_idx"].values, invert=True)]
-    not_matched = pd.DataFrame.from_dict({
-        "truth_idx": not_matched_truth_idx,
-        "match_objectId": -1,
-        "match_sep": -1.0,
-        "is_good_match": False,
-        "is_nearest_neighbor": False,
-        "is_unique_truth_entry": True,
-    })
+    # Append the remaining (i.e., unmatched) truth entries to generate the full table
+    # We know all these rows we are appending are not matched!
+    full_table = matched.append(
+        pd.DataFrame.from_dict({
+            "truth_idx": truth_cat.index.values[np.in1d(truth_cat.index.values, matched["truth_idx"].values, invert=True)],
+            "match_objectId": -1,
+            "match_sep": -1.0,
+            "is_good_match": False,
+            "is_nearest_neighbor": False,
+            "is_unique_truth_entry": True,
+        }),
+        ignore_index=True,
+    )
+    del matched
 
-    full_table = pd.concat([matched, not_matched], ignore_index=True)
-    del matched, not_matched, not_matched_truth_idx
-
-    full_table = pd.merge(truth_cat, full_table, left_index=True, right_on="truth_idx", how="outer")
-    full_table.sort_index(inplace=True)
+    full_table = pd.merge(truth_cat, full_table, left_index=True, right_on="truth_idx", how="outer").sort_index()
 
     if validate:
         objid = full_table["match_objectId"].values
