@@ -63,7 +63,7 @@ class Checkpoint():
 def _chunk_data_generator(cat, columns, native_filters=None):
     columns = sorted(columns)
     for data in cat.get_quantities(columns, native_filters=native_filters, return_iterator=True):
-        table = pa.Table.from_arrays(*zip(*[(col, pa.array(data[col])) for col in columns]))
+        table = pa.Table.from_arrays([pa.array(data[col]) for col in columns], columns)
         del data
         try:
             cat.close_all_file_handles()
