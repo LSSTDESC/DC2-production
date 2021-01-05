@@ -53,7 +53,7 @@ def get_tract_patch_arrays(skymap, ra_arr, dec_arr, disable_tqdm=None):
 
 
 def repartition_into_tracts(
-    input_file,
+    input_files,
     output_root_dir,
     skymap_source_repo,
     ra_label="ra",
@@ -66,8 +66,8 @@ def repartition_into_tracts(
 
     Parameters
     ----------
-    input_file : str
-        Path to the input parquet file.
+    input_files : list of str
+        List of paths to the input parquet file.
     output_root_dir : str
         Path to the output directory. The output files will have the following filename
         <output_root_dir>/<tract>/<input_file_basename>
@@ -83,36 +83,39 @@ def repartition_into_tracts(
     silent : bool, optional (default: False)
         If true, turn off most printout.
     """
-    my_print = (lambda x: None) if silent else print
+    my_print = (lambda *x: None) if silent else print
     tqdm_disable = silent or None
 
     repo = desc_dc2_dm_data.REPOS.get(skymap_source_repo, skymap_source_repo)
     my_print("Obtain skymap from", repo)
     skymap = Butler(repo).get("deepCoadd_skyMap")
 
-    my_print("Loading input parquet file", input_file)
-    df = pd.read_parquet(input_file)
+    for input_file in input_files:
+        my_print("Loading input parquet file", input_file)
+        df = pd.read_parquet(input_file)
 
-    # Add tract, patch columns to df (i.e., input)
-    n_cores = get_number_of_workers(n_cores)
-    my_print("Finding tract and patch for each row, using", n_cores, "cores")
-    skymap_arr = [skymap] * n_cores
-    ra_arr = np.array_split(df[ra_label].values, n_cores)
-    dec_arr = np.array_split(df[dec_label].values, n_cores)
-    tqdm_arr = [True] * n_cores
-    tqdm_arr[0] = tqdm_disable
-    with mp.Pool(n_cores) as pool:
-        tractpatch = pool.starmap(get_tract_patch_arrays, zip(skymap_arr, ra_arr, dec_arr, tqdm_arr))
-    df["tract"] = np.concatenate([tp[0] for tp in tractpatch])
-    df["patch"] = np.concatenate([tp[1] for tp in tractpatch])
-    del skymap_arr, skymap, ra_arr, dec_arr, tqdm_arr, tractpatch
+        # Add tract, patch columns to df (i.e., input)
+        n_cores = get_number_of_workers(n_cores)
+        my_print("Finding tract and patch for each row, using", n_cores, "cores")
+        skymap_arr = [skymap] * n_cores
+        ra_arr = np.array_split(df[ra_label].values, n_cores)
+        dec_arr = np.array_split(df[dec_label].values, n_cores)
+        tqdm_arr = [True] * n_cores
+        tqdm_arr[0] = tqdm_disable
+        with mp.Pool(n_cores) as pool:
+            tractpatch = pool.starmap(get_tract_patch_arrays, zip(skymap_arr, ra_arr, dec_arr, tqdm_arr))
+        df["tract"] = np.concatenate([tp[0] for tp in tractpatch])
+        df["patch"] = np.concatenate([tp[1] for tp in tractpatch])
+        del skymap_arr, ra_arr, dec_arr, tqdm_arr, tractpatch
 
-    my_print("Writing out parquet file for each tract in", output_root_dir)
-    for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
-        output_dir = os.path.join(output_root_dir, str(tract))
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, os.path.basename(input_file))
-        df_this_tract.to_parquet(output_path, index=False)
+        my_print("Writing out parquet file for each tract in", output_root_dir)
+        for tract, df_this_tract in tqdm(df.groupby("tract"), total=df["tract"].nunique(False), disable=tqdm_disable):
+            output_dir = os.path.join(output_root_dir, str(tract))
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = os.path.join(output_dir, os.path.basename(input_file))
+            df_this_tract.to_parquet(output_path, index=False)
+
+        my_print("Done with", input_file)
 
 
 def main():
@@ -130,11 +133,11 @@ Files within each tract directory can be then merged to produce a single file (u
 """
     parser = ArgumentParser(description=usage,
                             formatter_class=RawTextHelpFormatter)
-    parser.add_argument("input_file", help="Parquet file to read.")
+    parser.add_argument("input_files", nargs="+", help="Parquet file(s) to read.")
     parser.add_argument("-o", '--output-root-dir', default='.', help="Output root directory.")
     parser.add_argument("--skymap-source-repo", default="2.2i_dr6_wfd")
     parser.add_argument("--silent", action="store_true")
-    parser.add_argument("--n-cores", type=int)
+    parser.add_argument("--n-cores", "--cores", dest="n_cores", type=int)
 
     repartition_into_tracts(**vars(parser.parse_args()))
 
