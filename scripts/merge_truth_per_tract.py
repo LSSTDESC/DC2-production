@@ -11,8 +11,9 @@ import multiprocessing as mp
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import numpy as np
-from astropy.coordinates import SkyCoord
 import pandas as pd
+import astropy.units as u
+from astropy.coordinates import SkyCoord, search_around_sky
 
 __all__ = ["merge_truth_per_tract", "match_object_with_merged_truth"]
 
@@ -91,9 +92,22 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
     return df
 
 
-def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent=False, **kwargs):
-    """Match object catalog with truth catalog
+def _flux_to_mag(flux):
+    with np.errstate(divide="ignore"):
+        return (flux * u.nJy).to_value(u.ABmag)  # pylint: disable=no-member
 
+
+def match_object_with_merged_truth(
+    truth_cat,
+    object_cat,
+    validate=False,
+    silent=False,
+    sep_limit_arcsec=1.0,
+    dmag_limit=1.0,
+    mag_band="r",
+    **kwargs
+):
+    """Match object catalog with truth catalog
     Parameters
     ----------
     truth_cat : pd.DataFrame or str
@@ -107,8 +121,18 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
         If true, check that the matching is performed properly.
     silent : bool, optional (default: False)
         If true, turn off most printout.
+    sep_limit_arcsec : float, optional (default: 1.0)
+        Separation limit to be considered a good match
+    dmag_limit : float, optional (default: 1.0)
+        Magnitude difference to be considered a good match
+    mag_band : float, optional (default: 1)
+        Band to use for the magnitude difference calculation
     """
-    my_print = (lambda *x: None) if silent else print
+    my_print = (lambda x: None) if silent else print
+
+    mag_label_obj = "mag_{}_cModel".format(mag_band)
+    mag_label_truth = "mag_{}".format(mag_band)
+    flux_label_truth = "flux_{}".format(mag_band)
 
     if isinstance(truth_cat, str):
         my_print("Loading truth catalog from", truth_cat)
@@ -116,42 +140,100 @@ def match_object_with_merged_truth(truth_cat, object_cat, validate=False, silent
 
     if isinstance(object_cat, str):
         my_print("Loading object catalog from", object_cat)
-        object_cat = pd.read_parquet(object_cat, columns=["objectId", "ra", "dec"])
+        object_cat = pd.read_parquet(object_cat, columns=["objectId", "ra", "dec", mag_label_obj])
 
     if "tract" in object_cat.columns and truth_cat.loc[0, "tract"] != object_cat.loc[0, "tract"]:
         warnings.warn("Tract number does not match between truth and object catalog!!")
 
-    my_print("Performing nearest neighbor match")
+    my_print("Performing catalog match...")
+
+    # Obtain SkyCoords
     object_sc = SkyCoord(object_cat["ra"].values, object_cat["dec"].values, unit="deg")
     truth_sc = SkyCoord(truth_cat["ra"].values, truth_cat["dec"].values, unit="deg")
-    idx, sep, _ = object_sc.match_to_catalog_sky(truth_sc)
-    del object_sc, truth_sc
 
-    my_print("Merging matching info with truth catalog")
+    # Add magnitude to truth catalog for calculate magnitude difference
+    truth_cat_has_mag = (mag_label_truth in truth_cat.columns)
+    if not truth_cat_has_mag:
+        truth_cat[mag_label_truth] = _flux_to_mag(truth_cat[flux_label_truth].values)
+
+    # Find all pairs between object and truth that are separated within `sep_limit_arcsec`
+    object_idx, truth_idx, sep, _ = search_around_sky(object_sc, truth_sc, sep_limit_arcsec * u.arcsec)  # pylint: disable=no-member
+
+    # Calculate magnitude difference for all the pairs
+    with np.errstate(invalid="ignore"):
+        dmag = np.abs(
+            object_cat.loc[object_idx, mag_label_obj].values -
+            truth_cat.loc[truth_idx, mag_label_truth].values
+        )
+    # Set invalid or large dmag to `dmag_limit` because we don't want to distinguish them when sorting below
+    dmag[~np.isfinite(dmag)] = dmag_limit
+    dmag[dmag > dmag_limit] = dmag_limit
+
+    # Create a dataframe to store the matched entries
     matched = pd.DataFrame.from_dict({
-        "truth_idx": truth_cat.index.values[idx],
+        "object_idx": object_idx,
+        "truth_idx": truth_idx,
         "match_sep": sep.arcsec,
-        "match_objectId": object_cat["objectId"]
+        "dmag": dmag,
     })
-    del idx, sep
+    del object_idx, truth_idx, sep, dmag
 
-    matched.sort_values("match_sep", inplace=True)
+    # Mark nearest neighbor
+    matched = matched.sort_values("match_sep")
+    matched["is_nearest_neighbor"] = ~matched.duplicated("object_idx", keep="first")
+
+    # Choose the smallest `dmag` if less than dmag_limit; otherwise, choose the smallest `match_sep`
+    matched = matched.sort_values(["dmag", "match_sep"]).drop_duplicates("object_idx", keep="first")
+    matched["is_good_match"] = matched.eval("(match_sep < @sep_limit_arcsec) & (dmag < @dmag_limit)")
+    del matched["dmag"]
+    if truth_cat_has_mag:
+        del truth_cat[mag_label_truth]
+
+    # For any *object* entries that do not have a match yet, find the nearest neighbor
+    # We already know these are not good matches because their `match_sep` must be > sep_limit_arcsec
+    object_not_matched_mask = np.in1d(object_cat.index.values, matched["object_idx"].values, True, True)
+    truth_idx, sep, _ = object_sc[object_not_matched_mask].match_to_catalog_sky(truth_sc)
+    matched = matched.append(
+        pd.DataFrame.from_dict({
+            "object_idx": object_cat.index.values[object_not_matched_mask],
+            "truth_idx": truth_idx,
+            "match_sep": sep.arcsec,
+            "is_nearest_neighbor": True,
+            "is_good_match": False,
+        }),
+        ignore_index=True,
+    )
+    del object_not_matched_mask, truth_idx, sep, object_sc, truth_sc
+
+    # Check if any truth entry appears more than once, and mark those
+    matched = matched.sort_values("match_sep")
     matched["is_unique_truth_entry"] = ~matched.duplicated("truth_idx", keep="first")
-    matched.sort_index(inplace=True)
 
-    not_matched_truth_idx = truth_cat.index.values[np.in1d(truth_cat.index.values, matched["truth_idx"].values, invert=True)]
-    not_matched = pd.DataFrame.from_dict({
-        "truth_idx": not_matched_truth_idx,
-        "match_sep": -1.0,
-        "match_objectId": -1,
-        "is_unique_truth_entry": True
-    })
+    # Reorder `matched` so that it has exactly the same row order as `object_cat`
+    matched = matched.sort_values("object_idx")
+    if validate:
+        (matched["object_idx"] == object_cat.index.values).all()
+    matched["match_objectId"] = object_cat["objectId"].values
 
-    full_table = pd.concat([matched, not_matched], ignore_index=True)
-    del matched, not_matched, not_matched_truth_idx
+    # Select and reorder needed columns to be organized
+    matched = matched[["truth_idx", "match_objectId", "match_sep", "is_good_match", "is_nearest_neighbor", "is_unique_truth_entry"]]
 
-    full_table = pd.merge(truth_cat, full_table, left_index=True, right_on="truth_idx", how="outer")
-    full_table.sort_index(inplace=True)
+    # Append the remaining (i.e., unmatched) truth entries to generate the full table
+    # We know all these rows we are appending are not matched!
+    full_table = matched.append(
+        pd.DataFrame.from_dict({
+            "truth_idx": truth_cat.index.values[np.in1d(truth_cat.index.values, matched["truth_idx"].values, invert=True)],
+            "match_objectId": -1,
+            "match_sep": -1.0,
+            "is_good_match": False,
+            "is_nearest_neighbor": False,
+            "is_unique_truth_entry": True,
+        }),
+        ignore_index=True,
+    )
+    del matched
+
+    full_table = pd.merge(truth_cat, full_table, left_index=True, right_on="truth_idx", how="outer").sort_index()
 
     if validate:
         objid = full_table["match_objectId"].values
