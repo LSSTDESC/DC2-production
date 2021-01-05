@@ -54,12 +54,21 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
             if filename.startswith(type_prefix):
                 type_code = i + 1
 
+        if not type_code:
+            msg = "Cannot identify truth type for {}".format(filename)
+            if validate:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
         # obtain healpix id for galaxies (type_code == 1)
         healpix = -1
         if type_code == 1:
             m = re.search(r"_hp(\d+)\b", filename)
             if m is None:
-                warnings.warn("Cannot identify healpix id in", filename)
+                msg = "Cannot identify healpix id for {}".format(filename)
+                if validate:
+                    raise ValueError(msg)
+                warnings.warn(msg)
             else:
                 healpix = int(m.groups()[0])
 
