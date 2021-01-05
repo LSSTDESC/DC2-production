@@ -137,7 +137,7 @@ Files within each tract directory can be then merged to produce a single file (u
     parser.add_argument("-o", '--output-root-dir', default='.', help="Output root directory.")
     parser.add_argument("--skymap-source-repo", default="2.2i_dr6_wfd")
     parser.add_argument("--silent", action="store_true")
-    parser.add_argument("--n-cores", type=int)
+    parser.add_argument("--n-cores", "--cores", dest="n_cores", type=int)
 
     repartition_into_tracts(**vars(parser.parse_args()))
 

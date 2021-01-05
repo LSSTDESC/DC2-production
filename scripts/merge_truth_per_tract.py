@@ -226,7 +226,7 @@ Because this is an I/O intensive work, it is *not* recommended that you use too 
     parser.add_argument("--matching-only", action="store_true")
     parser.add_argument("--tracts", nargs="+", type=int, help="List of tract numbers to run. Use to format input_dir and object_catalog_path")
     parser.add_argument("--tract-list", help="File contains a list of tract numbers to run. Use to format input_dir and object_catalog_path")
-    parser.add_argument("--n-cores", type=int, default=1)
+    parser.add_argument("--n-cores", "--cores", dest="n_cores", type=int, default=1)
 
     args = parser.parse_args()
     kwargs = vars(args)
