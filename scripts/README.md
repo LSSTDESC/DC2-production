@@ -217,6 +217,8 @@ After the schema file is created will be picked up by the reader and loading sho
 
 #### Make DPDD Parquet files
 
+(This section is outdated as of 2021. See [`READMD_write_gcr_to_parquet.md`](READMD_write_gcr_to_parquet.md) for updated instructions.)
+
 Produce stand-alone files with columns named as in the DPDD.
 
 In addition to renaming columns, this also translates to derived columns that are based on several input columns.
