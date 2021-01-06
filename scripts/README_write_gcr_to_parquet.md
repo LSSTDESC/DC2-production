@@ -7,7 +7,7 @@ It was last updated by Yao-Yuan Mao on Jan 5th, 2021.
 
 ### Step 1: Create a new working directory in scratch
 
-Most likely you would want to put the parquet files in scratch area first,
+Most likely you will want to put the parquet files in a scratch area first,
 and then copy them to the actual destination when everything is done.
 
 ```bash
