@@ -66,7 +66,7 @@ If you want to overwrite the prefix, specify `--output-filename`.
 
 For object catalogs, specify `--tracts=<tract_id1>,<tract_id2>`. 
 
-For cosmoDC2/SkySim catalogs, specify `--healpix-pixels=<tract_id1>,<tract_id2>`. 
+For cosmoDC2/SkySim catalogs, specify `--healpix-pixels=<healpix_id1>,<healpix_id2>`. 
 
 #### Running multiple parallel threads
 
