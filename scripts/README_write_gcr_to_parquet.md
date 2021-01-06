@@ -42,19 +42,33 @@ salloc -N 1 -C haswell -q interactive -A m1727 -t 04:00:00
 
 ### Step 5: Generate Parquet files
 
-Generally speaking you can just run:
+#### For creating DPDD-only Object Catalog in Parquet
+
+```bash
+CAT="dc2_object_run2.2i_dr6_v1"
+python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd --partition
+```
+
+Here `CAT` can be set to any object catalog that is available in `GCRCatalogs`.
+
+#### For converting cosmoDC2/SkySim to Parquet
 
 ```bash
 CAT="cosmoDC2_v1.1.4"
 python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --partition
 ```
 
-But for DPDD-only Object Catalog in Parquet, you will want to change the output filename prefix:
+Here `CAT` can be set to any cosmoDC2/SkySim catalog that is available in `GCRCatalogs`.
+The output files will use `$CAT` as prefix. 
+If you want to overwrite the prefix, specify `--output-filename`.
 
-```bash
-CAT="dc2_object_run2.2i_dr6_v1"
-python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd  --partition
-```
+#### Running on only a subset of partitions
+
+For object catalogs, specify `--tracts=<tract_id1>,<tract_id2>`. 
+
+For cosmoDC2/SkySim catalogs, specify `--healpix-pixels=<tract_id1>,<tract_id2>`. 
+
+#### Running multiple parallel threads
 
 If you are running on an interactive session or using a batch job,
 you can enable checkpoints to parallelize the job.
@@ -62,7 +76,7 @@ Here's an example:
 
 ```bash
 CAT="dc2_object_run2.2i_dr6_v1"
-EXEC="python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd  --partition --checkpoint-dir=checkpoints"
+EXEC="python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd --partition --checkpoint-dir=checkpoints"
 
 $EXEC &
 sleep 30
