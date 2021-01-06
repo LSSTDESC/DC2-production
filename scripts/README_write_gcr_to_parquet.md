@@ -1,7 +1,7 @@
 # Using write_gcr_to_parquet.py
 
 This README contains the updated instructions for using `write_gcr_to_parquet.py`.
-It is last updated by Yao-Yuan Mao on Jan 5th, 2021.
+It was last updated by Yao-Yuan Mao on Jan 5th, 2021.
 
 ## General environment setup
 
