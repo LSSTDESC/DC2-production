@@ -46,7 +46,7 @@ salloc -N 1 -C haswell -q interactive -A m1727 -t 04:00:00
 
 ```bash
 CAT="dc2_object_run2.2i_dr6_v1"
-python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd --partition
+python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --output-filename=object_dpdd.parquet --partition
 ```
 
 Here `CAT` can be set to any object catalog that is available in `GCRCatalogs`.
@@ -60,7 +60,7 @@ python ./DC2-production/scripts/write_gcr_to_parquet.py $CAT --partition
 
 Here `CAT` can be set to any cosmoDC2/SkySim catalog that is available in `GCRCatalogs`.
 The output files will use `$CAT` as prefix. 
-If you want to overwrite the prefix, specify `--output-filename`.
+If you want to overwrite the prefix, specify `--output-filename=<prefix>.parquet`.
 
 #### Running on only a subset of partitions
 
