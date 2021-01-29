@@ -7,7 +7,7 @@ It was last updated by Yao-Yuan Mao on Jan 27th, 2021.
 
 Please follow Steps 1-4 of [`README_write_gcr_to_parquet.md`](README_write_gcr_to_parquet.md)
 to prepare the necessary environment.
-The remaining of this README will assume you have followed these steps.
+The remainder of this README will assume you have followed these steps.
 
 ## Generate tract-partitioned truth catalogs
 
