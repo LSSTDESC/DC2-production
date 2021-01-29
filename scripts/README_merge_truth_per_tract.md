@@ -38,7 +38,7 @@ python ./DC2-production/scripts/repartition_into_tracts.py \
   --skymap-source-repo 2.2i_dr6
 ```
 
-The skymap source repo should be a name available in
+The skymap source repo should be one of the names available in
 [`desc-dc2-dm-data`](https://github.com/LSSTDESC/desc-dc2-dm-data/blob/master/desc_dc2_dm_data/repos.py).
 
 When you go to `truth_tract_partition`, you will see many subdirectories, each of which corresponds to one tract.
