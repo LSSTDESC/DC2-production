@@ -1,7 +1,10 @@
 # Using merge_truth_per_tract.py
 
 This README contains the updated instructions for using `merge_truth_per_tract.py`.
-It was last updated by Yao-Yuan Mao on Jan 27th, 2021.
+This script has two functions: (1) to create tract-partitioned truth catalogs, 
+and (2) to match tract-partitioned truth catalogs to object catalogs.
+
+This README was last updated by Yao-Yuan Mao on Jan 27th, 2021.
 
 ## General environment setup
 
@@ -51,7 +54,8 @@ Once all are complete, one will then merge the output files for each tract by ru
 python ./DC2-production/scripts/merge_truth_per_tract.py ./truth_tract_partition/<tract>
 ```
 
-Most likely you will want to repeat this for all tracts, and you can do that by supplying a tract list
+Most likely you will want to repeat this for all tracts, and you can do that by supplying a tract list,
+which should be a text file that lists tract numbers, one per line. 
 
 ```bash
 cd truth_tract_partition
