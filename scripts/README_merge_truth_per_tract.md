@@ -71,7 +71,7 @@ Use `--n-cores` to specify how many cores you want to use.
 
 ## Generate a truth-match catalog that matches to a specific object catalog
 
-Once you have tract-partitioned truth catalogs, you can match them to object catalog tract-by-tract by running:
+Once you have tract-partitioned truth catalogs, you can match them to an object catalog tract-by-tract by running:
 
 ```bash
 TRUTH_DIR=/global/cfs/cdirs/lsst/shared/DC2-prod/Run2.2i/truth/tract_partition/raw
