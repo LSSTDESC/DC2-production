@@ -26,7 +26,7 @@ Add a description of this data release, including its identifier, i.e. Run2.2i-d
 /global/cfs/cdirs/lsst/shared/DC2-prod/*/dpdd
 - [ ] Copy Metacal, if available, into the shared area in a directory named: Run*-dr*-v*pre/metacal_table_summary
 /global/cfs/cdirs/lsst/shared/DC2-prod/*/dpdd
-- [ ] Produce Truth Match (is there a write up for how this is done?)
+- [ ] Produce Truth Match (see [instructions](https://github.com/LSSTDESC/DC2-production/blob/mastter/scripts/README_merge_truth_per_tract.md) )
 - [ ] Copy output into shared area: /global/cfs/cdirs/lsst/shared/DC2-prod/*/truth
 - [ ] Update GCRCatalogs for pre-release including the object catalogs and metacal
 - [ ] Produce [DPDD Parquet using Object Catalogs](https://github.com/LSSTDESC/DC2-production/blob/master/scripts/README_write_gcr_to_parquet.md)
@@ -38,6 +38,10 @@ Store output in the shared area: /global/cfs/cdirs/lsst/shared/DC2-prod/*/dpdd/R
 When available, copy into shared /global/cfs/cdirs/lsst/shared/DC2-prod/*/addons/photoz
 - [ ] Request generation of survey property maps using supreme
 When available, copy into shared /global/cfs/cdirs/lsst/shared/DC2-prod/*/addons/supreme
+
+#### Derived Catalogs
+
+For each entry describe source catalog(s) and cuts used
 
 #### Validation
 
