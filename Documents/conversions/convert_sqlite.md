@@ -53,7 +53,7 @@ e.g. for star truth
 update star_truth.truth_summary set coord=public.radec_to_coord(ra, dec);
 ```
 ### Create indices
-`id` is a unique index for all but variability tables. Any columns of type `earth should also be indexed. For variability tables, index at least `id` and `obsHistID`. (**NOTE:** PostgreSQL ignores case so the column may appear as `obshistid`)
+`id` is a unique index for all but variability tables. Any columns of type `earth` should also be indexed. For variability tables, index at least `id` and `obsHistID`. (**NOTE:** PostgreSQL ignores case so the column may appear as `obshistid`)
 
 ### Update permissions
 Finally, for all schemas, all tables give read permission to user desc_dc2_drp_user
