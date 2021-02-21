@@ -84,7 +84,7 @@ update star_truth.truth_summary set coord=public.radec_to_coord(ra, dec);
 ### Update permissions
 Finally, for all schemas, all tables, give read permission to user desc_dc2_drp_user. For a schema named `the_schema` this can be done from psql with these two commands:
 
-```sql
+```
 desc_dc2_drp=> grant usage on schema the_schema to desc_dc2_drp_user;
 desc_dc2_drp=> grant select on all tables in schema the_schema to desc_dc2_drp_user;
 ```
