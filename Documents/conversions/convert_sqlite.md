@@ -7,9 +7,35 @@
 * PostgreSQL schema name
 * PostgreSQL table name (defaults to sqlite tablename)
 
+### PostgreSQL prerequisites
+
+The database is called `desc_dc2_drp`.  In order to make changes to the database you must have access to the account `desc_dc2_drp_admin`.  By default PostgreSQL applications like the command-line tool psql will look for account information  in the file `.pgpass` in your home directory, readable (and writable) only by you.  Then you can invoke psql as follows:
+```
+$ psql desc_dc2_drp desc_dc2_drp_admin
+psql (10.15, server 9.6.19)
+Type "help" for help.
+
+desc_dc2_drp=>
+```
+For more information about psql see [https://www.postgresql.org/docs/9.6/app-psql.html](https://www.postgresql.org/docs/9.6/app-psql.html).
+
 ### Creating the PostgreSQL schema
 
-From the SQLite table schema make equivalent .sql file to create PostgreSQL table.  For now, do this by hand to ensure type names are correct. If original table has ra,dec columns, add a column of type `earth` (typical for such a column is `coord` or contains that string) to the PostgreSQL schema. All of this could perhaps be automated but if so review output.
+From the SQLite table schema make an equivalent .sql file, say called `my_create.sql`, to create the PostgreSQL table. (You can see an SQLite schema from within the SQLite command line program by typing
+```
+sqlite> .schema
+```
+Here is the correspondence between SQLite type names and PostgreSQL type names for those types occuring in truth catalogs:
+
+| SQLite         | PostgreSQL       |
+|----------------|------------------|
+| TEXT           | TEXT             |
+| INTEGER or INT | INTEGER          |
+| BIGINT         | BIGINT           |
+| FLOAT          | REAL             |
+| DOUBLE         | DOUBLE PRECISION |
+
+If the original table has ra,dec columns, add a column of type `earth` (a typical name for such a column is `coord` or something containing that string) to the PostgreSQL schema. All of this could perhaps be automated but if so, review output.
 
 Run it from psql:
 
@@ -17,34 +43,34 @@ Run it from psql:
 desc_dc2_drp=> \i my_create.sql;
 ```
 ### Extract data to csv
-Write sql script to extract the data, to be executed from inside sqlite command program. Here is one for summary_truth:
+Write an sql script to extract the data, to be executed from inside the sqlite command program. Here is one for summary_truth:
 
 ```sql
 .headers on
 .mode csv
 select * from truth_summary;
 ```
-Suppose the path to this file is  `/tool/path/extract.sql`, path to sqlite input file is `/input/path/sqlite_file.db` and path to output csv file is `/output/path/out_table.csv`. Then use it like this:
+Suppose the path to this file is  `/tool/path/extract.sql`, The path to sqlite input file is `/input/path/sqlite_file.db` and the path to output csv file is `/output/path/out_table.csv`. Then use it like this:
 ```
 $ sqlite3 /input/path/sqlite_file.db
 sqlite> .output /output/path/out_table.csv
 sqlite> .read /tool/path/extract.sql
 ```
 
-Alternatively, embed in shell script, e.g., assuming variables have been appropriately defined earlier in the script or in the environment before it was invoked
+Alternatively, embed a line like the following in a shell script, e.g., assuming variables have been appropriately defined earlier in the script or in the environment before it was invoked
 
 ```
 sqlite3 -header -csv ${SRC_FILE} "select * from table_name;" > ${DEST_CSV}
 ```
 ### Ingest csv file into PostgreSQL
-Create .sql file to ingest the data from the created .csv file. For each table, need a command something like
+Create an .sql file to ingest the data from the created .csv file. For each table, you'll need a command something like
 ```
 \copy pg-schema-name.pg-table-name (list-of-column-names) from '/output/path/out_table.csv' with (FORMAT 'csv' 'header');
 ```
-Run it from psql
+where `list-of-column-names` should be those names in the SQLite schema for the table. Run it from psql.
 
 ### Update
-For tables with ra, dec columns (for truth tables, only truth_summary) update any values of type `earth` with an sql command something like
+For tables with ra, dec columns (for truth tables, only truth_summary) update any values of type `earth` (can be computed from ra, dec) with an sql command something like
 ```
 update schema-name.table-name set coord=public.radec_to_coord(ra-col, dec-col);
 ```
@@ -56,8 +82,11 @@ update star_truth.truth_summary set coord=public.radec_to_coord(ra, dec);
 `id` is a unique index for all but variability tables. Any columns of type `earth` should also be indexed. For variability tables, index at least `id` and `obsHistID`. (**NOTE:** PostgreSQL ignores case so the column may appear as `obshistid`)
 
 ### Update permissions
-Finally, for all schemas, all tables give read permission to user desc_dc2_drp_user
-
+Finally, for all schemas, all tables, give read permission to user desc_dc2_drp_user. For a schema named `the_schema` this can be done from psql with these two commands:
+```
+desc_dc2_drp=> grant usage on schema the_schema to desc_dc2_drp_user;
+desc_dc2_drp=> grant select on all tables in schema the_schema to desc_dc2_drp_user;
+```
 ## From SQLite to Parquet
 See the [module-level script parquet-utils](https://github.com/LSSTDESC/sims_TruthCatalog/blob/master/python/desc/sims_truthcatalog/parquet_utils.py) in repo `sims_TruthCatalog`.  Here is the command-line help:
 
@@ -96,6 +125,11 @@ A typical invocation looks like:
 ```
 python parquet_utils.py agn_truth_cat.db --pqfile agn_truth_summary.parquet --table truth_summary
 ```
+
+**Note:** That the repo `sims_TruthCatalog` requires the stack, but the script does not.  You can copy the files `parquet_utils.py` and `script_utils.py` from that repo to another area, modify the statement
+```from desc.sims_truthcatalog.script_utils import print_callinfo
+```
+in the first file appropriately, and then run it using any of the standard desc kernels.
 
 ## Validation
 Output should be identical to input except for differences in floating point numbers within tolerance.
