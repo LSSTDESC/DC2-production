@@ -21,7 +21,7 @@ For more information about psql see [https://www.postgresql.org/docs/9.6/app-psq
 
 ### Creating the PostgreSQL schema
 
-From the SQLite table schema make an equivalent .sql file, say called `my_create.sql`, to create the PostgreSQL table. (You can see an SQLite schema from within the SQLite command line program by typing
+From the SQLite table schema make an equivalent .sql file, say called `my_create.sql`, to create the PostgreSQL table. You can see an SQLite schema from within the SQLite command line program by typing
 ```
 sqlite> .schema
 ```
@@ -71,11 +71,11 @@ where `list-of-column-names` should be those names in the SQLite schema for the 
 
 ### Update
 For tables with ra, dec columns (for truth tables, only truth_summary) update any values of type `earth` (can be computed from ra, dec) with an sql command something like
-```
+```sql
 update schema-name.table-name set coord=public.radec_to_coord(ra-col, dec-col);
 ```
 e.g. for star truth
-```
+```sql
 update star_truth.truth_summary set coord=public.radec_to_coord(ra, dec);
 ```
 ### Create indices
@@ -83,7 +83,8 @@ update star_truth.truth_summary set coord=public.radec_to_coord(ra, dec);
 
 ### Update permissions
 Finally, for all schemas, all tables, give read permission to user desc_dc2_drp_user. For a schema named `the_schema` this can be done from psql with these two commands:
-```
+
+```sql
 desc_dc2_drp=> grant usage on schema the_schema to desc_dc2_drp_user;
 desc_dc2_drp=> grant select on all tables in schema the_schema to desc_dc2_drp_user;
 ```
@@ -123,11 +124,13 @@ optional arguments:
 A typical invocation looks like:
 
 ```
-python parquet_utils.py agn_truth_cat.db --pqfile agn_truth_summary.parquet --table truth_summary
+$ python parquet_utils.py agn_truth_cat.db --pqfile agn_truth_summary.parquet --table truth_summary
 ```
 
 **Note:** That the repo `sims_TruthCatalog` requires the stack, but the script does not.  You can copy the files `parquet_utils.py` and `script_utils.py` from that repo to another area, modify the statement
-```from desc.sims_truthcatalog.script_utils import print_callinfo
+
+```python
+from desc.sims_truthcatalog.script_utils import print_callinfo
 ```
 in the first file appropriately, and then run it using any of the standard desc kernels.
 
