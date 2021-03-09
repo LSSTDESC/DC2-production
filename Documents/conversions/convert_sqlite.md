@@ -38,6 +38,7 @@ Here is the correspondence between SQLite type names and PostgreSQL type names f
 | DOUBLE         | DOUBLE PRECISION |
 
 If the original table has ra,dec columns, add a column of type `earth` (a typical name for such a column is `coord` or something containing that string) to the PostgreSQL table definition. Normally the table should be created within a schema other than the default `public` schema.
+
 **NOTE:** For PostgreSQL, "schema" has another special meaning in addition to the usual meaning of "description of structure of database tables".  The keyword `SCHEMA` refers to something which acts like a namespace.  It qualifies the table name.
 
 Here is a typical file, used to create the truth summary table for agn:
