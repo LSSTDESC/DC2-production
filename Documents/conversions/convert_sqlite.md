@@ -19,9 +19,11 @@ desc_dc2_drp=>
 ```
 For more information about psql see [https://www.postgresql.org/docs/9.6/app-psql.html](https://www.postgresql.org/docs/9.6/app-psql.html).
 
+See also [Getting Started with PostgreSQL at NERSC](https://confluence.slac.stanford.edu/x/s4joE), but note that details for authentication in that document pertain to the read-only user account and will have to be adjusted to log in as `desc_dc2_drp_admin`.
+
 ### Creating the PostgreSQL schema
 
-From the SQLite table schema make an equivalent .sql file, say called `my_create.sql`, to create the PostgreSQL table. You can see an SQLite schema from within the SQLite command line program by typing
+From the SQLite table schema make an equivalent .sql file, say called `my_create.sql`, to create the PostgreSQL table. (For the time being, "make" probably means "create in a text editor".) You can see an SQLite schema from within the SQLite command line program by typing
 ```
 sqlite> .schema
 ```
@@ -35,9 +37,26 @@ Here is the correspondence between SQLite type names and PostgreSQL type names f
 | FLOAT          | REAL             |
 | DOUBLE         | DOUBLE PRECISION |
 
-If the original table has ra,dec columns, add a column of type `earth` (a typical name for such a column is `coord` or something containing that string) to the PostgreSQL schema. All of this could perhaps be automated but if so, review output.
+If the original table has ra,dec columns, add a column of type `earth` (a typical name for such a column is `coord` or something containing that string) to the PostgreSQL table definition. Normally the table should be created within a schema other than the default `public` schema.
+**NOTE:** For PostgreSQL, "schema" has another special meaning in addition to the usual meaning of "description of structure of database tables".  The keyword `SCHEMA` refers to something which acts like a namespace.  It qualifies the table name.
 
-Run it from psql:
+Here is a typical file, used to create the truth summary table for agn:
+
+```
+CREATE SCHEMA IF NOT EXISTS agn_truth;
+CREATE TABLE agn_truth.truth_summary
+        (id TEXT, host_galaxy BIGINT, ra DOUBLE PRECISION, dec DOUBLE PRECISION,
+        redshift REAL, is_variable INTEGER, is_pointsource INTEGER,
+        flux_u REAL, flux_g REAL, flux_r REAL,
+        flux_i REAL, flux_z REAL, flux_y REAL,
+        flux_u_noMW REAL, flux_g_noMW REAL, flux_r_noMW REAL,
+        flux_i_noMW REAL, flux_z_noMW REAL, flux_y_noMW REAL,
+	coord earth);
+```
+
+All of this (generation of file `my_create.sql`) could perhaps be automated but if so, review output.
+
+Run it from psql (that is, execute the lines in the file as if entered at the psql prompt) like this:
 
 ```
 desc_dc2_drp=> \i my_create.sql;
