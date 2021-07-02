@@ -63,6 +63,14 @@ class Checkpoint():
 def _chunk_data_generator(cat, columns, native_filters=None):
     columns = sorted(columns)
     for data in cat.get_quantities(columns, native_filters=native_filters, return_iterator=True):
+        # fix some data types
+        bad_fields = {"lightcone_replication": ["int32", "int64"],
+              "lightcone_rotation": ["int32", "int64"],
+              "baseDC2/source_halo_mvir": ["float32", "float64"]}
+        for field in bad_fields:
+            if field in data and data[field].dtype == bad_fields[field][0] :
+                print("Fix dtype for field ", field)
+                data[field] = data[field].astype(bad_fields[field][1])
         table = pa.Table.from_arrays([pa.array(data[col]) for col in columns], columns)
         del data
         try:
@@ -107,6 +115,10 @@ def _write_one_parquet_file(
                 if table is not None:
                     pqwriter.write_table(table)
                 for table in chunk_iter:
+                    schema_table = table.schema
+                    if schema_table != schema :
+                        print("******* Schema mismatch",schema_table)
+                        print("******* ", schema_table["baseDC2/source_halo_mvir"], schema_table["lightcone_replication"], schema_table["lightcone_rotation"])
                     pqwriter.write_table(table)
         my_print("Done with", output_path, time.strftime("[%H:%M:%S]"))
 
