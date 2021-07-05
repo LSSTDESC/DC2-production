@@ -64,8 +64,8 @@ def _chunk_data_generator(cat, columns, native_filters=None):
     columns = sorted(columns)
     for data in cat.get_quantities(columns, native_filters=native_filters, return_iterator=True):
         # fix some data types
-        bad_fields = {"lightcone_replication": ["int32", "int64"],
-              "lightcone_rotation": ["int32", "int64"],
+        bad_fields = {"lightcone_replication": ["int64", "int32"],
+              "lightcone_rotation": ["int64", "int32"],
               "baseDC2/source_halo_mvir": ["float32", "float64"]}
         for field in bad_fields:
             if field in data and data[field].dtype == bad_fields[field][0] :
