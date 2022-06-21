@@ -161,18 +161,19 @@ def match_object_with_merged_truth(
     object_idx, truth_idx, sep, _ = search_around_sky(object_sc, truth_sc, sep_limit_arcsec * u.arcsec)  # pylint: disable=no-member
 
     # Calculate magnitude difference for all the pairs
+    # Use cModel magnitude if it's finite and the corresponding truth entry is a galaxy; otherwise use PSF magnitude
+    mag_to_match = np.where(
+        (
+            (truth_cat.loc[truth_idx, "truth_type"].values == 1)  # truth_type == 1 for galaxies
+            & np.isfinite(object_cat.loc[object_idx, mag_label_obj_cm].values)
+        ),
+        object_cat.loc[object_idx, mag_label_obj_cm].values,  # cModel mag
+        object_cat.loc[object_idx, mag_label_obj_ps].values,  # point-source mag
+    )
     with np.errstate(invalid="ignore"):
-        dmag = np.abs(
-            np.where(
-                (
-                    (truth_cat.loc[truth_idx, "truth_type"].values == 1)
-                    & np.isfinite(object_cat.loc[object_idx, mag_label_obj_cm].values)
-                ),
-                object_cat.loc[object_idx, mag_label_obj_cm].values,
-                object_cat.loc[object_idx, mag_label_obj_ps].values,
-            )
-            - truth_cat.loc[truth_idx, mag_label_truth].values
-        )
+        dmag = np.abs(mag_to_match - truth_cat.loc[truth_idx, mag_label_truth].values)
+    del mag_to_match
+
     # Set invalid or large dmag to `dmag_limit` because we don't want to distinguish them when sorting below
     dmag[~np.isfinite(dmag)] = dmag_limit
     dmag[dmag > dmag_limit] = dmag_limit
