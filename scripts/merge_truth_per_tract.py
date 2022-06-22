@@ -130,7 +130,8 @@ def match_object_with_merged_truth(
     """
     my_print = (lambda x: None) if silent else print
 
-    mag_label_obj = "mag_{}_cModel".format(mag_band)
+    mag_label_obj_cm = "mag_{}_cModel".format(mag_band)
+    mag_label_obj_ps = "mag_{}".format(mag_band)
     mag_label_truth = "mag_{}".format(mag_band)
     flux_label_truth = "flux_{}".format(mag_band)
 
@@ -140,7 +141,7 @@ def match_object_with_merged_truth(
 
     if isinstance(object_cat, str):
         my_print("Loading object catalog from", object_cat)
-        object_cat = pd.read_parquet(object_cat, columns=["objectId", "ra", "dec", mag_label_obj])
+        object_cat = pd.read_parquet(object_cat, columns=["objectId", "ra", "dec", mag_label_obj_cm, mag_label_obj_ps])
 
     if "tract" in object_cat.columns and truth_cat.loc[0, "tract"] != object_cat.loc[0, "tract"]:
         warnings.warn("Tract number does not match between truth and object catalog!!")
@@ -160,11 +161,19 @@ def match_object_with_merged_truth(
     object_idx, truth_idx, sep, _ = search_around_sky(object_sc, truth_sc, sep_limit_arcsec * u.arcsec)  # pylint: disable=no-member
 
     # Calculate magnitude difference for all the pairs
+    # Use cModel magnitude if it's finite and the corresponding truth entry is a galaxy; otherwise use PSF magnitude
+    mag_to_match = np.where(
+        (
+            (truth_cat.loc[truth_idx, "truth_type"].values == 1)  # truth_type == 1 for galaxies
+            & np.isfinite(object_cat.loc[object_idx, mag_label_obj_cm].values)
+        ),
+        object_cat.loc[object_idx, mag_label_obj_cm].values,  # cModel mag
+        object_cat.loc[object_idx, mag_label_obj_ps].values,  # point-source mag
+    )
     with np.errstate(invalid="ignore"):
-        dmag = np.abs(
-            object_cat.loc[object_idx, mag_label_obj].values -
-            truth_cat.loc[truth_idx, mag_label_truth].values
-        )
+        dmag = np.abs(mag_to_match - truth_cat.loc[truth_idx, mag_label_truth].values)
+    del mag_to_match
+
     # Set invalid or large dmag to `dmag_limit` because we don't want to distinguish them when sorting below
     dmag[~np.isfinite(dmag)] = dmag_limit
     dmag[dmag > dmag_limit] = dmag_limit
