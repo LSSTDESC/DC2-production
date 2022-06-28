@@ -18,12 +18,12 @@ from astropy.coordinates import SkyCoord, search_around_sky
 __all__ = ["merge_truth_per_tract", "match_object_with_merged_truth"]
 
 
-def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), validate=False, silent=False, **kwargs):
+def merge_truth_per_tract(input_dir, truth_types=("_hp", "star_", "sn_"), validate=False, silent=False, **kwargs):
     """Merge all the truth catalogs in one single tract directory.
 
     This function assumes the truth catalogs are in parquet format and have specific file name patterns.
-    The filename prefix should match one of those specified in truth_types.
-    For galaxy type (filename starting with "truth_"),
+    The filename should contain one of those specified in truth_types.
+    For galaxy type (filename contains with "_hp"),
     it is further assumed that the cosmodc2 healpix id is embedded in the filename.
 
     Parameters
@@ -33,7 +33,7 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
 
     Optional Parameters
     ----------------
-    truth_types : tuple of str, optional (default: ("truth_", "star_", "sn_"))
+    truth_types : tuple of str, optional (default: ("_hp", "star_", "sn_"))
         The types of truth objects. The string should be the prefix of truth files.
     validate : bool, optional (default: False)
         If true, check that the tract column has only one value
@@ -52,8 +52,9 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
         # determine truth type
         type_code = 0
         for i, type_prefix in enumerate(truth_types):
-            if filename.startswith(type_prefix):
+            if type_prefix in filename:
                 type_code = i + 1
+                break
 
         if not type_code:
             msg = "Cannot identify truth type for {}".format(filename)
@@ -75,10 +76,29 @@ def merge_truth_per_tract(input_dir, truth_types=("truth_", "star_", "sn_"), val
 
         # read in files and add columns
         df = pd.read_parquet(os.path.join(input_dir, filename))
-        df["truth_type"] = type_code
-        df["cosmodc2_hp"] = healpix
-        df["cosmodc2_id"] = df["id"] if type_code == 1 else -1
-        df["id"] = df["id"].astype(str)
+
+        if "id_string" not in df.columns:
+            df["id_string"] = df["id"].astype(str)
+
+        if "host_galaxy" not in df.columns:
+            df["host_galaxy"] = np.int64(-1)
+
+        if "redshift" not in df.columns:
+            df["redshift"] = np.float64(0)
+
+        for band in "ugrizy":
+            if f"flux_{band}" not in df.columns:
+                df[f"flux_{band}"] = np.float32(0)
+
+        df["truth_type"] = np.int32(type_code)
+        df["cosmodc2_hp"] = np.int64(healpix)
+        df["cosmodc2_id"] = df["id"] if type_code == 1 else np.int64(-1)
+
+        df = df[(
+            ["id", "id_string", "host_galaxy", "truth_type", "ra", "dec", "redshift"] +
+            [f"flux_{band}" for band in "ugrizy"] +
+            ["av", "rv", "tract", "patch", "cosmodc2_hp", "cosmodc2_id"]
+        )]
 
         df_to_merge.append(df)
 
